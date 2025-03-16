@@ -1,2 +1,2 @@
-#Life Financial Planner
+# Life Financial Planner
 ## Team Big Dawgs
