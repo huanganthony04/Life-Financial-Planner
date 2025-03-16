@@ -1,0 +1,28 @@
+{
+  "name": "lfp_server",
+  "version": "1.0.0",
+  "description": "Backend server for LFP by Team Big Dawgs",
+  "license": "ISC",
+  "author": "Team Big Dawgs",
+  "contributors": [
+    {
+      "name": "Anthony Huang"
+    },
+    {
+      "name": "Roy Chen"
+    },
+    {
+      "name": "Daniel Seo"
+    }
+  ],
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongoose": "^8.12.1"
+  }
+}
