@@ -46,12 +46,12 @@ const Scenario = () => {
     }
   }
   return (
-    <>
+    <div id="scenario_page" className="page">
       <h1>Scenario Upload</h1>
       <input id="scenario_upload_input" type="file" accept=".yaml" onChange={handleFileChange}/>
       <button id="scenario_upload_button" onClick={handleUpload}>Upload</button>
       <pre id="scenario_upload_message">{message}</pre>
-    </>
+    </div>
   )
 }
 

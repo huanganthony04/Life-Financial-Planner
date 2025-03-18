@@ -10,27 +10,27 @@ const Login = () => {
     const navigate = useNavigate()
 
     return (
-        <>
-            <div>Login</div>
+        <div id="login_page" className="page">
+            <h1>Login</h1>
             <div id="google_login">
                 <h2>Sign in with Google</h2>
-                    <GoogleLogin
-                        onSuccess={async (response) => {
-                            await axios.post(`${BACKEND_URL}/api/login`, response, { withCredentials: true })
-                                .then((res) => {
-                                    console.log(res)
-                                    navigate("/")
-                                })
-                                .catch((error) => {
-                                    console.log(error)
-                                })
-                        }}
-                        onError={() => {
-                            console.log("Login Failed");
-                        }}
-                    />
+                <GoogleLogin
+                    onSuccess={async (response) => {
+                        await axios.post(`${BACKEND_URL}/api/login`, response, { withCredentials: true })
+                            .then((res) => {
+                                console.log(res)
+                                navigate("/")
+                            })
+                            .catch((error) => {
+                                console.log(error)
+                            })
+                    }}
+                    onError={() => {
+                        console.log("Login Failed");
+                    }}
+                />
             </div>
-        </>
+        </div>
     )
 }
 
