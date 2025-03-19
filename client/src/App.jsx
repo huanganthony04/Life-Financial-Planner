@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Routes, Route, Outlet, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Banner from './components/Banner'
-import Home from './pages/Home'
+import Landing from './pages/Landing'
+import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Scenario from './pages/Scenario'
 import axios from 'axios'
@@ -42,8 +43,8 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Layout page="Home" user={user}/>}>
-          <Route index element={<Home user={user}/>} />
+        <Route path="/dashboard" element={<Layout page="Dashboard" user={user}/>}>
+          <Route index element={<Dashboard user={user}/>} />
         </Route>
 
         <Route path="/scenario" element={<Layout page="Scenario" user={user}/>}>
@@ -51,6 +52,7 @@ function App() {
         </Route>
 
         <Route path="/login" element={<Login user={user}/>} />
+        <Route path="/" element={<Landing user={user}/>} />
       </Routes>
     </>
   )

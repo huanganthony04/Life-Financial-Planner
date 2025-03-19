@@ -10,7 +10,7 @@ const Login = ({user}) => {
 
     useEffect(() => {
         if (user) {
-            navigate("/")
+            navigate("/dashboard")
         }
     })
 
@@ -28,7 +28,7 @@ const Login = ({user}) => {
                                 await axios.post(`${BACKEND_URL}/api/login`, response, { withCredentials: true })
                                     .then((res) => {
                                         console.log(res)
-                                        navigate("/")
+                                        navigate("/dashboard")
                                     })
                                     .catch((error) => {
                                         console.log(error)

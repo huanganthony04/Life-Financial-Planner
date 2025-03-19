@@ -13,11 +13,11 @@ const Navbar = () => {
         </div>
         <div id="nav-buttons">
             <NavLink 
-                to="/" 
+                to="/dashboard" 
                 className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
             >
                 <img className="nav-button-icon" src={homeLogo}/>
-                Home
+                Dashboard
             </NavLink>
             <NavLink 
                 to="/scenario" 
