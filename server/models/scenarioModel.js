@@ -126,14 +126,6 @@ const eventStartSchema = new Schema({
         eventSeries: String
     },
     duration: valueDistributionSchema,
-    validate: {
-        validator: () => {
-            if (this.startDistribution && this.startWith) {
-                return false
-            }
-        },
-        message: "eventSeries must have exactly one of a startDistribution or a startWith"
-    }
 })
 
 //Schema for income events
@@ -183,14 +175,6 @@ const investEventSchema = new Schema({
         type: Map,
         of: Number
     },
-    validate: {
-        validator: function(v) {
-            if (this.glidePath === undefined && this.assetAllocation2 !== undefined || this.glidePath !== undefined && this.assetAllocation2 === undefined) {
-                return false;
-            }
-        },
-        message: "assetAllocation2 must be specified only if glidePath is used"
-    }
     
 })
 
@@ -209,6 +193,10 @@ const rebalanceEventSchema = new Schema({
 
 const ScenarioSchema = new Schema({
 
+    name: {
+        type: String,
+        required: true
+    },
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
@@ -283,5 +271,5 @@ const ScenarioSchema = new Schema({
 
 })
 
-const ScenarioModel = mongoose.model('User', ScenarioSchema)
+const ScenarioModel = mongoose.model('Scenario', ScenarioSchema)
 export default ScenarioModel

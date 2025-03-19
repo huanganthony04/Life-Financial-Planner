@@ -7,6 +7,7 @@ import cors from 'cors'
 
 import mongoose from 'mongoose'
 import userRoutes from './routes/userRoutes.js'
+import scenarioRoutes from './routes/scenarioRoutes.js'
 
 import 'dotenv/config'
 
@@ -63,6 +64,7 @@ app.use(session({
 
 //Import routes from ./routes
 app.use('', userRoutes)
+app.use('', scenarioRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)

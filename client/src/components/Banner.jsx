@@ -1,44 +1,29 @@
-import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import './Banner.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
-const Banner = ({page}) => {
+const Banner = ({page, user}) => {
 
-    const [username, setUsername] = useState(null)
+    const username = user ? user.email : "Guest"
 
     const navigate = useNavigate()
 
-    useEffect(() => {
-
-        //Check authorization
-        axios.get(`${BACKEND_URL}/api/getuser`, {withCredentials: true})
-            .then((response) => {
-                if (response.data.user) {
-                    setUsername(response.data.user)
-                }
-            })
-
-
-    }, [])
-
     const logout = async function() {
-        if (!username) {
+        if (username === "Guest") {
             console.log('Not logged in')
         }
         else {
             await axios.post(`${BACKEND_URL}/api/logout`, {}, {withCredentials: true})
                 .then((response) => {
                     console.log(response)
-                    navigate("/login")
                 })
         }
     }
 
     const renderLoginLogout = () => {
-        if (!username) {
+        if (username === "Guest") {
             return (
                 <button id="sign-up-button" onClick={() => navigate("/login")}>
                     <h4 id="sign-up-button-label">Sign Up</h4>

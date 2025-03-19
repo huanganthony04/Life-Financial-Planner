@@ -1,58 +1,78 @@
-import { useState } from 'react'
-import YAML from 'yaml'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import './Scenario.css'
 
-const Scenario = () => {
-  const [file, setFile] = useState(null)
-  const [message, setMessage] = useState("")
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
-  const handleFileChange = (e) => {
-    const inputFile = e.target.files[0]
-    const extension = inputFile.name.split(".").pop().toLowerCase()
-    if (extension === "yaml") {
-      setFile(inputFile)
+const Scenario = ({user}) => {
 
-    }
-  }
+    const [scenarios, setScenarios] = useState([])
+  
+    useEffect(() => {
 
-  const parseFile = async (file) => {
-
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-
-      reader.onload = (event) => {
-        try {
-          const fileContents = event.target.result
-          const parsedData = YAML.parse(fileContents)
-          resolve(parsedData)
+        //Get user scenarios
+        if (user) {
+            axios.get(`${BACKEND_URL}/api/scenarios/${user.userId}`, {withCredentials: true})
+                .then((response) => {
+                    console.log(response)
+                    if (response.data.scenarios) {
+                        setScenarios(response.data.scenarios)
+                    }
+                })
+                .catch((error) => {
+                    console.log(error)
+                })
         }
-        catch(error) {
-          reject(error)
+        
+        //Not logged in, get scenarios from local storage
+        else {
+            const localScenarios = localStorage.getItem("scenarios")
+            if (localScenarios) {
+                setScenarios(JSON.parse(localScenarios))
+            }
         }
-      }
 
-      reader.onerror = () => reject(new Error("File reading failed"))
-      reader.readAsText(file)
-    })
 
-  }
+    }, [user])
 
-  const handleUpload = async () => {
-    if (file !== null) {
-      const parsedData = await parseFile(file)
-      setMessage(`Success! The parsed file contents:\n${JSON.stringify(parsedData, null, "\t")}`)
+    const scenarioList = (scenarios) => {
+        if (scenarios.length === 0) {
+            return (
+                <div id="no-scenarios">
+                    <h3>You have no scenarios</h3>
+                </div>
+            )
+        }
+        else {
+            return (
+                <div id="scenario-list">
+                    {scenarios.map((scenario, index) => {
+                        return (
+                            <div key={index} className="scenario-item">
+                                <h4>{scenario.name}</h4>
+                            </div>
+                        )
+                    })}
+                </div>
+            )
+        }
     }
-    else {
-      setMessage("Please submit a .yaml file.")
-    }
-  }
-  return (
-    <div id="scenario_page" className="page">
-      <h1>Scenario Upload</h1>
-      <input id="scenario_upload_input" type="file" accept=".yaml" onChange={handleFileChange}/>
-      <button id="scenario_upload_button" onClick={handleUpload}>Upload</button>
-      <pre id="scenario_upload_message">{message}</pre>
-    </div>
-  )
+
+    return (
+        <>
+            <div id="scenario-utils">
+                <input type="text" id="scenario-search" placeholder="Search..."/>
+                <button id="scenario-create-button">
+                    <h4>Create Scenario</h4>
+                </button>
+            </div>
+            <div>
+                {scenarioList(scenarios)}
+            </div>
+        </>
+    )
+
+
 }
 
 export default Scenario

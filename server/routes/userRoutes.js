@@ -1,5 +1,4 @@
 import express from 'express'
-import session from 'express-session'
 import { OAuth2Client } from 'google-auth-library'
 import UserModel from '../models/UserModel.js'
 import 'dotenv/config'
@@ -25,11 +24,11 @@ const verifyGoogleToken = async function (idToken) {
 const router = express.Router()
 
 router.get('/api/getuser', (req, res) => {
-    if (req.session.user !== undefined) {
-        return res.status(200).json({user: req.session.user})
+    if (req.session.userId !== undefined) {
+        return res.status(200).json({userId: req.session.userId, email: req.session.email})
     }
     else {
-        return res.status(200).json({user: undefined})
+        return res.status(200).json({userId: undefined})
     }
 })
 
@@ -43,7 +42,8 @@ router.post('/api/login', async (req, res) => {
 
             const user = await UserModel.findOne({ _id: sub, email: email })
             if (user) {
-                req.session.user = email
+                req.session.userId = sub
+                req.session.email = email
                 res.status(200).send({status: 'Success', message: 'Logged in'})
             }
             else {
