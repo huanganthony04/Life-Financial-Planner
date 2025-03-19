@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import searchLogo from '../assets/icons/search.svg'
+import addfileLogo from '../assets/icons/add_file.svg'
+import ScenarioUpload from '../components/ScenarioUpload'
 import './Scenario.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -7,6 +10,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 const Scenario = ({user}) => {
 
     const [scenarios, setScenarios] = useState([])
+    const [isOpen, setIsOpen] = useState(false)
   
     useEffect(() => {
 
@@ -61,14 +65,19 @@ const Scenario = ({user}) => {
     return (
         <>
             <div id="scenario-utils">
-                <input type="text" id="scenario-search" placeholder="Search..."/>
-                <button id="scenario-create-button">
-                    <h4>Create Scenario</h4>
+                <div id="scenario-search">
+                    <img src={searchLogo} id="scenario-search-icon"/>
+                    <input type="text" id="scenario-search-input" placeholder="Search..."/>
+                </div>
+                <button id="scenario-create-button" onClick={() => setIsOpen(true)}>
+                    <img src={addfileLogo} id="scenario-create-icon"/>
+                    <h4>Create</h4>
                 </button>
             </div>
             <div>
                 {scenarioList(scenarios)}
             </div>
+            <ScenarioUpload open={isOpen} onClose={() => setIsOpen(false)}/>
         </>
     )
 

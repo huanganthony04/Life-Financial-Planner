@@ -1,0 +1,62 @@
+#scenario-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#scenario-modal {
+  z-index: 1001;
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+}
+
+#scenario-modal-header-title {
+  margin: 0 0 20px;
+}
+
+#scenario-modal-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.scenario-modal-icon {
+  margin: 0.5em;
+  display: inline;
+}
+
+.scenario-modal-button {
+  display: flex;
+  flex-direction: column;
+  padding: 40px 0;
+  justify-content: start;
+  background-color: rgb(255, 255, 255);
+  color: darkgray;
+  border:1px solid darkgray;
+  height: 150px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.scenario-modal-button-label {
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scenario-modal-button-description {
+  text-align: center;
+  margin: 5px 20px;
+}

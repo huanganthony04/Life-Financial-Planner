@@ -1,0 +1,57 @@
+#scenario-utils {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ccc;
+}
+
+#scenario-search {
+    height: 36px;
+    padding: 0px 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+}
+
+#scenario-search-input {
+    width: 200px;
+    border: none;
+}
+
+#scenario-search-icon {
+    height: 20px;
+    width: 20px;
+    margin-right: 5px;
+}
+
+#scenario-search-input:focus {
+    outline: none;
+}
+
+#scenario-create-button {
+    display: flex;
+    align-items: center;
+    background-color: rgb(63, 216, 114);
+    color: white;   
+    border: none;
+    height: 36px;
+    padding: 0px 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#scenario-create-icon {
+    height: 20px;
+    width: 20px;
+    margin-right: 5px;
+}
+
+#scenario-create-button:hover {
+    background-color: rgb(53, 206, 104);
+}
+
+#scenario-create-button:active {
+    background-color: rgb(43, 196, 94);
+}
