@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import searchLogo from '../assets/icons/search.svg'
 import addfileLogo from '../assets/icons/add_file.svg'
+import ScenarioFileUpload from '../components/ScenarioFileUpload'
 import ScenarioUpload from '../components/ScenarioUpload'
 import './Scenario.css'
 
@@ -10,7 +11,10 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 const Scenario = ({user}) => {
 
     const [scenarios, setScenarios] = useState([])
-    const [isOpen, setIsOpen] = useState(false)
+
+    //States for opening and closing the modals
+    const [scenUpOpen, setScenUpOpen] = useState(false)
+    const [ScenFileOpen, setScenFileOpen] = useState(false)
   
     useEffect(() => {
 
@@ -39,6 +43,7 @@ const Scenario = ({user}) => {
 
     }, [user])
 
+    //Function to render list of scenarios associated with the user
     const scenarioList = (scenarios) => {
         if (scenarios.length === 0) {
             return (
@@ -69,7 +74,7 @@ const Scenario = ({user}) => {
                     <img src={searchLogo} id="scenario-search-icon"/>
                     <input type="text" id="scenario-search-input" placeholder="Search..."/>
                 </div>
-                <button id="scenario-create-button" onClick={() => setIsOpen(true)}>
+                <button id="scenario-create-button" onClick={() => setScenUpOpen(true)}>
                     <img src={addfileLogo} id="scenario-create-icon"/>
                     <h4>Create</h4>
                 </button>
@@ -77,7 +82,18 @@ const Scenario = ({user}) => {
             <div>
                 {scenarioList(scenarios)}
             </div>
-            <ScenarioUpload open={isOpen} onClose={() => setIsOpen(false)}/>
+
+            {/* Modals for creating scenarios */}
+            <ScenarioUpload 
+                open={scenUpOpen} 
+                onClose={() => setScenUpOpen(false)} 
+                openScenFileUpl={() => setScenFileOpen(true)}
+            />
+            <ScenarioFileUpload 
+                open={ScenFileOpen} 
+                onClose={() => setScenFileOpen(false)}
+                openScenUpl={() => setScenUpOpen(true)}
+            />
         </>
     )
 
