@@ -1,0 +1,47 @@
+#landing-page-header {
+    width: 100%;
+    background-color: white;
+    color: darkslategray;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;    
+
+}
+
+#landing-page-header>h2 {
+    color: white;
+    margin: 20px;
+    font-size: 2rem;
+}
+
+#landing-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgb(175, 244, 198);
+    height: 100%;
+}
+
+#landing-page-login-button {
+    margin: 20px;
+    background-color: white;
+    border: 1px solid darkslategray;
+    color: darkslategray;
+    height: 36px;
+    padding: 0px 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#landing-page h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+#landing-page-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}

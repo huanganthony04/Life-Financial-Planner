@@ -6,15 +6,19 @@ import './Login.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
-const Login = ({user}) => {
-
-    useEffect(() => {
-        if (user) {
-            navigate("/dashboard")
-        }
-    })
+const Login = () => {
 
     const navigate = useNavigate()
+
+    useEffect(() => {
+        //Check authorization
+        axios.get(`${BACKEND_URL}/api/getuser`, {withCredentials: true})
+          .then((response) => {
+            if (response.data) {
+                navigate("/dashboard")
+            }
+        })
+    })
 
     return (
         <div id="login-page" className="page">

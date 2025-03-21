@@ -25,10 +25,12 @@ const router = express.Router()
 
 router.get('/api/getuser', (req, res) => {
     if (req.session.userId !== undefined) {
+        console.log(req.session.userId)
         return res.status(200).json({userId: req.session.userId, email: req.session.email})
     }
     else {
-        return res.status(200).json({userId: undefined})
+        console.log("User not logged in")
+        return res.status(200).json(null)
     }
 })
 
@@ -65,7 +67,7 @@ router.post('/api/login', async (req, res) => {
 
 })
 
-router.post('/api/logout', async (req, res) => {
+router.post('/api/logout', (req, res) => {
 
     req.session.destroy((err) => {
         if (err) {

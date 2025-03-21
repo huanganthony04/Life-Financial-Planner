@@ -10,15 +10,15 @@ const Banner = ({page, user}) => {
 
     const navigate = useNavigate()
 
-    const logout = async function() {
+    const logout = async () => {
         if (username === "Guest") {
             console.log('Not logged in')
+            return
         }
         else {
             await axios.post(`${BACKEND_URL}/api/logout`, {}, {withCredentials: true})
-                .then((response) => {
-                    console.log(response)
-                })
+
+            navigate('/')
         }
     }
 

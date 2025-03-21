@@ -24,19 +24,14 @@ function Layout({page, user}) {
 }
 
 function App() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState()
   const location = useLocation()
 
   useEffect(() => {
     //Check authorization
     axios.get(`${BACKEND_URL}/api/getuser`, {withCredentials: true})
       .then((response) => {
-        if (response.data.userId) {
-          setUser(response.data)
-        }
-        else {
-          setUser(null)
-        }
+        setUser(response.data)
       })
   }, [location])
 
