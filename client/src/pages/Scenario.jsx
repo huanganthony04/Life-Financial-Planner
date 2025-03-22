@@ -18,32 +18,47 @@ const Scenario = ({user}) => {
     const [ScenModalOpen, setScenModalOpen] = useState(false)
     const [ScenFileModalOpen, setScenFileModalOpen] = useState(false)
     const [ScenNameModalOpen, setScenNameModalOpen] = useState(false)
+
+    const fetchUserScenarios = async (user) => {
+        await axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
+            .then((response) => {
+                console.log(response)
+                if (response.data.scenarios) {
+                    setScenarios(response.data.scenarios)
+                }
+            })
+            .catch((error) => {
+                console.log(error)
+            })
+    }
+
+    // Function to create a scenario
+    // This function is passed down to the Child Modals
+    // Defining it here allows Scenarios page to refresh the list of scenarios
+    const createScenario = async (scenario) => {
+        await axios.post(`${BACKEND_URL}/api/scenario/create`, scenario, {withCredentials: true})
+            .then((response) => {
+                console.log(response)
+                fetchUserScenarios(user)
+            })
+            .catch((error) => {
+                console.log(error)
+                return
+            })
+        
+        setScenModalOpen(false)
+        setScenFileModalOpen(false)
+        setScenNameModalOpen(false)
+        fetchUserScenarios(user)
+    }
   
     useEffect(() => {
-
-        //Get user scenarios
         if (user) {
-            axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
-                .then((response) => {
-                    console.log(response)
-                    if (response.data.scenarios) {
-                        setScenarios(response.data.scenarios)
-                    }
-                })
-                .catch((error) => {
-                    console.log(error)
-                })
+            fetchUserScenarios(user)
         }
-        
-        //Not logged in, get scenarios from local storage
         else {
-            const localScenarios = localStorage.getItem("scenarios")
-            if (localScenarios) {
-                setScenarios(JSON.parse(localScenarios))
-            }
+            console.log("User not logged in")
         }
-
-
     }, [user])
 
     const scenariosList = (scenario) => {
@@ -84,12 +99,14 @@ const Scenario = ({user}) => {
                 onClose={() => setScenFileModalOpen(false)}
                 openScenarioModal={() => setScenModalOpen(true)}
                 user={user}
+                createScenario={createScenario}
             />
             <CreateScenarioNameModal
                 open={ScenNameModalOpen} 
                 onClose={() => setScenNameModalOpen(false)} 
                 openScenarioModal={() => setScenModalOpen(true)}
                 user={user}
+                createScenario={createScenario}
             />
         </>
     )

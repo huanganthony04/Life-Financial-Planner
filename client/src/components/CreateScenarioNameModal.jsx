@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import ReactDOM from 'react-dom'
-import axios from 'axios'
 import './CreateScenarioModal.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
-const ScenarioCreateNameModal = ({open, onClose, openScenarioModal, user}) => {
+const ScenarioCreateNameModal = ({open, onClose, openScenarioModal, user, createScenario}) => {
 
   const [name, setName] = useState("")
 
@@ -13,14 +12,7 @@ const ScenarioCreateNameModal = ({open, onClose, openScenarioModal, user}) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (user) {
-      await axios.post(`${BACKEND_URL}/api/scenario/create`, {name: name}, {withCredentials: true})
-        .then((response) => {
-          console.log(response)
-          onClose()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
+      createScenario({name: name})
     }
   }
 
