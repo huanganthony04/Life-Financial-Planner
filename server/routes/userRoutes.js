@@ -54,7 +54,12 @@ router.post('/api/login', async (req, res) => {
                     email: email
                 })
 
-                await newUser.save().catch((err) => {
+                await newUser.save()
+                .then(() => {
+                    req.session.userId = sub
+                    req.session.email = email
+                    res.status(200).send({status: 'Success', message: 'Logged in'})
+                }).catch((err) => {
                     console.log(`Error saving user: ${err}`)
                     return res.status(500).send({status: 'ERROR', message: err})
                 })
