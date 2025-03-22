@@ -195,38 +195,24 @@ const ScenarioSchema = new Schema({
 
     name: {
         type: String,
-        required: true
+        default: "Unnamed Scenario",
     },
     owner: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        type: String,
     },
     editors: {
-        type: [{type: mongoose.Schema.Types.ObjectId, ref: "User"}],
+        type: [String],
         validate: {
             validator: e => e.length > 0,
-            message: "At least one editor is required"
+            message: `At least one editor required`
         }
     },
     maritalStatus: Boolean,
     birthYears: {
         type: [Number],
-        validate: {
-            validator: function(v) {
-                if (this.martialStatus) {
-                    if (v.length != 2) return false
-                }
-                else {
-                    if (v.length !== 1) return false
-                }
-                return true
-            }
-        },
-        message: "birthYears length must match maritalStatus"
     },
     lifeExpectancy: {
         type: valueDistributionSchema,
-        required: true
     },
     investments: [investmentSchema],
     incomeEvents: [incomeEventSchema],
@@ -235,7 +221,6 @@ const ScenarioSchema = new Schema({
     rebalanceEvents: [rebalanceEventSchema],
     inflationAssumption: {
         type: valueDistributionSchema,
-        required: true
     },
     afterTaxContributionLimit: Number,
     spendingStrategy: [String],
@@ -260,7 +245,6 @@ const ScenarioSchema = new Schema({
     },
     residenceState: {
         type: String,
-        required: true,
         validate: {
             validator: function (v) {
                 return v.length == 2

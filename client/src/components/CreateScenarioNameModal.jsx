@@ -7,13 +7,20 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 const ScenarioCreateNameModal = ({open, onClose, openScenarioModal, user}) => {
 
-  const [name, setName] = useState("Unnamed Scenario")
+  const [name, setName] = useState("")
 
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (user) {
-      await axios.post(`${BACKEND_URL}/api/create-scenario`, {name: name}, {withCredentials: true})
+      await axios.post(`${BACKEND_URL}/api/scenario/create`, {name: name}, {withCredentials: true})
+        .then((response) => {
+          console.log(response)
+          onClose()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
     }
   }
 
@@ -30,7 +37,8 @@ const ScenarioCreateNameModal = ({open, onClose, openScenarioModal, user}) => {
             <label htmlFor="scenario-modal-name-input">Name your scenario:</label>
             <input 
               type="text" 
-              id="scenario-modal-name-input" 
+              id="scenario-modal-name-input"
+              className="scenario-modal-input" 
               placeholder="Scenario Name"
               value={name}
               onChange={(e) => setName(e.target.value)}

@@ -23,10 +23,21 @@ const verifyGoogleToken = async function (idToken) {
 
 const router = express.Router()
 
-router.get('/api/getuser', (req, res) => {
+router.get('/api/getuser', async (req, res) => {
     if (req.session.userId !== undefined) {
-        console.log(req.session.userId)
-        return res.status(200).json({userId: req.session.userId, email: req.session.email})
+        await UserModel.findOne({_id: req.session.userId})
+        .then((user) => {
+            if (user) {
+                console.log("User found")
+                return res.status(200).json({userId: req.session.userId, email: req.session.email})
+            }
+            else {
+                console.log("User not found")
+                req.session.destroy();
+                res.clearCookie('connect.sid')
+                return res.status(200).json(null)
+            }
+        })
     }
     else {
         console.log("User not logged in")

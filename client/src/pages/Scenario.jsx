@@ -5,6 +5,7 @@ import addfileLogo from '../assets/icons/add_file.svg'
 import CreateScenarioFileModal from '../components/CreateScenarioFileModal'
 import CreateScenarioNameModal from '../components/CreateScenarioNameModal'
 import CreateScenarioModal from '../components/CreateScenarioModal'
+import ScenarioListItem from '../components/ScenarioListItem'
 import './Scenario.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -22,7 +23,7 @@ const Scenario = ({user}) => {
 
         //Get user scenarios
         if (user) {
-            axios.get(`${BACKEND_URL}/api/scenarios/${user.userId}`, {withCredentials: true})
+            axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
                 .then((response) => {
                     console.log(response)
                     if (response.data.scenarios) {
@@ -45,28 +46,15 @@ const Scenario = ({user}) => {
 
     }, [user])
 
-    //Function to render list of scenarios associated with the user
-    const scenarioList = (scenarios) => {
-        if (scenarios.length === 0) {
+    const scenariosList = (scenario) => {
+        return scenario.map((item) => {
             return (
-                <div id="no-scenarios">
-                    <h3>You have no scenarios</h3>
-                </div>
+                <ScenarioListItem
+                    key={item._id}
+                    name={item.name}
+                />
             )
-        }
-        else {
-            return (
-                <div id="scenario-list">
-                    {scenarios.map((scenario, index) => {
-                        return (
-                            <div key={index} className="scenario-item">
-                                <h4>{scenario.name}</h4>
-                            </div>
-                        )
-                    })}
-                </div>
-            )
-        }
+        })
     }
 
     return (
@@ -81,9 +69,7 @@ const Scenario = ({user}) => {
                     <h4>Create</h4>
                 </button>
             </div>
-            <div>
-                {scenarioList(scenarios)}
-            </div>
+            {scenariosList(scenarios)}
 
             {/* Modals for creating scenarios */}
             <CreateScenarioModal
