@@ -1,17 +1,12 @@
 import { useState, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import YAML from 'yaml'
-import './ScenarioUpload.css'
+import './CreateScenarioModal.css'
 
-const ScenarioFileUpload = ({open, onClose, openScenUpl}) => {
+const CreateScenarioFileModal = ({open, onClose, openScenarioModal}) => {
 
   const fileInputRef = useRef(null)
   const [file, setFile] = useState(null)
-
-  const openScenarioUpload = () => {
-    openScenUpl()
-    onClose()
-  }
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0]
@@ -46,7 +41,7 @@ const ScenarioFileUpload = ({open, onClose, openScenUpl}) => {
     <div id="scenario-modal-overlay" onClick={() => onClose()}>
       <div id="scenario-modal" onClick={(e) => e.stopPropagation()}>
         <div id="scenario-modal-header">
-          <h2 id="scenario-modal-header-title">Upload Scenario From File</h2>
+          <h2 id="scenario-modal-header-title">Create Scenario</h2>
         </div>
         <div id="scenario-modal-file-upload-body">
           <div id="scenario-modal-file-upload-area" onClick={() => fileInputRef.current.click()}>
@@ -64,8 +59,8 @@ const ScenarioFileUpload = ({open, onClose, openScenUpl}) => {
           </div>
         </div>
 
-        <div id="scenario-modal-file-upload-footer">
-          <button id="back-button" className="scenario-modal-button" onClick={() => openScenarioUpload()}>
+        <div id="scenario-modal-footer">
+          <button id="back-button" className="scenario-modal-button" onClick={() => {openScenarioModal(); onClose()}}>
               <h4>Back</h4>
           </button>
           <button id="upload-button" className="scenario-modal-button" onClick={handleFileUpload}>
@@ -78,4 +73,4 @@ const ScenarioFileUpload = ({open, onClose, openScenUpl}) => {
   )
 }
 
-export default ScenarioFileUpload
+export default CreateScenarioFileModal

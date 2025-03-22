@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import searchLogo from '../assets/icons/search.svg'
 import addfileLogo from '../assets/icons/add_file.svg'
-import ScenarioFileUpload from '../components/ScenarioFileUpload'
-import ScenarioUpload from '../components/ScenarioUpload'
+import CreateScenarioFileModal from '../components/CreateScenarioFileModal'
+import CreateScenarioNameModal from '../components/CreateScenarioNameModal'
+import CreateScenarioModal from '../components/CreateScenarioModal'
 import './Scenario.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -13,8 +14,9 @@ const Scenario = ({user}) => {
     const [scenarios, setScenarios] = useState([])
 
     //States for opening and closing the modals
-    const [scenUpOpen, setScenUpOpen] = useState(false)
-    const [ScenFileOpen, setScenFileOpen] = useState(false)
+    const [ScenModalOpen, setScenModalOpen] = useState(false)
+    const [ScenFileModalOpen, setScenFileModalOpen] = useState(false)
+    const [ScenNameModalOpen, setScenNameModalOpen] = useState(false)
   
     useEffect(() => {
 
@@ -74,7 +76,7 @@ const Scenario = ({user}) => {
                     <img src={searchLogo} id="scenario-search-icon"/>
                     <input type="text" id="scenario-search-input" placeholder="Search..."/>
                 </div>
-                <button id="scenario-create-button" onClick={() => setScenUpOpen(true)}>
+                <button id="scenario-create-button" onClick={() => setScenModalOpen(true)}>
                     <img src={addfileLogo} id="scenario-create-icon"/>
                     <h4>Create</h4>
                 </button>
@@ -84,15 +86,24 @@ const Scenario = ({user}) => {
             </div>
 
             {/* Modals for creating scenarios */}
-            <ScenarioUpload 
-                open={scenUpOpen} 
-                onClose={() => setScenUpOpen(false)} 
-                openScenFileUpl={() => setScenFileOpen(true)}
+            <CreateScenarioModal
+                open={ScenModalOpen} 
+                onClose={() => setScenModalOpen(false)} 
+                openScenarioFileModal={() => setScenFileModalOpen(true)}
+                openScenarioNameModal={() => setScenNameModalOpen(true)}
+                user={user}
             />
-            <ScenarioFileUpload 
-                open={ScenFileOpen} 
-                onClose={() => setScenFileOpen(false)}
-                openScenUpl={() => setScenUpOpen(true)}
+            <CreateScenarioFileModal 
+                open={ScenFileModalOpen} 
+                onClose={() => setScenFileModalOpen(false)}
+                openScenarioModal={() => setScenModalOpen(true)}
+                user={user}
+            />
+            <CreateScenarioNameModal
+                open={ScenNameModalOpen} 
+                onClose={() => setScenNameModalOpen(false)} 
+                openScenarioModal={() => setScenModalOpen(true)}
+                user={user}
             />
         </>
     )

@@ -3,16 +3,11 @@ import ReactDOM from 'react-dom'
 import YAML from 'yaml'
 import writeIcon from '../assets/icons/write.svg'
 import fileIcon from '../assets/icons/file.svg'
-import './ScenarioUpload.css'
+import './CreateScenarioModal.css'
 
-const ScenarioUpload = ({open, onClose, openScenFileUpl}) => {
+const ScenarioCreate = ({open, onClose, openScenarioFileModal, openScenarioNameModal}) => {
 
   const fileInputRef = useRef(null)
-
-  const openFileUpload = () => {
-    openScenFileUpl()
-    onClose()
-  }
 
   if (!open) return null
 
@@ -23,14 +18,14 @@ const ScenarioUpload = ({open, onClose, openScenFileUpl}) => {
           <h2 id="scenario-modal-header-title">Create Scenario</h2>
         </div>
         <div id="scenario-modal-body">
-          <button className="scenario-modal-button-large">
+          <button className="scenario-modal-button-large" onClick={() => {openScenarioNameModal(); onClose()}}>
             <div className="scenario-modal-button-label">
               <img src={writeIcon} alt="Write Icon" className="scenario-modal-icon" />
               <h2 className="scenario-modal-button-label">Create New</h2>
             </div>
             <h4 className="scenario-modal-button-description">Create a new scenario from scratch</h4>
           </button>
-          <button className="scenario-modal-button-large" onClick={() => openFileUpload()}>
+          <button className="scenario-modal-button-large" onClick={() => {openScenarioFileModal(); onClose()}}>
             <div className="scenario-modal-button-label">
               <img src={fileIcon} alt="File Icon" className="scenario-modal-icon" />
               <h2 className="scenario-modal-button-label">Import From File</h2>
@@ -45,4 +40,4 @@ const ScenarioUpload = ({open, onClose, openScenFileUpl}) => {
   )
 }
 
-export default ScenarioUpload
+export default ScenarioCreate
