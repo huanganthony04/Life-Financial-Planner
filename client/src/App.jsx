@@ -6,6 +6,7 @@ import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Scenario from './pages/Scenario'
+import Editor from './pages/Editor'
 import axios from 'axios'
 import './App.css'
 
@@ -43,8 +44,10 @@ function App() {
         </Route>
 
         <Route path="/scenario" element={<Layout page="Scenario" user={user}/>}>
-          <Route path="/scenario" element={<Scenario user={user}/>} />
+          <Route path="/scenario" element={<Scenario user={user}/>}/>
         </Route>
+
+        <Route path="/scenario/edit" element={<Editor user={user}/>}/>
 
         <Route path="/login" element={<Login user={user}/>} />
         <Route path="/" element={<Landing user={user}/>} />

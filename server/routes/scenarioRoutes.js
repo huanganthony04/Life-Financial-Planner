@@ -27,6 +27,26 @@ router.get('/api/scenario/:userId', async (req, res) => {
     }
 })
 
+//Get a specific scenario
+router.get('/api/scenario/', async (req, res) => {
+
+    const scenarioId = req.query.id
+    const userId = req.session.userId
+
+    const scenario = await ScenarioModel.findOne({_id: scenarioId })
+
+    if (!scenario) {
+        return res.status(404).json({error: 'Scenario not found!'})
+    }
+
+    if (scenario.owner !== userId && !scenario.editors.includes(userId)) {
+        return res.status(403).json({error: 'You do not have permission to access this scenario!'})
+    }
+
+    return res.status(200).json({scenario: scenario})
+
+})
+
 router.post('/api/scenario/create/', async (req, res) => {
 
     const userId = req.session.userId

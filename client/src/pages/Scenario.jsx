@@ -67,6 +67,7 @@ const Scenario = ({user}) => {
                 <ScenarioListItem
                     key={item._id}
                     name={item.name}
+                    scenarioId={item._id}
                 />
             )
         })
