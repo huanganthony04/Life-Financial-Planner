@@ -1,220 +1,227 @@
 /* This was generated from ScenarioModel.js using ChatGPT */
 
 class ValueDistribution {
-    /**
-     * @param {'normal'|'fixed'|'GBM'|'uniform'} distType
-     * @param {number|undefined} value - Only defined if distType is 'fixed'
-     * @param {number|undefined} mean - Defined if distType is 'normal' or 'GBM'
-     * @param {number|undefined} sigma - Defined if distType is 'normal' or 'GBM'
-     * @param {number|undefined} lower - Defined if distType is 'uniform'
-     * @param {number|undefined} upper - Defined if distType is 'uniform'
-     */
-    constructor(distType, value, mean, sigma, lower, upper) {
-      this.distType = distType;
-      this.value = value;
-      this.mean = mean;
-      this.sigma = sigma;
-      this.lower = lower;
-      this.upper = upper;
-      //custom validation here if needed.
-    }
+  /**
+   * @param {Object} options
+   * @param {'normal'|'fixed'|'GBM'|'uniform'} options.distType
+   * @param {number|undefined} options.value - Only defined if distType is 'fixed'
+   * @param {number|undefined} options.mean - Defined if distType is 'normal' or 'GBM'
+   * @param {number|undefined} options.stdev - Defined if distType is 'normal' or 'GBM'
+   * @param {number|undefined} options.lower - Defined if distType is 'uniform'
+   * @param {number|undefined} options.upper - Defined if distType is 'uniform'
+   */
+  constructor({ type, value, mean, stdev, lower, upper }) {
+    this.distType = type;
+    this.value = value;
+    this.mean = mean;
+    this.sigma = stdev;
+    this.lower = lower;
+    this.upper = upper;
+    // custom validation here if needed.
+  }
 }
-  
+
 
 class InvestmentType {
-    /**
-     * @param {string} name
-     * @param {string} description
-     * @param {'percent'|'amount'} returnAmtorPct
-     * @param {ValueDistribution} returnDistribution
-     * @param {number} expenseRatio
-     * @param {'percent'|'amount'} incomeAmtorPct
-     * @param {ValueDistribution} incomeDistribution
-     * @param {boolean} taxability
-     */
-    constructor(name, description, returnAmtorPct, returnDistribution, expenseRatio, incomeAmtorPct, incomeDistribution, taxability) {
-      this.name = name;
-      this.description = description;
-      this.returnAmtorPct = returnAmtorPct;
-      this.returnDistribution = returnDistribution;
-      this.expenseRatio = expenseRatio;
-      this.incomeAmtorPct = incomeAmtorPct;
-      this.incomeDistribution = incomeDistribution;
-      this.taxability = taxability;
-    }
+  /**
+   * @param {Object} options
+   * @param {string} options.name
+   * @param {string} options.description
+   * @param {'percent'|'amount'} options.returnAmtOrPct
+   * @param {ValueDistribution} options.returnDistribution
+   * @param {number} options.expenseRatio
+   * @param {'percent'|'amount'} options.incomeAmtOrPct
+   * @param {ValueDistribution} options.incomeDistribution
+   * @param {boolean} options.taxability
+   */
+  constructor({ name, description, returnAmtOrPct, returnDistribution, expenseRatio, incomeAmtOrPct, incomeDistribution, taxability }) {
+    this.name = name;
+    this.description = description;
+    this.returnAmtorPct = returnAmtOrPct;
+    this.returnDistribution = returnDistribution;
+    this.expenseRatio = expenseRatio;
+    this.incomeAmtorPct = incomeAmtOrPct;
+    this.incomeDistribution = incomeDistribution;
+    this.taxability = taxability;
+  }
 }
-  
+
 class Investment {
-    /**
-     * @param {InvestmentType} investmentType
-     * @param {number} value
-     * @param {'non-retirement'|'pre-tax'|'after-tax'} taxStatus
-     * @param {string} [id] - If not provided, computed from investmentType.name and taxStatus.
-     */
-    constructor(investmentType, value, taxStatus, id) {
-      this.investmentType = investmentType;
-      this.value = value;
-      this.taxStatus = taxStatus;
-      this.id = id || `${this.investmentType.name} ${this.taxStatus}`;
-    }
+  /**
+   * @param {Object} options
+   * @param {InvestmentType} options.investmentType
+   * @param {number} options.value
+   * @param {'non-retirement'|'pre-tax'|'after-tax'} options.taxStatus
+   * @param {string} [options.id] - If not provided, computed from investmentType.name and taxStatus.
+   */
+  constructor({ investmentType, value, taxStatus, id }) {
+    this.investmentType = investmentType;
+    this.value = value;
+    this.taxStatus = taxStatus;
+    this.id = id || `${this.investmentType.name} ${this.taxStatus}`;
+  }
 }
 
 class EventStart {
-    /**
-     * @param {ValueDistribution|undefined} startDistribution - A ValueDistribution instance.
-     * @param {{ eventSeries: string }|undefined} startWith - An object with an eventSeries property.
-     * @param {ValueDistribution} duration - A ValueDistribution instance.
-     */
-    constructor(startDistribution, startWith, duration) {
-      this.startDistribution = startDistribution;
-      this.startWith = startWith;
-      this.duration = duration;
+  /**
+   * @param {Object} options
+   * @param {ValueDistribution|undefined} options.startDistribution - A ValueDistribution instance.
+   * @param {{ eventSeries: string }|undefined} options.startWith - An object with an eventSeries property.
+   * @param {ValueDistribution} options.duration - A ValueDistribution instance.
+   */
+  constructor({ type, value, mean, sigma, lower, upper, eventSeries }) {
+    if (type === 'startWith') {
+      this.startWith = eventSeries
     }
+    else {
+      this.startDistribution = new ValueDistribution({ type, value, mean, sigma, lower, upper });
+    }
+  }
 }
 
 class IncomeEvent {
-    /**
-     * @param {string} name
-     * @param {EventStart} start
-     * @param {ValueDistribution} duration
-     * @param {number} initialAmount
-     * @param {'amount'|'percent'} changeAmtOrPct
-     * @param {ValueDistribution} changeDistribution
-     * @param {boolean} inflationAdjusted
-     * @param {number} [userFraction=1.0]
-     * @param {boolean} socialSecurity
-     */
-    constructor(name, start, duration, initialAmount, changeAmtOrPct, changeDistribution, inflationAdjusted, userFraction = 1.0, socialSecurity) {
-      this.name = name;
-      this.start = start;
-      this.duration = duration;
-      this.initialAmount = initialAmount;
-      this.changeAmtOrPct = changeAmtOrPct;
-      this.changeDistribution = changeDistribution;
-      this.inflationAdjusted = inflationAdjusted;
-      this.userFraction = userFraction;
-      this.socialSecurity = socialSecurity;
-    }
+  /**
+   * @param {Object} options
+   * @param {string} options.name
+   * @param {EventStart} options.start
+   * @param {ValueDistribution} options.duration
+   * @param {number} options.initialAmount
+   * @param {'amount'|'percent'} options.changeAmtOrPct
+   * @param {ValueDistribution} options.changeDistribution
+   * @param {boolean} options.inflationAdjusted
+   * @param {number} [options.userFraction=1.0]
+   * @param {boolean} options.socialSecurity
+   */
+  constructor({ name, start, duration, initialAmount, changeAmtOrPct, changeDistribution, inflationAdjusted, userFraction = 1.0, socialSecurity }) {
+    this.name = name;
+    this.start = new EventStart(start);
+    this.duration = new ValueDistribution(duration);
+    this.initialAmount = initialAmount;
+    this.changeAmtOrPct = changeAmtOrPct;
+    this.changeDistribution = new ValueDistribution(changeDistribution);
+    this.inflationAdjusted = inflationAdjusted;
+    this.userFraction = userFraction;
+    this.socialSecurity = socialSecurity;
+  }
 }
 
 class ExpenseEvent {
-    /**
-     * @param {string} name
-     * @param {EventStart} start
-     * @param {ValueDistribution} duration
-     * @param {number} initialAmount
-     * @param {'amount'|'percent'} changeAmtOrPct
-     * @param {ValueDistribution} changeDistribution
-     * @param {boolean} inflationAdjusted
-     * @param {number} [userFraction=1.0]
-     * @param {boolean} discretionary
-     */
-    constructor(name, start, duration, initialAmount, changeAmtOrPct, changeDistribution, inflationAdjusted, userFraction = 1.0, discretionary) {
-      this.name = name;
-      this.start = start;
-      this.duration = duration;
-      this.initialAmount = initialAmount;
-      this.changeAmtOrPct = changeAmtOrPct;
-      this.changeDistribution = changeDistribution;
-      this.inflationAdjusted = inflationAdjusted;
-      this.userFraction = userFraction;
-      this.discretionary = discretionary;
-    }
+  /**
+   * @param {Object} options
+   * @param {string} options.name
+   * @param {EventStart} options.start
+   * @param {ValueDistribution} options.duration
+   * @param {number} options.initialAmount
+   * @param {'amount'|'percent'} options.changeAmtOrPct
+   * @param {ValueDistribution} options.changeDistribution
+   * @param {boolean} options.inflationAdjusted
+   * @param {number} [options.userFraction=1.0]
+   * @param {boolean} options.discretionary
+   */
+  constructor({ name, start, duration, initialAmount, changeAmtOrPct, changeDistribution, inflationAdjusted, userFraction = 1.0, discretionary }) {
+    this.name = name;
+    this.start = new EventStart(start);
+    this.duration = new ValueDistribution(duration);
+    this.initialAmount = initialAmount;
+    this.changeAmtOrPct = changeAmtOrPct;
+    this.changeDistribution = new ValueDistribution(changeDistribution);
+    this.inflationAdjusted = inflationAdjusted;
+    this.userFraction = userFraction;
+    this.discretionary = discretionary;
+  }
 }
 
 class InvestEvent {
-    /**
-     * @param {string} name
-     * @param {EventStart} start
-     * @param {ValueDistribution} duration
-     * @param {Map<string, number>|Object} assetAllocation - A map or plain object with numeric values.
-     * @param {boolean|undefined} glidePath
-     * @param {Map<string, number>|Object|undefined} assetAllocation2
-     */
-    constructor(name, start, duration, assetAllocation, glidePath, assetAllocation2) {
-      this.name = name;
-      this.start = start;
-      this.duration = duration;
-      this.assetAllocation = assetAllocation;
-      this.glidePath = glidePath;
-      this.assetAllocation2 = assetAllocation2;
-    }
+  /**
+   * @param {Object} options
+   * @param {string} options.name
+   * @param {EventStart} options.start
+   * @param {ValueDistribution} options.duration
+   * @param {Map<string, number>|Object} options.assetAllocation - A map or plain object with numeric values.
+   * @param {boolean|undefined} options.glidePath
+   * @param {Map<string, number>|Object|undefined} options.assetAllocation2
+   */
+  constructor({ name, start, duration, assetAllocation, glidePath, assetAllocation2 }) {
+    this.name = name;
+    this.start = new EventStart(start);
+    this.duration = new ValueDistribution(duration);
+    this.assetAllocation = assetAllocation;
+    this.glidePath = glidePath;
+    this.assetAllocation2 = assetAllocation2;
+  }
 }
 
 class RebalanceEvent {
-    /**
-     * @param {string} name
-     * @param {EventStart} start
-     * @param {ValueDistribution} duration
-     * @param {Map<string, number>|Object} assetAllocation
-     */
-    constructor(name, start, duration, assetAllocation) {
-      this.name = name;
-      this.start = start;
-      this.duration = duration;
-      this.assetAllocation = assetAllocation;
-    }
+  /**
+   * @param {Object} options
+   * @param {string} options.name
+   * @param {EventStart} options.start
+   * @param {ValueDistribution} options.duration
+   * @param {Map<string, number>|Object} options.assetAllocation
+   */
+  constructor({ name, start, duration, assetAllocation }) {
+    this.name = name;
+    this.start = new EventStart(start);
+    this.duration = new ValueDistribution(duration);
+    this.assetAllocation = assetAllocation;
+  }
 }
 
 class Scenario {
-    /**
-     * @param {string} [name="Unnamed Scenario"]
-     * @param {string} owner
-     * @param {string[]} editors - At least one editor required.
-     * @param {boolean} maritalStatus
-     * @param {number[]} birthYears
-     * @param {ValueDistribution} lifeExpectancy
-     * @param {Investment[]} investments
-     * @param {IncomeEvent[]} incomeEvents
-     * @param {ExpenseEvent[]} expenseEvents
-     * @param {InvestEvent[]} investEvents
-     * @param {RebalanceEvent[]} rebalanceEvents
-     * @param {ValueDistribution} inflationAssumption
-     * @param {number} afterTaxContributionLimit
-     * @param {string[]} spendingStrategy
-     * @param {string[]} expenseWithdrawalStrategy
-     * @param {number} [financialGoal=0] - Must be non-negative.
-     * @param {string} residenceState - Must be of length 2.
-     */
-    constructor(
-      name = "Unnamed Scenario",
-      owner,
-      editors,
-      maritalStatus,
-      birthYears,
-      lifeExpectancy,
-      investments,
-      incomeEvents,
-      expenseEvents,
-      investEvents,
-      rebalanceEvents,
-      inflationAssumption,
-      afterTaxContributionLimit,
-      spendingStrategy,
-      expenseWithdrawalStrategy,
-      financialGoal = 0,
-      residenceState
-    ) {
-      this.name = name;
-      this.owner = owner;
-      this.editors = editors;
-      this.maritalStatus = maritalStatus;
-      this.birthYears = birthYears;
-      this.lifeExpectancy = lifeExpectancy;
-      this.investments = investments;
-      this.incomeEvents = incomeEvents;
-      this.expenseEvents = expenseEvents;
-      this.investEvents = investEvents;
-      this.rebalanceEvents = rebalanceEvents;
-      this.inflationAssumption = inflationAssumption;
-      this.afterTaxContributionLimit = afterTaxContributionLimit;
-      this.spendingStrategy = spendingStrategy;
-      this.expenseWithdrawalStrategy = expenseWithdrawalStrategy;
-      this.financialGoal = financialGoal;
-      this.residenceState = residenceState;
-    }
+  /**
+   * @param {Object} options
+   * @param {string} [options.name="Unnamed Scenario"]
+   * @param {string} options.owner
+   * @param {string[]} options.editors
+   * @param {boolean} options.maritalStatus
+   * @param {number[]} options.birthYears
+   * @param {Array<Object>} options.lifeExpectancy - Each element is passed to `ValueDistribution`
+   * @param {Array<Object>} [options.investmentTypes=[]] - Each element is passed to `InvestmentType`
+   * @param {Array<Object>} [options.eventSeries=[]] - Each element must have a `type` property ('income', 'expense', 'invest', or 'rebalance')
+   * @param {Array<Object>} [options.investments=[]] - Each element is passed to `Investment`
+   * @param {Object} options.inflationAssumption - Passed to `ValueDistribution`
+   * @param {number} options.afterTaxContributionLimit
+   * @param {string[]} options.spendingStrategy
+   * @param {string[]} options.expenseWithdrawalStrategy
+   * @param {number} [options.financialGoal=0] - Must be non-negative
+   * @param {string} options.residenceState - Must be 2 letters long
+   */
+  constructor({
+    name = "Unnamed Scenario",
+    owner,
+    editors,
+    maritalStatus,
+    birthYears,
+    lifeExpectancy,
+    investmentTypes = [],
+    eventSeries = [],
+    investments = [],
+    inflationAssumption,
+    afterTaxContributionLimit,
+    spendingStrategy,
+    expenseWithdrawalStrategy,
+    financialGoal = 0,
+    residenceState
+  }) {
+    this.name = name;
+    this.owner = owner;
+    this.editors = editors;
+    this.maritalStatus = maritalStatus;
+    this.birthYears = birthYears;
+    this.lifeExpectancy = lifeExpectancy.map((obj) => new ValueDistribution(obj));
+    this.investmentTypes = investmentTypes.map((type) => new InvestmentType(type));
+    this.investments = investments.map((investment) => new Investment(investment));
+    this.incomeEvents = eventSeries.filter((event) => event.type === 'income').map((event) => new IncomeEvent(event));
+    this.expenseEvents = eventSeries.filter((event) => event.type === 'expense').map((event) => new ExpenseEvent(event));
+    this.investEvents = eventSeries.filter((event) => event.type === 'invest').map((event) => new InvestEvent(event));
+    this.rebalanceEvents = eventSeries.filter((event) => event.type === 'rebalance').map((event) => new RebalanceEvent(event));
+    this.inflationAssumption = new ValueDistribution(inflationAssumption);
+    this.afterTaxContributionLimit = afterTaxContributionLimit;
+    this.spendingStrategy = spendingStrategy;
+    this.expenseWithdrawalStrategy = expenseWithdrawalStrategy;
+    this.financialGoal = financialGoal;
+    this.residenceState = residenceState;
+  }
 }
 
 export { ValueDistribution, InvestmentType, Investment, EventStart, IncomeEvent, ExpenseEvent, InvestEvent, RebalanceEvent, Scenario };
-  
-  
