@@ -212,7 +212,7 @@ const ScenarioSchema = new Schema({
         type: [Number],
     },
     lifeExpectancy: {
-        type: valueDistributionSchema,
+        type: [valueDistributionSchema],
     },
     investments: [investmentSchema],
     incomeEvents: [incomeEventSchema],
