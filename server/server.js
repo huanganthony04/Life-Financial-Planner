@@ -1,14 +1,12 @@
 import express from 'express'
-
 import session from 'express-session'
 import connectMongoDBSession from 'connect-mongodb-session'
-
 import cors from 'cors'
-
 import mongoose from 'mongoose'
 import userRoutes from './routes/userRoutes.js'
 import scenarioRoutes from './routes/scenarioRoutes.js'
-
+import taxRoutes from './routes/taxRoutes.js'
+import scraperIrsData from './scraperIrs.js'
 import 'dotenv/config'
 
 const app = express()
@@ -21,52 +19,61 @@ const PORT = 8080
 const MongoDBStore = connectMongoDBSession(session)
 
 mongoose.connect(MONGO_URL)
-.then(() => {
+  .then(() => {
     console.log("Connected to MongoDB")
-}).catch((error) => {
-    console.log(`Error connecting to MongoDB: ${error}`)
-    process.exit(1)
-})
 
-//Set up session store in MongoDB
-const store = new MongoDBStore(
-    {
-        uri: MONGO_URL,
-        collection: 'sessions'
-    }
-)
-store.on('error', (err) => {
-    console.log(err)
-})
+    // Run the IRS scraper on server startup
+    scraperIrsData()
+      .then(() => {
+        console.log("IRS scraper executed successfully.")
+      })
+      .catch((error) => {
+        console.error("Error executing IRS scraper:", error)
+      })
 
+    // Set up session store in MongoDB
+    const store = new MongoDBStore({
+      uri: MONGO_URL,
+      collection: 'sessions'
+    })
 
-//Allow the frontend URL for communication
-app.use(
-    cors({
+    store.on('error', (err) => {
+      console.log(err)
+    })
+
+    // Allow the frontend URL for communication
+    app.use(
+      cors({
         origin: FRONTEND_URL,
         credentials: true
-    })
-)
+      })
+    )
 
-//Handle JSON body parsing
-app.use(express.json())
+    // Handle JSON body parsing
+    app.use(express.json())
 
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: store,
-    cookie: {
+    app.use(session({
+      secret: SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      store: store,
+      cookie: {
         httpOnly: true,
         sameSite: 'strict'
-    }
-}))
+      }
+    }))
 
-//Import routes from ./routes
-app.use('', userRoutes)
-app.use('', scenarioRoutes)
+    // Import routes from ./routes
+    app.use('', userRoutes)
+    app.use('', scenarioRoutes)
+    app.use('', taxRoutes)
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`)
-})
-
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`)
+    })
+  })
+  .catch((error) => {
+    console.log(`Error connecting to MongoDB: ${error}`)
+    process.exit(1)
+  })
