@@ -1,8 +1,10 @@
+import './Editor.css'
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import ExpenseEvent from '../components/expenseEvent'
 import UserProfile from '../components/UserProfile'
+
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
@@ -35,10 +37,25 @@ const Editor = () => {
 
   const navigate = useNavigate()
 
+  const[tabState,setTab]=useState('');
+
+  const expenseSwitch=()=>{
+    setTab('expense');
+  }
+  const incomeSwitch=()=>{
+    setTab('income');
+  }
+
   return (
     <div id="editor-page" className="page">
-      
-      <ExpenseEvent scenarioId={scenarioId}></ExpenseEvent>
+      <div id='tab_container'>
+      <div id="expenseEventTab" className='tabs' onClick={expenseSwitch}>Expense</div>
+      <div id="incomeEventTab" className='tabs'onClick={incomeSwitch}>Income</div>
+      <div id="invesmentEventTab" className='tabs'>Investment</div>
+      <div id="invesmentEventTab" className='tabs'>Rebalance</div>
+      </div>
+
+      {tabState=='expense'&&(<div className='tabform'><ExpenseEvent className='tabform' scenarioId={scenarioId}></ExpenseEvent></div>)}
         <button onClick={() => navigate('/scenario')}>Return to scenarios</button>
 
     </div>

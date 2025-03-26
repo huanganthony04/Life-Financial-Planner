@@ -1,1 +1,25 @@
 
+
+.tabs{
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.page{
+    font-size: large;
+}
+
+#tab_container{
+    display: flex;
+    justify-content: center;
+    justify-content: space-evenly;
+}
+
+.tabform{
+
+    justify-content: center;
+}
+.container{
+    align-items: center;
+    justify-content: center;
+}
