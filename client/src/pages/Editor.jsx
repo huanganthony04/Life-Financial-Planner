@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import ExpenseEvent from '../components/expenseEvent'
+import UserProfile from '../components/UserProfile'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
@@ -36,6 +37,7 @@ const Editor = () => {
 
   return (
     <div id="editor-page" className="page">
+      
       <ExpenseEvent scenarioId={scenarioId}></ExpenseEvent>
         <button onClick={() => navigate('/scenario')}>Return to scenarios</button>
 

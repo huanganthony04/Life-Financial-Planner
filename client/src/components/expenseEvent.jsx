@@ -30,7 +30,47 @@ function ExpenseEvent({ scenarioId}) {
     const [upper,setUpper]=useState('');
     const [lower,setLower]=useState('');
 
+    const [distMode1,setdistMode1]=useState('normal');
+    const [fixedValue1, setFixedValue1] = useState('');
+    const [mu1,setMu1]=useState('');
+    const [sigma1,setSigma1]=useState('');
+    const [upper1,setUpper1]=useState('');
+    const [lower1,setLower1]=useState('');
+
+    const [distMode2,setdistMode2]=useState('normal');
+    const [fixedValue2, setFixedValue2] = useState('');
+    const [mu2,setMu2]=useState('');
+    const [sigma2,setSigma2]=useState('');
+    const [upper2,setUpper2]=useState('');
+    const [lower2,setLower2]=useState('');
+
     async function post(){
+
+        if(distMode1=="fixed"){
+        const start={
+            distType: distMode1,
+            value:fixedValue1,
+
+        }
+        if(distMode=="uniform"){
+            const start={
+                distType: distMode1,
+               upper:upper1,
+                lower:lower1,
+
+            }
+        }
+        if(distMode=="normal"){
+            const start={
+                distType: distMode1,
+                mean:mu1,
+                sigma:sigma1,
+
+            }
+        }
+        
+    }
+
         console.log("post reached");
         console.log(distMode);
         if(distMode=="fixed"){
@@ -145,7 +185,7 @@ function ExpenseEvent({ scenarioId}) {
             <div> 
                 <h2>Specification Parameters*</h2>
             <form id = "start_year">
-            <ValueDist setdistMode={setdistMode} setUpper={setUpper} setLower= {setLower} setFixedValue={setFixedValue} setMu={setMu} setSigma={setSigma}></ValueDist>
+            <ValueDist setdistMode={setdistMode1} setUpper={setUpper1} setLower= {setLower1} setFixedValue={setFixedValue1} setMu={setMu1} setSigma={setSigma1}></ValueDist>
             
             <input 
               type="number" 

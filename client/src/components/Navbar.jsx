@@ -26,6 +26,14 @@ const Navbar = () => {
                 <img className="nav-button-icon" src={listLogo}/>
                 Scenarios
             </NavLink>
+
+            <NavLink 
+                to="/userprofile" 
+                className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
+            >
+                <img className="nav-button-icon" src={listLogo}/>
+                UserProfile
+            </NavLink>
         </div>
     </nav>
   )

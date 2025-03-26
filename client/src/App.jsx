@@ -9,6 +9,7 @@ import Scenario from './pages/Scenario'
 import Editor from './pages/Editor'
 import axios from 'axios'
 import './App.css'
+import UserProfile from './components/UserProfile'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
@@ -51,6 +52,11 @@ function App() {
 
         <Route path="/login" element={<Login user={user}/>} />
         <Route path="/" element={<Landing user={user}/>} />
+
+        <Route path="/userprofile" element={<Layout page="userProfile" user={user}/>} >
+        <Route path="/userprofile" element={<UserProfile user={user}/>}/>
+        </Route>
+
       </Routes>
     </>
   )
