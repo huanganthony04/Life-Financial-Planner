@@ -13,7 +13,8 @@ Project Set UP
 6.  run npm i -g nodemon inside server and client directory
 7.  npm install cheerio and npm install axios in server directory
 8. cd to client directory and run npm install
-9. cd to server directory to run npm start
-10. cd to client repository to run npm run dev
+9. npm install react-icons in client directory
+10. cd to server directory to run npm start
+11. cd to client repository to run npm run dev
 
    
