@@ -111,6 +111,10 @@ const investmentSchema = new Schema({
         default: function() {
             return `${this.investmentType.name} ${this.taxStatus}`
         }
+    },
+    costBasis: {
+        type: Number,
+        default: 0
     }
 })
 
@@ -175,6 +179,10 @@ const investEventSchema = new Schema({
         type: Map,
         of: Number
     },
+    maxCash: {
+        type: Number,
+        default: 0
+    }
     
 })
 
