@@ -37,11 +37,11 @@ class InvestmentType {
   constructor({ name, description, returnAmtOrPct, returnDistribution, expenseRatio, incomeAmtOrPct, incomeDistribution, taxability }) {
     this.name = name;
     this.description = description;
-    this.returnAmtorPct = returnAmtOrPct;
-    this.returnDistribution = returnDistribution;
+    this.returnAmtOrPct = returnAmtOrPct;
+    this.returnDistribution = new ValueDistribution(returnDistribution);
     this.expenseRatio = expenseRatio;
-    this.incomeAmtorPct = incomeAmtOrPct;
-    this.incomeDistribution = incomeDistribution;
+    this.incomeAmtOrPct = incomeAmtOrPct;
+    this.incomeDistribution = new ValueDistribution(incomeDistribution);
     this.taxability = taxability;
   }
 }
@@ -206,15 +206,26 @@ class Scenario {
     this.name = name;
     this.owner = owner;
     this.editors = editors;
-    this.maritalStatus = maritalStatus;
+    this.maritalStatus = (maritalStatus === 'couple' ? true : false);
     this.birthYears = birthYears;
     this.lifeExpectancy = lifeExpectancy.map((obj) => new ValueDistribution(obj));
     this.investmentTypes = investmentTypes.map((type) => new InvestmentType(type));
-    this.investments = investments.map((investment) => new Investment(investment));
+
+    // Link up investments with their corresponding investment types
+    this.investments = investments.map((investment) => {
+      const investmentType = this.investmentTypes.find((type) => type.name === investment.investmentType);
+      if (!investmentType) {
+        throw new Error(`Investment type ${investment.investmentType.name} not found`);
+      }
+      return new Investment({ ...investment, investmentType });
+    })
+
+    // Filter eventSeries based on type and create corresponding event instances
     this.incomeEvents = eventSeries.filter((event) => event.type === 'income').map((event) => new IncomeEvent(event));
     this.expenseEvents = eventSeries.filter((event) => event.type === 'expense').map((event) => new ExpenseEvent(event));
     this.investEvents = eventSeries.filter((event) => event.type === 'invest').map((event) => new InvestEvent(event));
     this.rebalanceEvents = eventSeries.filter((event) => event.type === 'rebalance').map((event) => new RebalanceEvent(event));
+
     this.inflationAssumption = new ValueDistribution(inflationAssumption);
     this.afterTaxContributionLimit = afterTaxContributionLimit;
     this.spendingStrategy = spendingStrategy;

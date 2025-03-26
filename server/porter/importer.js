@@ -1,11 +1,18 @@
 import YAML from 'yaml'
-import { ValueDistribution, InvestmentType, Investment, EventStart, IncomeEvent, ExpenseEvent, InvestEvent, RebalanceEvent, Scenario } from '../classes.js'
+import mongoose from 'mongoose'
+import { Scenario } from '../classes.js'
+import ScenarioModel from '../models/ScenarioModel.js'
 import fs from 'fs'
 
 function importScenario(content) {
     const parsedData = YAML.parse(content)
     const scenario = new Scenario(parsedData)
-    console.dir(scenario, { depth: null });
+
+    ScenarioModel.create(scenario).then(() => {
+        console.log("Scenario imported successfully")
+    }).catch(err => {
+        console.error("Error importing scenario:", err)
+    })
 }
 
 export default importScenario
