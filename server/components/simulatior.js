@@ -1,4 +1,4 @@
-import { ValueDistribution, InvestmentType, Investment } from './classes.js'
+import { ValueDistribution, InvestmentType, Investment } from '../classes.js'
 
 //Generate a normal distribution using Box-Muller transform
 function normalSample(mean, sigma) {
@@ -380,3 +380,5 @@ function runRebalanceEvent(rebalanceEvent, investments):
 
 
 */
+
+/* Test Code */

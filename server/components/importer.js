@@ -16,7 +16,9 @@ function importScenario(content) {
 }
 
 export default importScenario
-//Test code
+
+
+/* Test code */
 const filePath = './scenario.yaml'
 try {
     const data = fs.readFileSync(filePath, 'utf8')
