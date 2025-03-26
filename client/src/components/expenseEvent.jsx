@@ -10,8 +10,10 @@ function ExpenseEvent({ scenarioId}) {
     const [inflationStatus, setInflation] = useState(true);
 
     const [summary, setSummary] = useState('description');
-    const [startyear, setStartYear] = useState('');
-    const [duration, setDuration] = useState('');
+    //const [start, setStart] = useState('');
+    var start='';
+    //const [duration, setDuration] = useState('');
+    var duration='';
     const [userFrac, setUserFrac] = useState(1.0);
     const [amountOrPercent, setAP] = useState("amount");
     const [initial, setInitial] = useState('');
@@ -44,24 +46,26 @@ function ExpenseEvent({ scenarioId}) {
     const [upper2,setUpper2]=useState('');
     const [lower2,setLower2]=useState('');
 
-    async function post(){
-
-        if(distMode1=="fixed"){
-        const start={
+    //const [changeDistribution,setChangeDist]=useState('');
+    var changeDistribution='';
+    if(distMode1=="fixed"){
+        start={
             distType: distMode1,
             value:fixedValue1,
 
         }
-        if(distMode=="uniform"){
-            const start={
+    }
+        
+        if(distMode1=="uniform"){
+             start={
                 distType: distMode1,
                upper:upper1,
                 lower:lower1,
 
             }
         }
-        if(distMode=="normal"){
-            const start={
+        if(distMode1=="normal"){
+            start={
                 distType: distMode1,
                 mean:mu1,
                 sigma:sigma1,
@@ -71,21 +75,22 @@ function ExpenseEvent({ scenarioId}) {
 
 
         if(distMode2=="fixed"){
-            const start={
+            duration={
                 distType: distMode2,
                 value:fixedValue2,
     
             }
-            if(distMode=="uniform"){
-                const start={
+        }
+            if(distMode2=="uniform"){
+                duration={
                     distType: distMode2,
                    upper:upper2,
                     lower:lower2,
     
                 }
             }
-            if(distMode=="normal"){
-                const start={
+            if(distMode2=="normal"){
+                duration={
                     distType: distMode2,
                     mean:mu2,
                     sigma:sigma2,
@@ -93,29 +98,53 @@ function ExpenseEvent({ scenarioId}) {
                 }
             }
         
-    }
-
-        console.log("post reached");
-        console.log(distMode);
-        if(distMode=="fixed"){
-        let response = await axios.post("http://localhost:8080/api/postEventnew", {scenarioId:scenarioId, title:title,  distMode:distMode, fixedValue:fixedValue, summary: summary, discretionaryStatus:discretionaryStatus,inflationStatus:inflationStatus, startyear: startyear, duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
-        }
-
-        if(distMode=="uniform"){
-            let response = await axios.post("http://localhost:8080/api/postEventnew", {scenarioId:scenarioId, title:title, distMode:distMode, upper:upper,lower:lower, summary: summary, discretionaryStatus:discretionaryStatus,inflationStatus:inflationStatus, startyear: startyear, duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
-        }
+    
 
         if(distMode=="normal"){
-            console.log("normal sending");
-            let response = await axios.post("http://localhost:8080/api/postEventnew", {scenarioId:scenarioId,title:title, mu:mu, sigma:sigma, summary: summary, discretionaryStatus:discretionaryStatus,inflationStatus:inflationStatus, startyear: startyear, duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
+             changeDistribution={
+                distType: distMode,
+                mean:mu,
+                sigma:sigma,
+
+            }
+       
+        }
+        if(distMode=="fixed"){
+             changeDist={
+                distType: distMode,
+                value:fixedValue,
+
             }
 
+        }
+        if(distMode=="uniform"){
+             changeDist={
+                distType: distMode,
+                upper:upper,
+                lower:lower,
+
+            }
+           
+           
+            }
+
+    async function post(){
+
+       
+        let response = await axios.post("http://localhost:8080/api/postEventnew", {scenarioId:scenarioId,title:title,changeDistribution:changeDistribution, summary: summary, discretionaryStatus:discretionaryStatus,inflationStatus:inflationStatus, start: start, duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
+            console.log("post sending");
       }
 
       const handlePostQuestion = () => {
 
         let errors = false;
-
+        if(start==''||duration==''||changeDistribution==''||initial==''){
+            errors=true;
+            if(start==''){console.log("start is blank")}
+            if(duration==''){console.log("duration is blank")}
+            if(changeDistribution==''){console.log("changeDuration is blank")}
+            console.log("a field is blank");
+        }
 
         if(userFrac>1||userFrac<0){
             errors=true;
@@ -209,31 +238,32 @@ function ExpenseEvent({ scenarioId}) {
             <div> 
                 <h2>Specification Parameters*</h2>
             <form id = "start_year">
+                <h3>Start</h3>
             <ValueDist setdistMode={setdistMode1} setUpper={setUpper1} setLower= {setLower1} setFixedValue={setFixedValue1} setMu={setMu1} setSigma={setSigma1}></ValueDist>
             
-            <input 
-              type="number" 
-              name = "start_year" 
-              id ="startyear" 
-              placeholder='start year'
-              value = {startyear}
-              onChange = {(e) => setStartYear(e.target.value)}
-              />
+
             </form>
             
             
 
             <form id = "duration">
-            <input 
-              type="number" 
-              name = "duration" 
-              id ="duration" 
-              placeholder='duration'
-              value = {duration}
-              onChange = {(e) => setDuration(e.target.value)}
-              />
-              <>{duration}</>
+                <h3>Duration</h3>
+            <ValueDist setdistMode={setdistMode2} setUpper={setUpper2} setLower= {setLower2} setFixedValue={setFixedValue2} setMu={setMu2} setSigma={setSigma2}></ValueDist>
+
+              
             </form>
+
+            
+
+        <h3>Change Distribution</h3>
+            <ValueDist setdistMode={setdistMode} setUpper={setUpper} setLower= {setLower} setFixedValue={setFixedValue} setMu={setMu} setSigma={setSigma}></ValueDist>
+            {//distMode=="fixed"&&(<div>Broooo</div>)
+           // <p>{distMode}</p>
+            }
+            </div>
+
+            <h3>Misc</h3>
+            <div> Initial Amount </div>
             <form id = "inital_amount">
             <input 
               type="number" 
@@ -246,6 +276,8 @@ function ExpenseEvent({ scenarioId}) {
               />
              
             </form>
+
+
             <div>Amount or Percent</div>
             <select name="amount_or_percent" id="amount_or_percent"  onChange={(e)=>setAP(e.target.value)}>
                 
@@ -272,7 +304,7 @@ function ExpenseEvent({ scenarioId}) {
               /> 
             </form>
           
-
+            
             <form id = "Discretionary">
                 <>Discretionary:</>
                 <>{discretionaryStatus?"true":"false"}</>
@@ -294,14 +326,6 @@ function ExpenseEvent({ scenarioId}) {
                 value={userFrac}
                 onChange={(e)=>setUserFrac(e.target.value)}
             ></input>
-            
-
-
-            <ValueDist setdistMode={setdistMode} setUpper={setUpper} setLower= {setLower} setFixedValue={setFixedValue} setMu={setMu} setSigma={setSigma}></ValueDist>
-            {//distMode=="fixed"&&(<div>Broooo</div>)
-           // <p>{distMode}</p>
-            }
-            </div>
 
 
 
@@ -322,5 +346,6 @@ function ExpenseEvent({ scenarioId}) {
         </div>
       </div>
     );
+
   }
   export default ExpenseEvent;

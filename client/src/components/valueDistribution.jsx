@@ -24,14 +24,15 @@ function ValueDist({ setdistMode,setMu,setSigma,setUpper,setLower,setFixedValue}
     if(visibleDiv=='uniform'){
         setdistMode("uniform");
     }
-        */
+        
+    */
 
   
     return (
   
         <div id = "valDist_form" className = "form">
           
-          <h2> Value Distribution*</h2>
+          
           <div>
             Select distribution
           <select name="valDist" id="valDist" onChange={handleValDist}>
