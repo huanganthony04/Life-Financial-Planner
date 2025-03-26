@@ -148,6 +148,7 @@ function ExpenseEvent({ scenarioId}) {
 
         if(userFrac>1||userFrac<0){
             errors=true;
+            console.log("userFrac less than one");
         }
         if(amountOrPercent!=='amount'&&amountOrPercent!='percent'){
             errors=true;
