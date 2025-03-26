@@ -68,6 +68,30 @@ function ExpenseEvent({ scenarioId}) {
 
             }
         }
+
+
+        if(distMode2=="fixed"){
+            const start={
+                distType: distMode2,
+                value:fixedValue2,
+    
+            }
+            if(distMode=="uniform"){
+                const start={
+                    distType: distMode2,
+                   upper:upper2,
+                    lower:lower2,
+    
+                }
+            }
+            if(distMode=="normal"){
+                const start={
+                    distType: distMode2,
+                    mean:mu2,
+                    sigma:sigma2,
+    
+                }
+            }
         
     }
 
