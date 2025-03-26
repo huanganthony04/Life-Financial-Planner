@@ -103,72 +103,18 @@ router.post('/api/postEventnew', async (req, res) => {
     const expenseEventList= scenario.expenseEvents;
     var map1= {
         name:req.body.title,  
-        distMode:req.body.distMode, 
-        mu:req.body.mu,
-        sigma:req.body.sigma,
-        summary: req.body.summary, 
+        start:req.body.start,
+        description: req.body.summary, 
         discretionary:req.body.discretionaryStatus,
-        inflationStatus:req.body.inflationStatus, 
-        startyear: req.body.startyear, 
+        inflationAdjusted:req.body.inflationStatus,  
         duration: req.body.duration, 
-        userFrac: req.body.userFrac,
+        userFraction: req.body.userFrac,
         changeAmtOrPct:req.body.amountOrPercent, 
-        initialAmount:req.body.initial
+        initialAmount:req.body.initial,
+        changeDistribution:req.body.changeDistribution
 
     }
-    if(req.body.distMode=="fixed"){
-        
-         map1={
-            title:req.body.title,  
-            distMode:req.body.distMode, 
-            fixedValue:req.body.fixedValue, 
-            summary: req.body.summary, 
-            discretionaryStatus:req.body.discretionaryStatus,
-            inflationStatus:req.body.inflationStatus, 
-            startyear: req.body.startyear, 
-            duration: req.body.duration, 
-            userFrac: req.body.userFrac,
-            amountOrPercent:req.body.amountOrPercent, 
-            initial:req.body.initial
 
-        }
-    }
-    if(req.body.distMode=="uniform"){
-         map1={
-            title:req.body.title,  
-            distMode:req.body.distMode, 
-            upper:req.body.upper,
-            lower:req.body.lower,
-            summary: req.body.summary, 
-            discretionaryStatus:req.body.discretionaryStatus,
-            inflationStatus:req.body.inflationStatus, 
-            startyear: req.body.startyear, 
-            duration: req.body.duration, 
-            userFrac: req.body.userFrac,
-            amountOrPercent:req.body.amountOrPercent, 
-            initial:req.body.initial
-
-        }
-    }
-
-    if(req.body.distMode=="normal"){
-        console.log("normal distmode map");
-        map1={
-           title:req.body.title,  
-           distMode:req.body.distMode, 
-           mu:req.body.mu,
-           sigma:req.body.sigma,
-           summary: req.body.summary, 
-           discretionaryStatus:req.body.discretionaryStatus,
-           inflationStatus:req.body.inflationStatus, 
-           startyear: req.body.startyear, 
-           duration: req.body.duration, 
-           userFrac: req.body.userFrac,
-           amountOrPercent:req.body.amountOrPercent, 
-           initial:req.body.initial
-
-       }
-   }
    expenseEventList.push(map1);
 console.log("map made");
    try {
