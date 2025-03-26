@@ -8,11 +8,7 @@ function importScenario(content) {
     const parsedData = YAML.parse(content)
     const scenario = new Scenario(parsedData)
 
-    ScenarioModel.create(scenario).then(() => {
-        console.log("Scenario imported successfully")
-    }).catch(err => {
-        console.error("Error importing scenario:", err)
-    })
+    return scenario
 }
 
 export default importScenario
