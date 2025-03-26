@@ -13,7 +13,7 @@ const valueDistributionSchema = new Schema({
         type: Number,
         validate: {
             validator: function(v) {
-                if (this.returnDistribution.distType === 'fixed') {
+                if (this.distType === 'fixed') {
                     return v !== undefined
                 }
                 else {
@@ -28,7 +28,7 @@ const valueDistributionSchema = new Schema({
         type: Number,
         validate: {
             validator: function(v) {
-                if (this.returnDistribution.distType !== 'fixed') {
+                if (this.distType !== 'fixed') {
                     return v !== undefined
                 }
                 else {
@@ -42,7 +42,7 @@ const valueDistributionSchema = new Schema({
         type: Number,
         validate: {
             validator: function(v) {
-                if (this.returnDistribution.distType !== 'fixed') {
+                if (this.distType !== 'fixed') {
                     return v !== undefined
                 }
                 else {
@@ -56,7 +56,7 @@ const valueDistributionSchema = new Schema({
         type: Number,
         validate: {
             validator: function(v) {
-                if (this.returnDistribution.distType === 'uniform') {
+                if (this.distType === 'uniform') {
                     return v !== undefined
                 }
                 else {
@@ -69,7 +69,7 @@ const valueDistributionSchema = new Schema({
         type: Number,
         validate: {
             validator: function(v) {
-                if (this.returnDistribution.distType === 'uniform') {
+                if (this.distType === 'uniform') {
                     return v !== undefined
                 }
                 else {
@@ -202,17 +202,13 @@ const ScenarioSchema = new Schema({
     },
     editors: {
         type: [String],
-        validate: {
-            validator: e => e.length > 0,
-            message: `At least one editor required`
-        }
     },
     maritalStatus: Boolean,
     birthYears: {
         type: [Number],
     },
     lifeExpectancy: {
-        type: valueDistributionSchema,
+        type: [valueDistributionSchema],
     },
     investments: [investmentSchema],
     incomeEvents: [incomeEventSchema],

@@ -31,6 +31,8 @@
     "express-session": "^1.18.1",
     "google-auth-library": "^9.15.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.12.1"
+    "jstat": "^1.9.6",
+    "mongoose": "^8.12.1",
+    "yaml": "^2.7.0"
   }
 }
