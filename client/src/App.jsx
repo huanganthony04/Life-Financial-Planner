@@ -53,9 +53,11 @@ function App() {
         <Route path="/login" element={<Login user={user}/>} />
         <Route path="/" element={<Landing user={user}/>} />
 
+        {/* Uncomment this when the UserProfile page is ready}
         <Route path="/userprofile" element={<Layout page="userProfile" user={user}/>} >
         <Route path="/userprofile" element={<UserProfile user={user}/>}/>
         </Route>
+        */}
 
       </Routes>
     </>

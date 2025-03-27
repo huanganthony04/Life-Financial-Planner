@@ -3,9 +3,13 @@ import dropdownLogo from '../assets/icons/chevron_down.svg'
 import DropdownMenu from './DropdownMenu'
 import './ScenarioListItem.css'
 
-const ScenarioListItem = ({key, name, scenarioId}) => {
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
+
+const ScenarioListItem = ({key, name, scenarioId, editScenario, deleteScenario}) => {
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
 
     return (
         <div key={key} className="scenario-list-item">
@@ -13,7 +17,13 @@ const ScenarioListItem = ({key, name, scenarioId}) => {
             <button className="scenario-list-show-dropdown-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
                 <img src={dropdownLogo} className="scenario-list-show-dropdown-button"/>
             </button>
-            <DropdownMenu open={isDropdownOpen} setOpen={setIsDropdownOpen} scenarioId={scenarioId}/>
+            <DropdownMenu 
+                open={isDropdownOpen} 
+                setOpen={setIsDropdownOpen} 
+                scenarioId={scenarioId}
+                editScenario={editScenario}
+                deleteScenario={deleteScenario}
+            />
         </div>
     )
 }

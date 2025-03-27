@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 import searchLogo from '../assets/icons/search.svg'
 import addfileLogo from '../assets/icons/add_file.svg'
 import CreateScenarioFileModal from '../components/CreateScenarioFileModal'
@@ -12,6 +13,8 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 const Scenario = ({user}) => {
 
+    const navigate = useNavigate()
+
     const [scenarios, setScenarios] = useState([])
 
     //States for opening and closing the modals
@@ -22,7 +25,6 @@ const Scenario = ({user}) => {
     const fetchUserScenarios = async (user) => {
         await axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
             .then((response) => {
-                console.log(response)
                 if (response.data.scenarios) {
                     setScenarios(response.data.scenarios)
                 }
@@ -37,8 +39,7 @@ const Scenario = ({user}) => {
     // Defining it here allows Scenarios page to refresh the list of scenarios
     const createScenario = async (scenario) => {
         await axios.post(`${BACKEND_URL}/api/scenario/create`, scenario, {withCredentials: true})
-            .then((response) => {
-                console.log(response)
+            .then(() => {
                 fetchUserScenarios(user)
             })
             .catch((error) => {
@@ -51,6 +52,20 @@ const Scenario = ({user}) => {
         setScenNameModalOpen(false)
         fetchUserScenarios(user)
     }
+
+    const editScenario = useCallback((scenarioId) => {
+        navigate(`/scenario/edit?id=${scenarioId}`)
+    }, [navigate])
+
+    const deleteScenario = useCallback(async (scenarioId) => {
+        await axios.post(`${BACKEND_URL}/api/scenario/delete`, {scenarioId}, {withCredentials: true})
+        .then(() => {
+            fetchUserScenarios(user)
+        })
+        .catch((error) => {
+            console.log(error)
+        })
+    }, [user])
   
     useEffect(() => {
         if (user) {
@@ -68,6 +83,9 @@ const Scenario = ({user}) => {
                     key={item._id}
                     name={item.name}
                     scenarioId={item._id}
+                    // Function to edit/delete scenarios
+                    editScenario={editScenario}
+                    deleteScenario={deleteScenario}
                 />
             )
         })

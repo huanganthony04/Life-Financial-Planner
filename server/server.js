@@ -7,6 +7,8 @@ import userRoutes from './routes/userRoutes.js'
 import scenarioRoutes from './routes/scenarioRoutes.js'
 import taxRoutes from './routes/taxRoutes.js'
 import scraperIrsData from './scraperIrs.js'
+import stateTaxRoutes from './routes/stateTaxRoutes.js'
+import scraperStateYaml from './scraperStateYaml.js'
 import 'dotenv/config'
 
 const app = express()
@@ -29,6 +31,15 @@ mongoose.connect(MONGO_URL)
       })
       .catch((error) => {
         console.error("Error executing IRS scraper:", error)
+      })
+
+    // Run the State YAML loader/scraper
+    scraperStateYaml()
+      .then(() => {
+        console.log("State YAML data loaded successfully.")
+      })
+     .catch ((error) => {
+       console.error("Error loading state YAML data:", error)
       })
 
     // Set up session store in MongoDB
@@ -67,6 +78,7 @@ mongoose.connect(MONGO_URL)
     app.use('', userRoutes)
     app.use('', scenarioRoutes)
     app.use('', taxRoutes)
+    app.use('', stateTaxRoutes)
 
     // Start the server
     app.listen(PORT, () => {

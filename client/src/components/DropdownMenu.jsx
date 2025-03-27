@@ -1,10 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import './DropdownMenu.css'
 
-const DropdownMenu = ({open, setOpen, scenarioId}) => {
-
-    const navigate = useNavigate()
+const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario}) => {
 
     const dropdownRef = useRef(null)
 
@@ -15,8 +12,12 @@ const DropdownMenu = ({open, setOpen, scenarioId}) => {
     }
 
     const handleEdit = () => {
-        navigate(`/scenario/edit?id=${scenarioId}`)
+        editScenario(scenarioId)
     }
+
+    const handleDelete = () => {
+        deleteScenario(scenarioId)
+    }   
 
     useEffect(() => {
         if (open) {
@@ -40,7 +41,7 @@ const DropdownMenu = ({open, setOpen, scenarioId}) => {
             <button className="dropdown-menu-button" onClick={handleEdit}>
                 <h4 className="dropdown-menu-item-text">Edit</h4>
             </button>
-            <button className="dropdown-menu-button">
+            <button className="dropdown-menu-button" onClick={handleDelete}>
                 <h4 className="dropdown-menu-item-text">Delete</h4>
             </button>
             <button className="dropdown-menu-button">

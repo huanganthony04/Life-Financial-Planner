@@ -12,12 +12,16 @@ function financialSim(Scenario, TaxRates) {
 
     let inflation_rate = 0
     let prevYearIncome = 0
+    let prevYearSS = 0
     let curYearIncome = 0
     let curYearSS = 0
     let prevYearGains = 0
     let curYearGains = 0
     let prevYearTaxes = 0
     let results = []
+    let simTaxRates = structuredClone(TaxRates)
+
+    let presentYear = new Date().getFullYear()
 
     //Get the cash investment
     let cash_investment;
@@ -51,10 +55,9 @@ function financialSim(Scenario, TaxRates) {
     }
 
     //Get the life expectancy
-    let currentYear = new Date().getFullYear()
     let lifeExpectancy;
     if (Scenario.lifeExpectancy[0].distType == "fixed") {
-        lifeExpectancy = Scenario.lifeExpectancy.value
+        lifeExpectancy = Scenario.lifeExpectancy[0].value
     }
     else {
         //Create normal distribution for life expectancy
@@ -62,15 +65,19 @@ function financialSim(Scenario, TaxRates) {
         let sigma = Scenario.lifeExpectancy[0].sigma
         lifeExpectancy = normalSample(mean, sigma)
     }
-    let remainingYears = lifeExpectancy - currentYear
+
+    //Get the birth year of the user
+    let birthYear = Scenario.birthYears[0]
+
+    let remainingYears = birthYear + lifeExpectancy - presentYear
+
+    console.log(remainingYears)
 
     // Event preprocessing
     let allEvents = Scenario.incomeEvents
         .concat(Scenario.expenseEvents)
         .concat(Scenario.investEvents)
         .concat(Scenario.rebalanceEvents)
-
-    console.dir(allEvents, {depth: null})
 
     // Replace all events with 'startWith' with the year of the event that it starts with
     // And determine the start/end year of events that have a distribution as a start year.
@@ -139,7 +146,9 @@ function financialSim(Scenario, TaxRates) {
 
     // Beginning of the main simulation loop
 
-    for (i = 0; i < remainingYears; i++) {
+    for (let i = 0; i < remainingYears; i++) {
+
+        currentYear = presentYear + i
 
         if (Scenario.inflationAssumption.type === "fixed") {
             inflation_rate = Scenario.inflationAssumption.value
@@ -151,28 +160,23 @@ function financialSim(Scenario, TaxRates) {
         }
 
         // Get income from income events
-
-        [ curYearIncome, curYearSS ] = calculateIncome(i, Scenario.incomeEvents)
-
-        cash_investment.value += income
+        [ curYearIncome, curYearSS ] = calculateIncome(currentYear, Scenario.incomeEvents)
+        cash_investment.value += curYearIncome + curYearSS
 
         // Update investments
-
         investmentIncome = updateInvestments(Scenario.investments)
-
         curYearIncome += investmentIncome
 
         // Pay non-discretionary expenses
 
         // Calculate last year's taxes
-        prevYearTaxes = calculateTaxes(prevYearIncome, prevYearGains, TaxRates, inflation_rate)
+        prevYearTaxes = calculateTaxes(prevYearIncome, prevYearSS, prevYearGains, simTaxRates, Scenario.maritalStatus)
 
-        expenses = calculateExpensesND(i, Scenario.events, inflation_rate)
-        curYearGains = payExpensesND(expenses + prevYearTaxes, investments, cash_investment, Scenario.expwithdrawal)
+        let expensesND = calculateExpensesND(currentYear, Scenario.expenseEvents)
+        curYearGains = payExpensesND(expensesND + prevYearTaxes, Scenario.investments, cash_investment, Scenario.expenseWithdrawalStrategy)
 
         // Pay discretionary expenses
-
-        payExpensesD(i, Scenario.events, cash_investment, Scenario.goal)
+        payExpensesD(currentYear, Scenario.expenseEvents, cash_investment, Scenario.financialGoal)
 
         // Run investment event
         runInvestEvent(i, Scenario.events, cash_investment, Scenario.investments)
@@ -183,12 +187,16 @@ function financialSim(Scenario, TaxRates) {
         prevYearIncome = curYearIncome
         prevYearGains = curYearGains
 
+        // Adjust everything affected by inflation
+        adjustInflation(Scenario.incomeEvents, Scenario.expenseEvents, simTaxRates, inflation_rate)
+
     }
+
+    return results
+
 }
 
-function calculateIncome(yearsElapsed, incomeEvents) {
-
-    currentYear = Date().getFullYear() + yearsElapsed
+function calculateIncome(currentYear, incomeEvents, inflation_rate) {
 
     let income = 0
     let socialSecurity = 0
@@ -213,12 +221,12 @@ function calculateIncome(yearsElapsed, incomeEvents) {
 
         //Calculate the expected annual change
 
-        if (incomeEvent.expectedAnnualChange.distType == "fixed") {
+        if (incomeEvent.changeDistribution.distType == "fixed") {
             if (incomeEvent.changeAmtOrPct == "amount") {
-                incomeEvent.initialAmount += incomeEvent.expectedAnnualChange.value
+                incomeEvent.initialAmount += incomeEvent.changeDistribution.value
             }
             else {
-                incomeEvent.initialAmount *= incomeEvent.expectedAnnualChange.value
+                incomeEvent.initialAmount *= 1 + incomeEvent.changeDistribution.value
             }
         }
         if (incomeEvent.inflationAdjusted) {
@@ -226,224 +234,382 @@ function calculateIncome(yearsElapsed, incomeEvents) {
         }
 
     return [ income, socialSecurity ]
-    
+
     }
 }
-/*
-function calculateTaxes(income, capitalGains, taxRates, inflation):
+
+function updateInvestments(investments) {
+
+    for (let investment of investments) {
+
+        let new_value;
+
+        const asset = investment.investmentType
+
+        // Get the expected new value
+        if (asset.returnAmtOrPct == "amount") {
+            if (asset.returnDistribution.distType == "fixed") {
+                new_value = asset.returnDistribution.value + investment.value
+            }
+            else if (asset.returnDistribution.distType == "normal") {
+                let mean = asset.returnDistribution.mean
+                let sigma = asset.returnDistribution.sigma
+                new_value = normalSample(mean, sigma) + investment.value
+            }
+            else {
+                let lower = asset.returnDistribution.lower
+                let upper = asset.returnDistribution.upper
+                new_value = Math.random() * (upper - lower) + lower + investment.value
+            }
+        }
+        else if (asset.returnAmtOrPct == "percent") {
+            if (asset.returnDistribution.distType == "fixed") {
+                new_value = investment.value * (1 + asset.returnDistribution.value)
+            }
+            else if (asset.returnDistribution.distType == "normal") {
+                let mean = asset.returnDistribution.mean
+                let sigma = asset.returnDistribution.sigma
+                new_value = investment.value * (1 + normalSample(mean, sigma))
+            }
+            else {
+                let lower = asset.returnDistribution.lower
+                let upper = asset.returnDistribution.upper
+                new_value = investment.value * (1 + Math.random() * (upper - lower) + lower)
+            }
+        }
+
+        average_value = (new_value + investment.value) / 2
+
+        // Update the value
+        investment.value = new_value
+
+        // Pay the expense ratio
+        if (asset.expenseRatio) {
+            investment.value -= average_value * asset.expenseRatio
+        }
+
+        let dividends = 0
+
+        // Calculate and reinvest any dividends and interest
+        if (asset.incomeAmtOrPct === "amount") {
+            if (asset.incomeDistribution.distType === "fixed") {
+                investment.value += asset.incomeDistribution.value
+                investment.costBasis += asset.incomeDistribution.value
+                dividends += asset.incomeDistribution.value
+            }
+            else if (asset.incomeDistribution.distType === "normal") {
+                let mean = asset.incomeDistribution.mean
+                let sigma = asset.incomeDistribution.sigma
+                let sample = normalSample(mean, sigma)
+                investment.value += sample
+                investment.costBasis += sample
+                dividends += sample
+            }
+            else {
+                let lower = asset.incomeDistribution.lower
+                let upper = asset.incomeDistribution.upper
+                let sample = Math.random() * (upper - lower) + lower
+                investment.value += sample
+                investment.costBasis += sample
+                dividends += sample
+            }
+        }
+        else {
+            if (asset.incomeDistribution.distType === "fixed") {
+                let dividend = investment.value * (1 + asset.incomeDistribution.value) - investment.value
+                investment.value += dividend
+                investment.costBasis += dividend
+                dividends += dividend
+            }
+            else if (asset.incomeDistribution.distType === "normal") {
+                let mean = asset.incomeDistribution.mean
+                let sigma = asset.incomeDistribution.sigma
+                let dividend = investment.value * (1 + normalSample(mean, sigma)) - investment.value
+                investment.value += dividend
+                investment.costBasis += dividend
+                dividends += dividend
+            }
+            else {
+                let lower = asset.incomeDistribution.lower
+                let upper = asset.incomeDistribution.upper
+                let dividend = investment.value * (1 + Math.random() * (upper - lower) + lower) - investment.value
+                investment.value += dividend
+                investment.costBasis += dividend
+                dividends += dividend
+            }
+        }
+    
+    }
+    return dividends
+}
+
+function calculateTaxes(income, socialSecurity, capitalGains, taxRates, isMarried, inflation) {
 
     tax = 0
     previous_limit = 0
-    #Each cell in taxRates has two fields, limit and rate.
-    for rates in taxRates.federalRates:
 
-        #adjust for inflation
-        rates = [ rates.limit * (1 + inflation), rates.rate ]
+    if (isMarried) {
+        income -= taxRates.standardDeductionMarried
+    }
+    else {
+        income -= taxRates.standardDeductionSingle
+    }
 
-        if income > limit:
+    // Each cell in taxRates has two fields, limit and rate.
+    for (const bracket of taxRates.taxBrackets) {
+        limit = bracket.max
+        rate = bracket.rate
+
+        if (income > limit) {
             tax += (limit - previous_limit) * rate
             previous_limit = limit
-        else:
+        }
+        else {
             tax += (income - previous_limit) * rate
             break
+        }
+    }
 
+    // Currently, we don't have the tax rates for states.
+    /*
     previous_limit = 0
-    for rates in taxRates.stateRates:
 
-        #adjust for inflation
-        rates = [ rates.limit * (1 + inflation), rates.rate ]
+    for (let i = 0; i < taxRates.stateTaxBrackets.length; i++) {
+        limit = taxRates.stateTaxBrackets[i].max
+        rate = taxRates.stateTaxBrackets[i].rate
 
-        if income > limit:
+        if (income > limit) {
             tax += (limit - previous_limit) * rate
             previous_limit = limit
-        else:
+        }
+        else {
             tax += (income - previous_limit) * rate
             break
+        }
+    }
+    */
 
-    #Calculate capital gains tax
+    // Calculate capital gains tax
     previous_limit = 0
     remaining_gains = capitalGains
-    for rates in taxRates.cgRates:
+    for (const bracket of taxRates.capitalGainsBrackets) {
 
-        #adjust for inflation
-        rates = [ rates.limit * (1 + inflation), rates.rate ]
+        limit = bracket.max
+        rate = bracket.rate
 
-        if income >= limit:
+        if (income >= limit) {
             previous_limit = limit
             continue
-        
-        taxable_gains = min(remaining_gains, max(0, limit - max(previous_limit, income)))
+        }
+
+        let taxable_gains = min(remaining_gains, max(0, limit - max(previous_limit, income)))
         tax += taxable_gains * rate
         remaining_gains -= taxable_gains
         previous_limit = limit
 
-        if remaining_gains <= 0:
+        if (remaining_gains <= 0) {
             break
+        }
+
+    }
+
+    // Adjust tax rates for inflation (for next year)
+    for (let i = 0; i < taxRates.taxBrackets.length; i++) {
+        taxRates.taxBrackets[i].max *= (1 + inflation)
+    }
+    taxRates.standardDeductionSingle *= (1 + inflation)
+    taxRates.standardDeductionMarried *= (1 + inflation)
+
+    for (let i = 0; i < taxRates.capitalGainsBrackets.length; i++) {
+        taxRates.capitalGainsBrackets[i].max *= (1 + inflation)
+    }
 
     return tax
-    
-function updateInvestments(investments):
+}
 
-    #Expected drift
-    mu = investments.expectedAnnualReturn
-    #Volatility factor
-    sigma = 0.2
-    #Steps (one per year)
-    steps = 1
-    #Delta time (years / steps, so just one)
-    dt = 1
-
-    #normal distribution
-    normal = new Normal(0, sqrt(dt))
-
-    dividends = 0
-
-    for investment in investments:
-
-        if investment.useGBM is false:
-            new_value = investment.value * (1 + ExpectedAnnualReturn)
-        else:
-
-            #get random sample from normal distribution
-            dw = normal.sample()
-
-            new_value = investment.value * exp((mu - 0.5 * sigma ^ 2) * dt + sigma + dW)
-
-        average_value = (new_value + investment.value) / 2
-
-        investment.invest(new_value - investment.value)
-
-        #Pay expense ratio
-        if investment.expenseRatio is a number:
-            investment.value -= average_value * investment.expenseRatio
-
-        #Reinvest dividends and interest
-        if investment.ExpectedAnnualIncome is a percentage:
-            investment.invest(average_value * (1 + ExpectedAnnualIncome))
-            dividends += average_value * (1 + ExpectedAnnualIncome)
-        else if investment.ExpectedAnnualIncome is a number:
-            investment.value = investment.value + ExpectedAnnualIncome
-            dividends += investment.value + ExpectedAnnualIncome
-    
-    return dividends
-        
-
-
-function calculateExpensesND(yearsElapsed, events, inflation):
-
-    currentYear = Date().getFullYear() + yearsElapsed
+function calculateExpensesND(currentYear, expenseEvents, inflation) {
 
     expenses = 0
 
-    for event in events:
+    for (let expenseEvent of expenseEvents) {
 
-        if event.startYear > currentYear || event.duration + event.startYear < currentYear
+        let startYear = expenseEvent.start.startDistribution.value
+        let endYear = startYear + expenseEvent.duration.value
+
+        if (currentYear < startYear || currentYear > endYear) {
             continue
-        
-        if event.type is EXPENSE and event.isDiscretionary is false:
-            if event.expectedAnnualChange is percentage:
-                new_amount = event.amount * event.expectedAnnualChange
-            else if event.expectedAnnualChange is fixed number:
-                new_amount += event.expectedAnnualChange
-            if event.useInflation:
-                new_amount = new_amount * (1 + inflation)
-        
-            if event.isMarried:
-                if event.spouseAnnualChange is percentage:
-                    new_spouseAmount = event.spouseAmount * (1 + event.spouseAnnualChange)
-                else if event.expectedAnnualChange is fixed number:
-                    new_spouseAmount = event.spouseAmount + event.spouseAnnualChange
-                if event.useInflation:
-                    event.new_spouseAmount = event.new_spouseAmount * (1 + inflation)
-            
-            average_amount = (new_amount + event.amount) / 2
-            average_spouseAmount = (new_spouseAmount + event.spouseAmount) / 2
+        }
 
-            expenses += average_amount + average_spouseAmount
+        if (expenseEvent.isDiscretionary) continue;
+
+        //Add the expense to the total expenses
+        expenses += expenseEvent.initialAmount
+
+        //Calculate the expected annual change
+
+        if (expenseEvent.changeDistribution.distType == "fixed") {
+            if (expenseEvent.changeAmtOrPct == "amount") {
+                expenseEvent.initialAmount += expenseEvent.changeDistribution.value
+            }
+            else {
+                expenseEvent.initialAmount *= 1 + expenseEvent.changeDistribution.value
+            }
+        }
+        else if (expenseEvent.expectedAnnualChange.distType == "normal") {
+            let mean = expenseEvent.expectedAnnualChange.mean
+            let sigma = expenseEvent.expectedAnnualChange.sigma
+            let change = normalSample(mean, sigma)
+            if (expenseEvent.changeAmtOrPct == "amount") {
+                expenseEvent.initialAmount += change
+            }
+            else {
+                expenseEvent.initialAmount *= 1 + change
+            }
+        }
+        else {
+            let lower = expenseEvent.expectedAnnualChange.lower
+            let upper = expenseEvent.expectedAnnualChange.upper
+            let change = Math.random() * (upper - lower) + lower
+            if (expenseEvent.changeAmtOrPct == "amount") {
+                expenseEvent.initialAmount += change
+            }
+            else {
+                expenseEvent.initialAmount *= 1 + change
+            }
+        }
     
     return expenses
+
+    }
+
+}
         
-function payExpensesND(amount, investments, cash_investment, withdrawalStrategy):
+function payExpensesND(amount, investments, cash_investment, withdrawalStrategy) {
 
-    if cash_investment.value < amount:
-        amount -= cash_investment.value
-        cash_investment.value = 0
-
-        cg_tax = 0
-
-        for withdrawInvestment in withdrawalStrategy:
-        find investment in investments such that withdrawInvestment.name == investment.name
-        if investment.value < amount:
-            amount -= investment.value
-            capital_gains += investment.sell(investment.value)
-        else:
-            capital_gains += investment.sell(amount)
-            break
-    else:
+    //Check if there is enough cash to pay the expenses
+    if (cash_investment.value > amount) {
         cash_investment.value -= amount
+        return 0
+    }
 
-    return capital_gains
+    amount -= cash_investment.value
+    cash_investment.value = 0
+
+    capitalGains = 0
+
+    for (const assetName of withdrawalStrategy) {
+        let investment = investments.find(i => i.investmentType.name == assetName)
+        if (investment.value < amount) {
+            //Sell the entire investment to pay the expenses
+            amount -= investment.value
+            capitalGains += investment.value - investment.costBasis
+        }
+        else {
+            //Sell a portion of the investment to pay the expenses
+            let portion = amount / investment.value
+            capitalGains += investment.value * portion - investment.costBasis * portion
+            investment.value -= amount
+            investment.costBasis -= investment.costBasis * portion
+        }
+    }
+
+    return capitalGains
+
+}
     
-function payExpensesD(yearsElapsed, events, cash_investment, goal):
+function payExpensesD(currentYear, expenseEvents, cash_investment, financialGoal) {
 
-    cash_available = cash_investment.value - goal
-    if cash_available <= 0 return
+    // Take out all excess cash from the cash investment
+    let cashAvailable = cash_investment.value - financialGoal
+    cash_investment.value = financialGoal
 
-    currentYear = Date().getFullYear() + yearsElapsed
+    if (cashAvailable <= 0) return
 
-    for event in events:
+    for (let expenseEvent of expenseEvents) {
+        if (!expenseEvent.isDiscretionary) continue
 
-        if event.type is EXPENSE:
-            if event.isDiscretionary is true:
-                if event.startYear > currentYear || event.duration + event.startYear < currentYear
-                    continue
-                if event.amount > cash_available:
-                    event.amount -= cash_available
-                    break
-                else:
-                    cash_available -= event.amount
-                    event.amount = 0
-    
-    cash_investment.value = goal + cash_available
-            
-function runInvestEvent(yearsElapsed, events, cash_investment, investments):
+        let startYear = expenseEvent.start.startDistribution.value
+        let endYear = startYear + expenseEvent.duration.value
 
-    #Find active invest event
-    investEvent = None
-
-    currentYear = Date().getFullYear() + yearsElapsed
-
-    for event in events:
-        if event.startYear > currentYear || event.duration + event.startYear < currentYear
+        if (currentYear < startYear || currentYear > endYear) {
             continue
-        if event.type is INVEST:
-            investEvent = event
+        }
+
+        if (expenseEvent.initialAmount > cashAvailable) {
+            expenseEvent.initialAmount -= cashAvailable
             break
+        }
+        else {
+            cashAvailable -= expenseEvent.initialAmount
+            expenseEvent.initialAmount = 0
+        }
+    }
 
-    if investEvent is None:
+    // If there is still cash available, add it back to the cash investment
+    cash_investment.value += cashAvailable
+
+}
+            
+function runInvestEvent(currentYear, investEvents, cash_investment, investments) {
+
+    let activeInvestEvent = null
+
+    for (let investEvent of investEvents) {
+        let startYear = investEvent.start.startDistribution.value
+        let endYear = startYear + investEvent.duration.value
+        if (currentYear < startYear || currentYear > endYear) {
+            continue
+        }
+        else {
+            activeInvestEvent = investEvent
+            break
+        }
+    }
+
+    if (!activeInvestEvent) {
         return
+    }
 
-    excess_cash = cash_investment - investEvent.maxCash
+    let excess_cash = cash_investment.value - activeInvestEvent.maxCash
 
-    if excess_cash < 0:
+    if (excess_cash <= 0) {
         return
+    }
 
-    target = investEvent.AssetAlloc.percentage
-    if investEvent.AssetAlloc.useGlidePath is true:
-        timeToFinal = (investEvent.startYear + investEvent.duration) - (Date().getFullYear() + i)
-        finalPercentage = investEvent.AssetAlloc.glideFinalPercentage
-        for [investment, percent] in target:
-            find [finalInvestment, finalPercent] from finalPercentage such that finalInvestment.name == investment.name
-            percent = percent + ((finalPercent - percent) / investEvent.duration * timeToFinal)
+    let assetAlloc = activeInvestEvent.AssetAllocation
 
-            find i in investments such that i.name == investment.name
-            i.invest(excess_cash * percent)
-    else:
-        for [investment, percent] in target:
-            find i in investments such that i.name == investment.name
-            i.invest(excess_cash * percent)
+    if (activeInvestEvent.AssetAlloc.useGlidePath) {
 
-function runRebalanceEvent(rebalanceEvent, investments):
+        let finalAssetAlloc = activeInvestEvent.assetAllocation2
+        let progress = currentYear - activeInvestEvent.startYear / activeInvestEvent.duration.value
+
+        for (const [asset, alloc] of assetAlloc) {
+
+            let targetAlloc = alloc + ((finalAssetAlloc[asset] - alloc) * progress)
+
+            let investment = investments.find(i => i.investmentType.name == asset)
+            
+            investment.value += excess_cash * targetAlloc
+            investment.costBasis += excess_cash * targetAlloc
+            excess_cash -= excess_cash * targetAlloc
+
+        }
+    }
+    // If there is no glide path, just invest according to the asset allocation
+    else {
+        for(const [asset, alloc] of assetAlloc) {
+            let investment = investments.find(i => i.name == asset)
+
+            investment.value += excess_cash * alloc
+            investment.costBasis += excess_cash * alloc
+            excess_cash -= excess_cash * alloc
+
+        }
+    }
+}
+
+/*
+function runRebalanceEvent(rebalanceEvent, investments) {
 
     #find active rebalance event
     rebalanceEvent = None
@@ -487,19 +653,66 @@ function runRebalanceEvent(rebalanceEvent, investments):
     
     return capitalGains
 
-
+}
 */
+
+function adjustInflation(incomeEvents, expenseEvents, simTaxRates, inflation) {
+    for (let incomeEvent of incomeEvents) {
+        if (incomeEvent.inflationAdjusted) {
+            incomeEvent.initialAmount *= (1 + inflation)
+        }
+    }
+
+    for (let expenseEvent of expenseEvents) {
+        if (expenseEvent.inflationAdjusted) {
+            expenseEvent.initialAmount *= (1 + inflation)
+        }
+    }
+
+    for (let i = 0; i < simTaxRates.taxBrackets.length; i++) {
+        simTaxRates.taxBrackets[i].max *= (1 + inflation)
+    }
+
+    simTaxRates.standardDeductionSingle *= (1 + inflation)
+    simTaxRates.standardDeductionMarried *= (1 + inflation)
+
+    for (let i = 0; i < simTaxRates.capitalGainsBrackets.length; i++) {
+        simTaxRates.capitalGainsBrackets[i].max *= (1 + inflation)
+    }
+
+    simTaxRates.standardDeductionHeadOfHousehold *= (1 + inflation)
+    simTaxRates.standardDeductionMarried *= (1 + inflation)
+    simTaxRates.standardDeductionSingle *= (1 + inflation)
+}
+
 
 /* Test Code */
 import importScenario from './importer.js'
+import TaxModel from '../models/taxModel.js'
+import mongoose from 'mongoose'
+import dotenv from 'dotenv'
+dotenv.config({path: '../.env'})
 import fs from 'fs'
+import { exit } from 'process'
+
+const MONGO_URL = process.env.MONGO_URL
+
+mongoose.connect(MONGO_URL).then(() => {
+    console.log("Connected to MongoDB")
+})
+
+const taxRates = await TaxModel.findOne({})
+console.log("Tax rates:", taxRates)
 
 const filePath = './scenario.yaml'
 try {
     const data = fs.readFileSync(filePath, 'utf8')
     let scenario = importScenario(data)
 
-    financialSim(scenario, null)
+    let results = financialSim(scenario, taxRates)
+
+    console.log(results)
+    exit(0)
 }
 catch (error) {
     console.error("Error:", error)
