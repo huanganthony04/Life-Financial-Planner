@@ -19,7 +19,7 @@
     border-radius: 10px;
 }
 
-#scenario-selection-button {
+.green-button {
     height: 2rem;
     min-width: 100px;
     padding: 0px 1rem;
@@ -31,9 +31,33 @@
     cursor: pointer;
   }
   
-#scenario-selection-button:hover {
+.green-button:hover {
 background-color: rgb(53, 206, 104);
 }
-#scenario-selection-button:active {
+.green-button:active {
 background-color: rgb(43, 196, 94);
+}
+
+#results-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#no-results-container {
+    padding: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#no-results-container > h3 {
+    margin: 5px 0;
+}
+
+#no-results-container > button {
+    margin: 5px 0;
 }

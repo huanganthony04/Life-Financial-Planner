@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
 import axios from 'axios'
 import SelectScenarioModal from '../components/SelectScenarioModal'
 import './Results.css'
@@ -16,7 +15,7 @@ const Results = ({user}) => {
       setScenario(scenario)
   }, []))
 
-  const runSimulation = async () => {
+  const runSimulation = async (scenario) => {
     await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenario._id}`, {withCredentials: true})
       .then((response) => {
           console.log(response.data)
@@ -28,19 +27,46 @@ const Results = ({user}) => {
       })
   }
 
+  const noScenario = () => {
+    return (
+      <div id="no-results-container">
+        <h3>Select a scenario from above to see its results!</h3>
+      </div>
+    )
+  }
+
+  const noResults = () => {
+    return (
+      <div id="no-results-container">
+        <h3>No results were found for this scenario.</h3>
+        <h3>Click the button below to run a new simulation!</h3>
+        <button className="green-button" onClick={() => runSimulation(scenario)}>
+          Run Simulation
+        </button>
+      </div>
+    )
+  }
+
+  useEffect(() => {
+
+  })
+
   return (
     <>
       <div id="results-header">
         <div id="scenario-select">
           <div id="scenario-selection">
             <div id="selected-scenario-title">{scenario ? scenario.name : "No Scenario Selected"}</div>
-            <button id="scenario-selection-button" onClick={() => setSelectScenarioOpen(true)}>
-              <h4 id="scenario-selection-button-text">
+            <button className="green-button" onClick={() => setSelectScenarioOpen(true)}>
+              <h4>
                   Select Scenario
               </h4>
             </button>
           </div>
         </div>
+      </div>
+      <div id="results-body">
+        {scenario ? (results ? null : noResults()) : noScenario()}
       </div>
 
       <SelectScenarioModal
