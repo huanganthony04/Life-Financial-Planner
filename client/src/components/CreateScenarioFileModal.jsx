@@ -1,12 +1,11 @@
 import { useState, useRef } from 'react'
-import axios from 'axios'
 import ReactDOM from 'react-dom'
 import YAML from 'yaml'
 import './CreateScenarioModal.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
-const CreateScenarioFileModal = ({open, onClose, openScenarioModal}) => {
+const CreateScenarioFileModal = ({open, onClose, openScenarioModal, user, createScenario}) => {
 
   const fileInputRef = useRef(null)
   const [file, setFile] = useState(null)
@@ -23,24 +22,11 @@ const CreateScenarioFileModal = ({open, onClose, openScenarioModal}) => {
     if (file) {
       const reader = new FileReader()
       reader.onload = async (event) => {
-        const fileContent = event.target.result
-        try {
-          const parsedData = YAML.parse(fileContent)
 
-          console.log("Parsed YAML data:", parsedData)
-          // Handle the parsed data as needed
-          await axios.post(`${BACKEND_URL}/api/scenario/create`, parsedData, {withCredentials: true})
-            .then((response) => {
-              console.log(response)
-              openScenarioModal()
-              onClose()
-            })
-            .catch((error) => {
-              console.log(error)
-            })
-        } catch (error) {
-          console.error("Error parsing YAML file:", error)
-        }
+        const fileContent = event.target.result
+        const parsedData = YAML.parse(fileContent)
+        createScenario(parsedData)
+
       }
       reader.readAsText(file)
     } else {

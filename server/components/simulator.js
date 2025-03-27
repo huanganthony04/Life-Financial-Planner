@@ -36,7 +36,7 @@ function financialSim(Scenario, TaxRates) {
 
     //Add cash investment if no cash investment exists
     if (cash_investment == null) {
-        it = new InvestmentType({
+        let it = new InvestmentType({
             name: "cash",
             description: "Cash investment",
             returnAmtOrPct: "amount",
@@ -148,7 +148,7 @@ function financialSim(Scenario, TaxRates) {
 
     for (let i = 0; i < remainingYears; i++) {
 
-        currentYear = presentYear + i
+        let currentYear = presentYear + i
 
         if (Scenario.inflationAssumption.type === "fixed") {
             inflation_rate = Scenario.inflationAssumption.value
@@ -164,7 +164,7 @@ function financialSim(Scenario, TaxRates) {
         cash_investment.value += curYearIncome + curYearSS
 
         // Update investments
-        investmentIncome = updateInvestments(Scenario.investments)
+        let investmentIncome = updateInvestments(Scenario.investments)
         curYearIncome += investmentIncome
 
         // Pay non-discretionary expenses
@@ -190,6 +190,7 @@ function financialSim(Scenario, TaxRates) {
         // Adjust everything affected by inflation
         adjustInflation(Scenario.incomeEvents, Scenario.expenseEvents, simTaxRates, inflation_rate)
 
+        results.push({results: structuredClone(Scenario), year: currentYear})
     }
 
     return results
@@ -240,6 +241,8 @@ function calculateIncome(currentYear, incomeEvents, inflation_rate) {
 
 function updateInvestments(investments) {
 
+    let totalDividends = 0
+
     for (let investment of investments) {
 
         let new_value;
@@ -278,7 +281,7 @@ function updateInvestments(investments) {
             }
         }
 
-        average_value = (new_value + investment.value) / 2
+        let average_value = (new_value + investment.value) / 2
 
         // Update the value
         investment.value = new_value
@@ -338,15 +341,22 @@ function updateInvestments(investments) {
                 dividends += dividend
             }
         }
+
+        // Add the dividends to the total dividends
+        totalDividends += dividends
     
     }
-    return dividends
+
+    return totalDividends
+
 }
 
-function calculateTaxes(income, socialSecurity, capitalGains, taxRates, isMarried, inflation) {
+function calculateTaxes(income, socialSecurity, capitalGains, taxRates, isMarried) {
 
-    tax = 0
-    previous_limit = 0
+    console.log(taxRates)
+
+    let tax = 0
+    let previous_limit = 0
 
     if (isMarried) {
         income -= taxRates.standardDeductionMarried
@@ -411,17 +421,6 @@ function calculateTaxes(income, socialSecurity, capitalGains, taxRates, isMarrie
             break
         }
 
-    }
-
-    // Adjust tax rates for inflation (for next year)
-    for (let i = 0; i < taxRates.taxBrackets.length; i++) {
-        taxRates.taxBrackets[i].max *= (1 + inflation)
-    }
-    taxRates.standardDeductionSingle *= (1 + inflation)
-    taxRates.standardDeductionMarried *= (1 + inflation)
-
-    for (let i = 0; i < taxRates.capitalGainsBrackets.length; i++) {
-        taxRates.capitalGainsBrackets[i].max *= (1 + inflation)
     }
 
     return tax
@@ -685,6 +684,7 @@ function adjustInflation(incomeEvents, expenseEvents, simTaxRates, inflation) {
     simTaxRates.standardDeductionSingle *= (1 + inflation)
 }
 
+export default financialSim
 
 /* Test Code */
 import importScenario from './importer.js'

@@ -23,35 +23,34 @@ const Scenario = ({user}) => {
     const [ScenNameModalOpen, setScenNameModalOpen] = useState(false)
 
     const fetchUserScenarios = async (user) => {
-        await axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
-            .then((response) => {
-                if (response.data.scenarios) {
-                    setScenarios(response.data.scenarios)
-                }
-            })
-            .catch((error) => {
-                console.log(error)
-            })
+        await axios.get(`${BACKEND_URL}/api/scenario/byuser?userId=${user.userId}`, {withCredentials: true})
+        .then((response) => {
+            if (response.data.scenarios) {
+                setScenarios(response.data.scenarios)
+            }
+        })
+        .catch((error) => {
+            console.log(error)
+        })
     }
 
     // Function to create a scenario
     // This function is passed down to the Child Modals
     // Defining it here allows Scenarios page to refresh the list of scenarios
-    const createScenario = async (scenario) => {
+    const createScenario = useCallback(async (scenario) => {
         await axios.post(`${BACKEND_URL}/api/scenario/create`, scenario, {withCredentials: true})
             .then(() => {
+                console.log('test')
+                setScenModalOpen(false)
+                setScenFileModalOpen(false)
+                setScenNameModalOpen(false)
                 fetchUserScenarios(user)
             })
             .catch((error) => {
                 console.log(error)
                 return
             })
-        
-        setScenModalOpen(false)
-        setScenFileModalOpen(false)
-        setScenNameModalOpen(false)
-        fetchUserScenarios(user)
-    }
+    }, [user])
 
     const editScenario = useCallback((scenarioId) => {
         navigate(`/scenario/edit?id=${scenarioId}`)

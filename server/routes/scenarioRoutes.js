@@ -1,16 +1,20 @@
 import express from 'express'
 import { Scenario } from '../classes.js'
 import UserModel from '../models/UserModel.js'
-import ScenarioModel from '../models/ScenarioModel.js'
+import { ScenarioModel } from '../models/ScenarioModel.js'
+import ResultsModel from '../models/ResultsModel.js'
+import TaxModel from '../models/taxModel.js'
+import runSimulation from '../components/simulator.js'
 import 'dotenv/config'
 
 const FRONTEND_URL = process.env.FRONTEND_URL
 
 const router = express.Router()
 
-router.get('/api/scenario/:userId', async (req, res) => {
+//Get scenarios by user
+router.get('/api/scenario/byuser', async (req, res) => {
 
-    const userId = req.params.userId
+    const userId = req.query.userId
 
     try {
         const user = await UserModel.findOne({_id: userId})
@@ -18,11 +22,9 @@ router.get('/api/scenario/:userId', async (req, res) => {
             path: 'ownedScenarios',
             select: 'name'
         })
-        console.log(user)
         return res.status(200).json({scenarios: user.ownedScenarios})
     }
     catch (error) {
-        console.log(error)
         return res.status(500).json({error: error})
     }
 })
@@ -39,19 +41,17 @@ router.post('/api/scenario/create/', async (req, res) => {
         return res.status(401).json({error: 'User not found!'})
     }
 
-    console.log(userId)
-
     let name = req.body.name
 
     if (!name || name.length === 0) {
         name = "Unnamed Scenario"
     }
 
-    const scenario = new ScenarioModel({
-        name: name,
-        owner: userId,
-        editors: [user._id],
-    })
+    let scenarioObj = new Scenario(req.body)
+    scenarioObj.name = name
+    scenarioObj.owner = userId
+    scenarioObj.editors = [userId]
+    const scenario = new ScenarioModel(scenarioObj)
 
     try {
         await scenario.save()
@@ -202,4 +202,36 @@ catch(error) {
 
 })
 
+router.get('/api/scenario/run', async (req, res) => {
+
+    const userId = req.session.userId
+
+    if (!userId) {
+        return res.status(401).json({error: 'You are not logged in!'})
+    }
+    const user = await UserModel.findOne({_id: userId})
+    if (!user) {
+        return res.status(401).json({error: 'User not found!'})
+    }
+
+    const scenarioId = req.query.id
+
+    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+    if (!scenario) {
+        return res.status(404).json({error: 'Scenario not found!'})
+    }
+
+    if (scenario.owner !== userId && !scenario.editors.includes(userId)) {
+        return res.status(403).json({error: 'You do not have permission to operate on this scenario!'})
+    }
+
+    // Run the simulation
+    let results = runSimulation(scenario)
+    console.log(results)
+
+
+
+
+
+})
 export default router

@@ -1,7 +1,7 @@
 import YAML from 'yaml'
 import mongoose from 'mongoose'
 import { Scenario } from '../classes.js'
-import ScenarioModel from '../models/ScenarioModel.js'
+import { ScenarioModel } from '../models/ScenarioModel.js'
 import fs from 'fs'
 
 function importScenario(content) {

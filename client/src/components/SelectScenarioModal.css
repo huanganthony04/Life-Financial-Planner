@@ -1,0 +1,113 @@
+#scenario-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#scenario-modal {
+  z-index: 1001;
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+  width: 540px;
+}
+
+#scenario-modal-header-title {
+  margin: 0 0 20px;
+}
+
+#scenario-select-modal-body {
+  display: flex;
+  min-height: 200px;
+  border-radius: 10px;
+  border: 1px solid darkgray;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.scenario-modal-icon {
+  margin: 0.5em;
+  display: inline;
+}
+
+#scenario-modal-file-upload-area > h4 {
+  color: darkgray;
+}
+
+#scenario-modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.scenario-modal-button {
+  height: 2rem;
+  min-width: 100px;
+  padding: 0px 1rem;
+  border: none;
+  border-radius: 10px;
+  background-color: rgb(63, 216, 114);
+  color: white;
+  cursor: pointer;
+}
+
+.scenario-modal-button:hover {
+  background-color: rgb(53, 206, 104);
+}
+.scenario-modal-button:active {
+  background-color: rgb(43, 196, 94);
+}
+
+#scenario-modal-form {
+  margin: 40px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+}
+
+#scenario-modal-form > input{
+  margin: 10px 0;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+.close-modal-button {
+  height: 2rem;
+  min-width: 100px;
+  padding: 0px 1rem;
+  border: 1px solid darkgray;
+  border-radius: 10px;
+  background-color: white;
+  color: darkgray;
+  cursor: pointer;
+}
+
+.close-modal-button:hover {
+  background-color: rgb(245, 245, 245);
+}
+
+.close-modal-button:active {
+  background-color: rgb(235, 235, 235);
+}
+
+.scenario-modal-list-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  border-top: 1px solid lightgray;
+  border-bottom: 1px solid lightgray;
+}
