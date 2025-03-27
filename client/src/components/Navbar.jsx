@@ -27,6 +27,7 @@ const Navbar = () => {
                 Scenarios
             </NavLink>
 
+            {/* Uncomment this when the UserProfile page is ready
             <NavLink 
                 to="/userprofile" 
                 className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
@@ -34,6 +35,7 @@ const Navbar = () => {
                 <img className="nav-button-icon" src={listLogo}/>
                 UserProfile
             </NavLink>
+            */}
         </div>
     </nav>
   )
