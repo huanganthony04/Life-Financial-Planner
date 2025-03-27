@@ -235,13 +235,13 @@ router.get('/api/scenario/run', async (req, res) => {
     // Run the simulation
     let results = runSimulation(scenario, federalTaxRates, stateTaxRates)
 
-    res.status(500).json({error: 'Simulation not implemented yet!'})
+    console.log(results)
 
-    /*
+    
     // Create a new ResultsModel instance
     let resultsModel = new ResultsModel({
+        resultList: results,
         scenario: scenarioId,
-        results: results
     })
 
     await resultsModel.save()
@@ -252,6 +252,6 @@ router.get('/api/scenario/run', async (req, res) => {
         console.log(error)
         res.status(500).json({error: error})
     })
-    */
+
 })
 export default router

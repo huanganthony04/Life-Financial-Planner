@@ -14,9 +14,10 @@ const FRONTEND_URL = process.env.FRONTEND_URL
 const router = express.Router()
 
 //Get result by scenario ID
-router.get('/api/results/', async (req, res) => {
+router.get('/api/results', async (req, res) => {
 
     const scenarioId = req.query.id
+    console.log(scenarioId)
 
     const results = await ResultsModel.findOne({scenario: scenarioId})
     if (!results) {

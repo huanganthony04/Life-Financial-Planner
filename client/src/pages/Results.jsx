@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
+import ResultViewer from '../components/ResultViewer'
 import SelectScenarioModal from '../components/SelectScenarioModal'
 import './Results.css'
 
@@ -31,8 +32,8 @@ const Results = ({user}) => {
       .then((response) => {
           setResults(response.data)
       })
-      .catch((error) => {
-          console.log(error)
+      .catch(() => {
+          console.log('Results not found')
           return
       })
   }
@@ -78,7 +79,7 @@ const Results = ({user}) => {
         </div>
       </div>
       <div id="results-body">
-        {scenario ? (results ? null : noResults()) : noScenario()}
+        {scenario ? (results ? <ResultViewer resultList={results.results.resultList}/> : noResults()) : noScenario()}
       </div>
 
       <SelectScenarioModal

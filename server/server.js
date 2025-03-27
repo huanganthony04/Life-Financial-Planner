@@ -6,6 +6,7 @@ import mongoose from 'mongoose'
 import userRoutes from './routes/userRoutes.js'
 import scenarioRoutes from './routes/scenarioRoutes.js'
 import taxRoutes from './routes/taxRoutes.js'
+import resultRoutes from './routes/resultRoutes.js'
 import scraperIrsData from './scraperIrs.js'
 import stateTaxRoutes from './routes/stateTaxRoutes.js'
 import scraperStateYaml from './scraperStateYaml.js'
@@ -79,6 +80,7 @@ mongoose.connect(MONGO_URL)
     app.use('', scenarioRoutes)
     app.use('', taxRoutes)
     app.use('', stateTaxRoutes)
+    app.use('', resultRoutes)
 
     // Start the server
     app.listen(PORT, () => {

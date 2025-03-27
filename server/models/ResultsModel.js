@@ -1,24 +1,23 @@
 import mongoose from 'mongoose'
-import { ScenarioSchema } from './ScenarioModel.js'
+import { valueDistributionSchema, investmentTypeSchema, investmentSchema, incomeEventSchema, expenseEventSchema, investEventSchema, rebalanceEventSchema } from './schemas.js'
 const { Schema } = mongoose;
 
 //Used for fixed values or Normal/Uniform distributions/GBM.
 //Used in life expectancy, investment return/income, etc
 
-const resultItemSchema = new Schema({
-    result: {
-        type: ScenarioSchema,
-        required: true
-    },
+const yearResultSchema = new Schema({
+
+    investments: [mongoose.Schema.Types.Mixed],
     year: {
         type: Number,
         required: true
-    },
-}, { _id: false })
+    }
+
+}, {_id: false})
 
 const resultSchema = new Schema({
-    results: {
-        type: [resultItemSchema],
+    resultList: {
+        type: [yearResultSchema],
     },
     scenario: {
         type: mongoose.Schema.Types.ObjectId,
