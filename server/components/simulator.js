@@ -155,7 +155,14 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
     let currentYear = presentYear
 
     for (let i = 0; i < remainingYears; i++) {
-        results.push({investments: structuredClone(Scenario.investments), year: currentYear})
+        
+        results.push({
+            investments: structuredClone(Scenario.investments), 
+            incomeEvents: structuredClone(Scenario.incomeEvents), 
+            expenseEvents: structuredClone(Scenario.expenseEvents),
+            investEvents: structuredClone(Scenario.investEvents),
+            year: currentYear
+        })
 
         if (Scenario.inflationAssumption.distType === "fixed") {
             inflation_rate = Scenario.inflationAssumption.value
@@ -201,7 +208,13 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
 
     }
 
-    results.push({investments: structuredClone(Scenario.investments), year: currentYear})
+    results.push({
+        investments: structuredClone(Scenario.investments), 
+        incomeEvents: structuredClone(Scenario.incomeEvents), 
+        expenseEvents: structuredClone(Scenario.expenseEvents),
+        investEvents: structuredClone(Scenario.investEvents),
+        year: currentYear
+    })
     return results
 
 }

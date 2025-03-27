@@ -19,6 +19,7 @@ const Results = ({user}) => {
   const runSimulation = async (scenarioId) => {
     await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenarioId}`, {withCredentials: true})
       .then((response) => {
+          console.log(response.data)
           setResults(response.data)
       })
       .catch((error) => {
@@ -79,7 +80,7 @@ const Results = ({user}) => {
         </div>
       </div>
       <div id="results-body">
-        {scenario ? (results ? <ResultViewer resultList={results.results.resultList}/> : noResults()) : noScenario()}
+        {scenario ? (results ? <ResultViewer resultList={results.resultList}/> : noResults()) : noScenario()}
       </div>
 
       <SelectScenarioModal

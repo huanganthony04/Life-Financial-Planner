@@ -8,6 +8,10 @@ const { Schema } = mongoose;
 const yearResultSchema = new Schema({
 
     investments: [mongoose.Schema.Types.Mixed],
+    incomeEvents: [mongoose.Schema.Types.Mixed],
+    expenseEvents: [mongoose.Schema.Types.Mixed],
+    investEvents: [mongoose.Schema.Types.Mixed],
+
     year: {
         type: Number,
         required: true

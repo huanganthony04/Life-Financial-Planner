@@ -246,7 +246,7 @@ router.get('/api/scenario/run', async (req, res) => {
 
     await resultsModel.save()
     .then(() => {
-        res.status(200).json({success: true})
+        res.status(200).json(resultsModel.toObject())
     })
     .catch((error) => {
         console.log(error)

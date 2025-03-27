@@ -24,7 +24,7 @@ router.get('/api/results', async (req, res) => {
         return res.status(404).json({error: 'Results not found'})
     }
     else {
-        return res.status(200).json({results: results})
+        return res.status(200).json(results)
     }
 })
 
