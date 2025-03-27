@@ -2,6 +2,9 @@ import { ValueDistribution, InvestmentType, Investment, Scenario } from '../clas
 
 //Generate a normal distribution using Box-Muller transform
 function normalSample(mean, sigma) {
+    if (mean == null || sigma == null || Number.isNaN(mean) || Number.isNaN(sigma)) {
+        throw new Error("Invalid mean or sigma value")
+    }
     let u1 = Math.random()
     let u2 = Math.random()
     let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2)
@@ -82,8 +85,8 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
     for (let event of allEvents) {
 
         //Determine the duration of the event
-        if (event.duration.distType == "fixed") continue;
-        else if (event.duration.distType == "normal") {
+        if (event.duration.distType === "fixed") continue;
+        else if (event.duration.distType === "normal") {
             let mean = event.duration.mean
             let sigma = event.duration.sigma
             let duration = normalSample(mean, sigma)
@@ -95,21 +98,23 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
             let duration = Math.random() * (upper - lower) + lower
             event.duration = new ValueDistribution({ type: "fixed", value: duration })
         }
+    }
 
+    for (let event of allEvents) {
         //Determine the start year of the event (if it doesn't have a startWith)
-        if (event.start.startWith) {
-            if (event.start.startDistribution.distType == "fixed") continue;
+        if (!event.start.startWith) {
+            if (event.start.startDistribution.distType === "fixed") continue;
             else if (event.start.startDistribution.distType === "normal") {
                 let mean = event.start.startDistribution.mean
                 let sigma = event.start.startDistribution.sigma
                 let startYear = normalSample(mean, sigma)
-                event.start.startDistribution = new ValueDistribution({ type: "fixed", value: startYear })
+                event.start.startDistribution = new ValueDistribution({ type: "fixed", value: Math.round(startYear) })
             }
             else {
                 let lower = event.start.startDistribution.lower
                 let upper = event.start.startDistribution.upper
                 let startYear = Math.random() * (upper - lower) + lower
-                event.start.startDistribution = new ValueDistribution({ type: "fixed", value: startYear })
+                event.start.startDistribution = new ValueDistribution({ type: "fixed", value: Math.round(startYear) })
             }
         }
     }
@@ -147,9 +152,10 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
 
     // Beginning of the main simulation loop
 
-    for (let i = 0; i < remainingYears; i++) {
+    let currentYear = presentYear
 
-        let currentYear = presentYear + i
+    for (let i = 0; i < remainingYears; i++) {
+        results.push({results: structuredClone(Scenario), year: currentYear})
 
         if (Scenario.inflationAssumption.distType === "fixed") {
             inflation_rate = Scenario.inflationAssumption.value
@@ -165,7 +171,6 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
         cash_investment.value += curYearIncome + curYearSS
 
         // Update investments
-
         let investmentIncome = updateInvestments(Scenario.investments)
         curYearIncome += investmentIncome
 
@@ -192,9 +197,11 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
         // Adjust everything affected by inflation
         adjustInflation(Scenario.incomeEvents, Scenario.expenseEvents, simFederalTaxRates, simStateTaxRates, inflation_rate)
 
-        results.push({results: structuredClone(Scenario), year: currentYear})
+        currentYear++
+
     }
 
+    results.push({result: structuredClone(Scenario), year: currentYear})
     return results
 
 }
@@ -319,6 +326,7 @@ function updateInvestments(investments) {
                 dividends += sample
             }
         }
+
         else {
             if (asset.incomeDistribution.distType === "fixed") {
                 let dividend = investment.value * (1 + asset.incomeDistribution.value) - investment.value
@@ -597,7 +605,11 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
     if (activeInvestEvent.glidePath) {
 
         let finalAssetAlloc = activeInvestEvent.assetAllocation2
-        let progress = currentYear - activeInvestEvent.startYear / activeInvestEvent.duration.value
+
+        let progress = 0
+        if (activeInvestEvent.duration.value !== 0) {
+            progress = currentYear - activeInvestEvent.start.value / activeInvestEvent.duration.value
+        }
 
         for (const [asset, alloc] of Object.entries(assetAlloc)) {
 

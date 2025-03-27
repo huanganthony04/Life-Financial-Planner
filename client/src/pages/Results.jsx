@@ -15,10 +15,20 @@ const Results = ({user}) => {
       setScenario(scenario)
   }, []))
 
-  const runSimulation = async (scenario) => {
-    await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenario._id}`, {withCredentials: true})
+  const runSimulation = async (scenarioId) => {
+    await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenarioId}`, {withCredentials: true})
       .then((response) => {
-          console.log(response.data)
+          setResults(response.data)
+      })
+      .catch((error) => {
+          console.log(error)
+          return
+      })
+  }
+
+  const getResults = async (scenarioId) => {
+    await axios.get(`${BACKEND_URL}/api/results?id=${scenarioId}`, {withCredentials: true})
+      .then((response) => {
           setResults(response.data)
       })
       .catch((error) => {
@@ -40,7 +50,7 @@ const Results = ({user}) => {
       <div id="no-results-container">
         <h3>No results were found for this scenario.</h3>
         <h3>Click the button below to run a new simulation!</h3>
-        <button className="green-button" onClick={() => runSimulation(scenario)}>
+        <button className="green-button" onClick={() => runSimulation(scenario._id)}>
           Run Simulation
         </button>
       </div>
@@ -48,8 +58,10 @@ const Results = ({user}) => {
   }
 
   useEffect(() => {
-
-  })
+    if (scenario) {
+      getResults(scenario._id)
+    }
+  }, [scenario])
 
   return (
     <>

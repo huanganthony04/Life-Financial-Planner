@@ -231,9 +231,27 @@ router.get('/api/scenario/run', async (req, res) => {
     let federalTaxRates = await FederalTaxModel.findOne().lean()
     let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
 
+
     // Run the simulation
     let results = runSimulation(scenario, federalTaxRates, stateTaxRates)
-    console.log(results)
 
+    res.status(500).json({error: 'Simulation not implemented yet!'})
+
+    /*
+    // Create a new ResultsModel instance
+    let resultsModel = new ResultsModel({
+        scenario: scenarioId,
+        results: results
+    })
+
+    await resultsModel.save()
+    .then(() => {
+        res.status(200).json({success: true})
+    })
+    .catch((error) => {
+        console.log(error)
+        res.status(500).json({error: error})
+    })
+    */
 })
 export default router

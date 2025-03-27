@@ -19,8 +19,13 @@ const resultItemSchema = new Schema({
 const resultSchema = new Schema({
     results: {
         type: [resultItemSchema],
+    },
+    scenario: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Scenario',
+        required: true
     }
 })
 
-const ResultModel = mongoose.model('result', resultSchema)
+const ResultModel = mongoose.model('Result', resultSchema)
 export default ResultModel
