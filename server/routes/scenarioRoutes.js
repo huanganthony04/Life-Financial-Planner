@@ -1,5 +1,5 @@
 import express from 'express'
-import { OAuth2Client } from 'google-auth-library'
+import { Scenario } from '../classes.js'
 import UserModel from '../models/UserModel.js'
 import ScenarioModel from '../models/ScenarioModel.js'
 import 'dotenv/config'
@@ -85,10 +85,75 @@ router.get('/api/scenario/', async (req, res) => {
 
 })
 
+//Save an existing scenario
+router.post('/api/scenario/save/', async (req, res) => {
+    
+    const userId = req.session.userId
+    if (!userId) {
+        return res.status(401).json({error: 'You are not logged in!'})
+    }
 
+    const user = await UserModel.findOne({_id: userId})
+    if (!user) {
+        return res.status(401).json({error: 'User not found!'})
+    }
 
+    const scenarioId = req.body.scenarioId
 
+    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+    if (!scenario) {
+        return res.status(404).json({error: 'Scenario not found!'})
+    }
 
+    if (scenario.owner !== userId && !scenario.editors.includes(userId)) {
+        return res.status(403).json({error: 'You do not have permission to save this scenario!'})
+    }
+
+    scenario.name = req.body.name
+
+    try {
+        await scenario.save()
+        return res.status(200).json({success: true})
+    }
+    catch(error) {
+        console.log(error)
+        return res.status(500).json({error: error})
+    }
+})
+
+//Delete a scenario
+router.post('/api/scenario/delete/', async (req, res) => {
+    
+    const userId = req.session.userId
+    if (!userId) {
+        return res.status(401).json({error: 'You are not logged in!'})
+    }
+    const user = await UserModel.findOne({_id: userId})
+    if (!user) {
+        return res.status(401).json({error: 'User not found!'})
+    }
+
+    const scenarioId = req.body.scenarioId
+
+    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+    if (!scenario) {
+        return res.status(404).json({error: 'Scenario not found!'})
+    }
+
+    if (scenario.owner !== userId) {
+        return res.status(403).json({error: 'You do not have permission to delete this scenario!'})
+    }
+
+    try {
+        await ScenarioModel.deleteOne({_id: scenarioId})
+        user.ownedScenarios = user.ownedScenarios.filter(scenario => scenario.toString() !== scenarioId)
+        return res.status(200).json({success: true})
+    }
+    catch(error) {
+        console.log(error)
+        return res.status(500).json({error: error})
+    }
+})
 
 router.post('/api/postEventnew', async (req, res) => {
 
