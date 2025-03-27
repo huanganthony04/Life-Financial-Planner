@@ -3,6 +3,7 @@ import { Scenario } from '../classes.js'
 import UserModel from '../models/UserModel.js'
 import { ScenarioModel } from '../models/ScenarioModel.js'
 import ResultsModel from '../models/ResultsModel.js'
+import TaxModel from '../models/taxModel.js'
 import runSimulation from '../components/simulator.js'
 import 'dotenv/config'
 
