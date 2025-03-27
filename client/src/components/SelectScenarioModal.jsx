@@ -11,7 +11,7 @@ const ScenarioCreate = ({open, onClose, user, selectScenario}) => {
   const [scenarios, setScenarios] = useState(null)
 
   const fetchUserScenarios = async (user) => {
-    await axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
+    await axios.get(`${BACKEND_URL}/api/scenario/byuser?userId=${user.userId}`, {withCredentials: true})
     .then((response) => {
         if (response.data.scenarios) {
             setScenarios(response.data.scenarios)
@@ -53,7 +53,7 @@ const ScenarioCreate = ({open, onClose, user, selectScenario}) => {
         <div id="scenario-modal-header">
           <h2 id="scenario-modal-header-title">Select Scenario</h2>
         </div>
-        <div id="scenario-modal-body">
+        <div id="scenario-select-modal-body">
           {scenariosList(scenarios)}
         </div>
         <div id="scenario-modal-footer">

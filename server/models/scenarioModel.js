@@ -260,4 +260,4 @@ const ScenarioSchema = new Schema({
 })
 
 const ScenarioModel = mongoose.model('Scenario', ScenarioSchema)
-export default ScenarioModel
+export { ScenarioModel, ScenarioSchema }

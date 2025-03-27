@@ -36,7 +36,7 @@ function financialSim(Scenario, TaxRates) {
 
     //Add cash investment if no cash investment exists
     if (cash_investment == null) {
-        it = new InvestmentType({
+        let it = new InvestmentType({
             name: "cash",
             description: "Cash investment",
             returnAmtOrPct: "amount",
@@ -190,6 +190,7 @@ function financialSim(Scenario, TaxRates) {
         // Adjust everything affected by inflation
         adjustInflation(Scenario.incomeEvents, Scenario.expenseEvents, simTaxRates, inflation_rate)
 
+        results.push({results: structuredClone(Scenario), year: currentYear})
     }
 
     return results
@@ -685,6 +686,7 @@ function adjustInflation(incomeEvents, expenseEvents, simTaxRates, inflation) {
     simTaxRates.standardDeductionSingle *= (1 + inflation)
 }
 
+export default financialSim
 
 /* Test Code */
 import importScenario from './importer.js'
