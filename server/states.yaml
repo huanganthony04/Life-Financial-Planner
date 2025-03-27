@@ -1,0 +1,102 @@
+states:
+  - name: "NY"
+    baseYear: 2023
+    baseInflationRate: 0.03
+    singleBrackets:
+      - min: 0
+        max: 8500
+        rate: 4.0
+      - min: 8500
+        max: 11700
+        rate: 4.5
+      - min: 11700
+        max: 13900
+        rate: 5.25
+      - min: 13900
+        max: 21400
+        rate: 5.9
+      - min: 21400
+        max: 80650
+        rate: 6.33
+      - min: 80650
+        max: Infinity
+        rate: 6.85
+    marriedBrackets:
+      - min: 0
+        max: 17150
+        rate: 4.0
+      - min: 17150
+        max: 23600
+        rate: 4.5
+      - min: 23600
+        max: 27900
+        rate: 5.25
+      - min: 27900
+        max: 43000
+        rate: 5.9
+      - min: 43000
+        max: 161550
+        rate: 6.33
+      - min: 161550
+        max: Infinity
+        rate: 6.85
+
+  - name: "NJ"
+    baseYear: 2023
+    baseInflationRate: 0.03
+    singleBrackets:
+      - min: 0
+        max: 20000
+        rate: 1.4
+      - min: 20000
+        max: 35000
+        rate: 1.75
+      - min: 35000
+        max: 40000
+        rate: 2.45
+      - min: 40000
+        max: 75000
+        rate: 3.5
+      - min: 75000
+        max: Infinity
+        rate: 6.37
+    marriedBrackets:
+      - min: 0
+        max: 20000
+        rate: 1.4
+      - min: 20000
+        max: 35000
+        rate: 1.75
+      - min: 35000
+        max: 40000
+        rate: 2.45
+      - min: 40000
+        max: 75000
+        rate: 3.5
+      - min: 75000
+        max: Infinity
+        rate: 6.37
+
+  - name: "CT"
+    baseYear: 2023
+    baseInflationRate: 0.03
+    singleBrackets:
+      - min: 0
+        max: 10000
+        rate: 3
+      - min: 10000
+        max: 50000
+        rate: 5
+      - min: 50000
+        max: Infinity
+        rate: 6.99
+    marriedBrackets:
+      - min: 0
+        max: 20000
+        rate: 3
+      - min: 20000
+        max: 100000
+        rate: 5
+      - min: 100000
+        max: Infinity
+        rate: 6.99
