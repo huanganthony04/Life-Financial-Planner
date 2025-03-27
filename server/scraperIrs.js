@@ -3,7 +3,9 @@ import axios from 'axios'
 import { load } from 'cheerio'
 import FederalTax from './models/taxModel.js'  
 
-const MONGO_URI = 'mongodb://localhost:27017/CSE361'
+import 'dotenv/config'
+
+const MONGO_URI = process.env.MONGO_URL
 console.log("Connecting to:", MONGO_URI);
 
 async function main() {
