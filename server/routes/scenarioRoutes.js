@@ -3,7 +3,9 @@ import { Scenario } from '../classes.js'
 import UserModel from '../models/UserModel.js'
 import { ScenarioModel } from '../models/ScenarioModel.js'
 import ResultsModel from '../models/ResultsModel.js'
-import TaxModel from '../models/taxModel.js'
+import FederalTaxModel from '../models/taxModel.js'
+import StateTaxModel from '../models/stateTaxModel.js'
+import importScenario from '../components/importer.js'
 import runSimulation from '../components/simulator.js'
 import 'dotenv/config'
 
@@ -47,10 +49,11 @@ router.post('/api/scenario/create/', async (req, res) => {
         name = "Unnamed Scenario"
     }
 
-    let scenarioObj = new Scenario(req.body)
+    let scenarioObj = importScenario(req.body)
     scenarioObj.name = name
     scenarioObj.owner = userId
     scenarioObj.editors = [userId]
+
     const scenario = new ScenarioModel(scenarioObj)
 
     try {
@@ -216,7 +219,7 @@ router.get('/api/scenario/run', async (req, res) => {
 
     const scenarioId = req.query.id
 
-    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+    const scenario = await ScenarioModel.findOne({_id: scenarioId}).lean()
     if (!scenario) {
         return res.status(404).json({error: 'Scenario not found!'})
     }
@@ -225,13 +228,12 @@ router.get('/api/scenario/run', async (req, res) => {
         return res.status(403).json({error: 'You do not have permission to operate on this scenario!'})
     }
 
+    let federalTaxRates = await FederalTaxModel.findOne().lean()
+    let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
+
     // Run the simulation
-    let results = runSimulation(scenario)
+    let results = runSimulation(scenario, federalTaxRates, stateTaxRates)
     console.log(results)
-
-
-
-
 
 })
 export default router

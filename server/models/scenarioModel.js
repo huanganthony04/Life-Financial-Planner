@@ -78,30 +78,33 @@ const valueDistributionSchema = new Schema({
             }
         }
     }
-})
+}, {_id: false})
 
 //Schema for an investmentType
 const investmentTypeSchema = new Schema({
     name: String,
     description: String,
-    returnAmtorPct: {
+    returnAmtOrPct: {
         type: String,
         enum: ['percent', 'amount']
     },
     returnDistribution: valueDistributionSchema,
     expenseRatio: Number,
-    incomeAmtorPct: {
+    incomeAmtOrPct: {
         type: String,
         enum: ['percent', 'amount']
     },
     incomeDistribution: valueDistributionSchema,
     taxability: Boolean
-})
+}, {_id: false})
 
 //Schema for investments
 const investmentSchema = new Schema({
     investmentType: investmentTypeSchema,
-    value: Number,
+    value: {
+        type: Number,
+        default: 0
+    },
     taxStatus: {
         type: String,
         enum: ['non-retirement', 'pre-tax', 'after-tax']
@@ -116,7 +119,7 @@ const investmentSchema = new Schema({
         type: Number,
         default: 0
     }
-})
+}, {_id: false})
 
 //Schema for the start time of an event
 const eventStartSchema = new Schema({
@@ -127,10 +130,10 @@ const eventStartSchema = new Schema({
     },
     startWith: {
         //The name of the eventSeries this eventSeries starts with
-        eventSeries: String
+        type: String,
     },
     duration: valueDistributionSchema,
-})
+}, {_id: false})
 
 //Schema for income events
 const incomeEventSchema = new Schema({
@@ -147,7 +150,7 @@ const incomeEventSchema = new Schema({
     userFraction: {type: Number, default: 1.0},
     socialSecurity: {type: Boolean, required: true}
 
-})
+}, {_id: false})
 
 //Schema for expense events
 const expenseEventSchema = new Schema({
@@ -162,7 +165,7 @@ const expenseEventSchema = new Schema({
     userFraction: {type: Number, default: 1.0},
     discretionary: {type: Boolean, required: true}
 
-})
+}, {_id: false})
 
 const investEventSchema = new Schema({
 
@@ -184,7 +187,7 @@ const investEventSchema = new Schema({
         default: 0
     }
     
-})
+}, {_id: false})
 
 const rebalanceEventSchema = new Schema({
 
@@ -197,7 +200,7 @@ const rebalanceEventSchema = new Schema({
         required: true
     }
 
-})
+}, {_id: false})
 
 const ScenarioSchema = new Schema({
 

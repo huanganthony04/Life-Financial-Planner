@@ -8,7 +8,7 @@ function normalSample(mean, sigma) {
     return mean + sigma * z0
 }
 
-function financialSim(Scenario, TaxRates) {
+function financialSim(Scenario, federalTaxRates, stateTaxRates) {
 
     let inflation_rate = 0
     let prevYearIncome = 0
@@ -19,7 +19,8 @@ function financialSim(Scenario, TaxRates) {
     let curYearGains = 0
     let prevYearTaxes = 0
     let results = []
-    let simTaxRates = structuredClone(TaxRates)
+    let simFederalTaxRates = structuredClone(federalTaxRates)
+    let simStateTaxRates = structuredClone(stateTaxRates)
 
     let presentYear = new Date().getFullYear()
 
@@ -71,16 +72,13 @@ function financialSim(Scenario, TaxRates) {
 
     let remainingYears = birthYear + lifeExpectancy - presentYear
 
-    console.log(remainingYears)
-
     // Event preprocessing
     let allEvents = Scenario.incomeEvents
         .concat(Scenario.expenseEvents)
         .concat(Scenario.investEvents)
         .concat(Scenario.rebalanceEvents)
 
-    // Replace all events with 'startWith' with the year of the event that it starts with
-    // And determine the start/end year of events that have a distribution as a start year.
+    // Determine the start/end year of events that have a distribution as a start year.
     for (let event of allEvents) {
 
         //Determine the duration of the event
@@ -99,7 +97,7 @@ function financialSim(Scenario, TaxRates) {
         }
 
         //Determine the start year of the event (if it doesn't have a startWith)
-        if (!event.start.startWith) {
+        if (event.start.startWith) {
             if (event.start.startDistribution.distType == "fixed") continue;
             else if (event.start.startDistribution.distType === "normal") {
                 let mean = event.start.startDistribution.mean
@@ -114,7 +112,10 @@ function financialSim(Scenario, TaxRates) {
                 event.start.startDistribution = new ValueDistribution({ type: "fixed", value: startYear })
             }
         }
+    }
 
+    // Replace all events with 'startWith' with the year of the event that it starts with
+    for (let event of allEvents) {
         //Since an event's startWith can also have another startWith, we need to traverse up 
         //the events by their startWith until we reach an event with an actual year.
         let eventStack = []
@@ -150,7 +151,7 @@ function financialSim(Scenario, TaxRates) {
 
         let currentYear = presentYear + i
 
-        if (Scenario.inflationAssumption.type === "fixed") {
+        if (Scenario.inflationAssumption.distType === "fixed") {
             inflation_rate = Scenario.inflationAssumption.value
         }
         else {
@@ -164,13 +165,14 @@ function financialSim(Scenario, TaxRates) {
         cash_investment.value += curYearIncome + curYearSS
 
         // Update investments
+
         let investmentIncome = updateInvestments(Scenario.investments)
         curYearIncome += investmentIncome
 
         // Pay non-discretionary expenses
 
         // Calculate last year's taxes
-        prevYearTaxes = calculateTaxes(prevYearIncome, prevYearSS, prevYearGains, simTaxRates, Scenario.maritalStatus)
+        prevYearTaxes = calculateTaxes(prevYearIncome, prevYearSS, prevYearGains, simFederalTaxRates, simStateTaxRates, Scenario.maritalStatus)
 
         let expensesND = calculateExpensesND(currentYear, Scenario.expenseEvents)
         curYearGains = payExpensesND(expensesND + prevYearTaxes, Scenario.investments, cash_investment, Scenario.expenseWithdrawalStrategy)
@@ -179,16 +181,16 @@ function financialSim(Scenario, TaxRates) {
         payExpensesD(currentYear, Scenario.expenseEvents, cash_investment, Scenario.financialGoal)
 
         // Run investment event
-        runInvestEvent(i, Scenario.events, cash_investment, Scenario.investments)
+        runInvestEvent(i, Scenario.investEvents, cash_investment, Scenario.investments)
 
         // Run rebalance event
-        curYearGains += runRebalanceEvent(events, Scenario.investments)
+        // curYearGains += runRebalanceEvent(events, Scenario.investments)
         
         prevYearIncome = curYearIncome
         prevYearGains = curYearGains
 
         // Adjust everything affected by inflation
-        adjustInflation(Scenario.incomeEvents, Scenario.expenseEvents, simTaxRates, inflation_rate)
+        adjustInflation(Scenario.incomeEvents, Scenario.expenseEvents, simFederalTaxRates, simStateTaxRates, inflation_rate)
 
         results.push({results: structuredClone(Scenario), year: currentYear})
     }
@@ -351,68 +353,83 @@ function updateInvestments(investments) {
 
 }
 
-function calculateTaxes(income, socialSecurity, capitalGains, taxRates, isMarried) {
-
-    console.log(taxRates)
+function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, stateTaxRates, isMarried) {
 
     let tax = 0
     let previous_limit = 0
 
+    let adjustedIncome = income
     if (isMarried) {
-        income -= taxRates.standardDeductionMarried
+        adjustedIncome -= federalTaxRates.standardDeductionMarried
     }
     else {
-        income -= taxRates.standardDeductionSingle
+        adjustedIncome -= federalTaxRates.standardDeductionSingle
     }
 
     // Each cell in taxRates has two fields, limit and rate.
-    for (const bracket of taxRates.taxBrackets) {
-        limit = bracket.max
-        rate = bracket.rate
+    for (const bracket of federalTaxRates.taxBrackets) {
+        let limit = bracket.max
+        let rate = bracket.rate
 
-        if (income > limit) {
+        if (adjustedIncome > limit) {
             tax += (limit - previous_limit) * rate
             previous_limit = limit
         }
         else {
-            tax += (income - previous_limit) * rate
+            tax += (adjustedIncome - previous_limit) * rate
             break
         }
     }
 
-    // Currently, we don't have the tax rates for states.
-    /*
     previous_limit = 0
 
-    for (let i = 0; i < taxRates.stateTaxBrackets.length; i++) {
-        limit = taxRates.stateTaxBrackets[i].max
-        rate = taxRates.stateTaxBrackets[i].rate
+    adjustedIncome = income
 
-        if (income > limit) {
-            tax += (limit - previous_limit) * rate
-            previous_limit = limit
-        }
-        else {
-            tax += (income - previous_limit) * rate
-            break
+    if (isMarried) {
+        for (const bracket of stateTaxRates.marriedBrackets) {
+            let limit = bracket.max
+            let rate = bracket.rate
+    
+            if (adjustedIncome > limit) {
+                tax += (limit - previous_limit) * rate
+                previous_limit = limit
+            }
+            else {
+                tax += (adjustedIncome - previous_limit) * rate
+                break
+            }
         }
     }
-    */
+    else {
+        for (const bracket of stateTaxRates.singleBrackets) {
+            let limit = bracket.max
+            let rate = bracket.rate
+    
+            if (adjustedIncome > limit) {
+                tax += (limit - previous_limit) * rate
+                previous_limit = limit
+            }
+            else {
+                tax += (adjustedIncome - previous_limit) * rate
+                break
+            }
+        }
+    }
 
     // Calculate capital gains tax
     previous_limit = 0
-    remaining_gains = capitalGains
-    for (const bracket of taxRates.capitalGainsBrackets) {
+    let remaining_gains = capitalGains
+    for (const bracket of federalTaxRates.capitalGainsBrackets) {
 
-        limit = bracket.max
-        rate = bracket.rate
+        let limit = bracket.max
+        let rate = bracket.rate
 
         if (income >= limit) {
             previous_limit = limit
             continue
         }
 
-        let taxable_gains = min(remaining_gains, max(0, limit - max(previous_limit, income)))
+        let taxable_gains = Math.min(remaining_gains, Math.max(0, limit - Math.max(previous_limit, income)))
         tax += taxable_gains * rate
         remaining_gains -= taxable_gains
         previous_limit = limit
@@ -426,9 +443,9 @@ function calculateTaxes(income, socialSecurity, capitalGains, taxRates, isMarrie
     return tax
 }
 
-function calculateExpensesND(currentYear, expenseEvents, inflation) {
+function calculateExpensesND(currentYear, expenseEvents) {
 
-    expenses = 0
+    let expenses = 0
 
     for (let expenseEvent of expenseEvents) {
 
@@ -454,9 +471,9 @@ function calculateExpensesND(currentYear, expenseEvents, inflation) {
                 expenseEvent.initialAmount *= 1 + expenseEvent.changeDistribution.value
             }
         }
-        else if (expenseEvent.expectedAnnualChange.distType == "normal") {
-            let mean = expenseEvent.expectedAnnualChange.mean
-            let sigma = expenseEvent.expectedAnnualChange.sigma
+        else if (expenseEvent.changeDistribution.distType == "normal") {
+            let mean = expenseEvent.changeDistribution.mean
+            let sigma = expenseEvent.changeDistribution.sigma
             let change = normalSample(mean, sigma)
             if (expenseEvent.changeAmtOrPct == "amount") {
                 expenseEvent.initialAmount += change
@@ -466,8 +483,8 @@ function calculateExpensesND(currentYear, expenseEvents, inflation) {
             }
         }
         else {
-            let lower = expenseEvent.expectedAnnualChange.lower
-            let upper = expenseEvent.expectedAnnualChange.upper
+            let lower = expenseEvent.changeDistribution.lower
+            let upper = expenseEvent.changeDistribution.upper
             let change = Math.random() * (upper - lower) + lower
             if (expenseEvent.changeAmtOrPct == "amount") {
                 expenseEvent.initialAmount += change
@@ -494,10 +511,10 @@ function payExpensesND(amount, investments, cash_investment, withdrawalStrategy)
     amount -= cash_investment.value
     cash_investment.value = 0
 
-    capitalGains = 0
+    let capitalGains = 0
 
     for (const assetName of withdrawalStrategy) {
-        let investment = investments.find(i => i.investmentType.name == assetName)
+        let investment = investments.find(i => i.id === assetName)
         if (investment.value < amount) {
             //Sell the entire investment to pay the expenses
             amount -= investment.value
@@ -575,18 +592,18 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
         return
     }
 
-    let assetAlloc = activeInvestEvent.AssetAllocation
+    let assetAlloc = activeInvestEvent.assetAllocation
 
-    if (activeInvestEvent.AssetAlloc.useGlidePath) {
+    if (activeInvestEvent.glidePath) {
 
         let finalAssetAlloc = activeInvestEvent.assetAllocation2
         let progress = currentYear - activeInvestEvent.startYear / activeInvestEvent.duration.value
 
-        for (const [asset, alloc] of assetAlloc) {
+        for (const [asset, alloc] of Object.entries(assetAlloc)) {
 
             let targetAlloc = alloc + ((finalAssetAlloc[asset] - alloc) * progress)
 
-            let investment = investments.find(i => i.investmentType.name == asset)
+            let investment = investments.find(i => i.id === asset)
             
             investment.value += excess_cash * targetAlloc
             investment.costBasis += excess_cash * targetAlloc
@@ -596,8 +613,8 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
     }
     // If there is no glide path, just invest according to the asset allocation
     else {
-        for(const [asset, alloc] of assetAlloc) {
-            let investment = investments.find(i => i.name == asset)
+        for(const [asset, alloc] of Object.entries(assetAlloc)) {
+            let investment = investments.find(i => i.id == asset)
 
             investment.value += excess_cash * alloc
             investment.costBasis += excess_cash * alloc
@@ -655,7 +672,8 @@ function runRebalanceEvent(rebalanceEvent, investments) {
 }
 */
 
-function adjustInflation(incomeEvents, expenseEvents, simTaxRates, inflation) {
+function adjustInflation(incomeEvents, expenseEvents, simFederalTaxRates, simStateTaxRates, inflation) {
+
     for (let incomeEvent of incomeEvents) {
         if (incomeEvent.inflationAdjusted) {
             incomeEvent.initialAmount *= (1 + inflation)
@@ -668,52 +686,29 @@ function adjustInflation(incomeEvents, expenseEvents, simTaxRates, inflation) {
         }
     }
 
-    for (let i = 0; i < simTaxRates.taxBrackets.length; i++) {
-        simTaxRates.taxBrackets[i].max *= (1 + inflation)
+    // Adjust the federal tax brackets by inflation
+    for (let i = 0; i < simFederalTaxRates.taxBrackets.length; i++) {
+        simFederalTaxRates.taxBrackets[i].max *= (1 + inflation)
     }
 
-    simTaxRates.standardDeductionSingle *= (1 + inflation)
-    simTaxRates.standardDeductionMarried *= (1 + inflation)
+    simFederalTaxRates.standardDeductionSingle *= (1 + inflation)
+    simFederalTaxRates.standardDeductionMarried *= (1 + inflation)
 
-    for (let i = 0; i < simTaxRates.capitalGainsBrackets.length; i++) {
-        simTaxRates.capitalGainsBrackets[i].max *= (1 + inflation)
+    for (let i = 0; i < simFederalTaxRates.capitalGainsBrackets.length; i++) {
+        simFederalTaxRates.capitalGainsBrackets[i].max *= (1 + inflation)
     }
 
-    simTaxRates.standardDeductionHeadOfHousehold *= (1 + inflation)
-    simTaxRates.standardDeductionMarried *= (1 + inflation)
-    simTaxRates.standardDeductionSingle *= (1 + inflation)
+    simFederalTaxRates.standardDeductionHeadOfHousehold *= (1 + inflation)
+    simFederalTaxRates.standardDeductionMarried *= (1 + inflation)
+    simFederalTaxRates.standardDeductionSingle *= (1 + inflation)
+
+    // Adjust the state tax brackets by inflation
+    for (let i = 0; i < simStateTaxRates.marriedBrackets.length; i++) {
+        simStateTaxRates.marriedBrackets[i].max *= (1 + inflation)
+    }
+    for (let i = 0; i < simStateTaxRates.singleBrackets.length; i++) {
+        simStateTaxRates.singleBrackets[i].max *= (1 + inflation)
+    }
 }
 
 export default financialSim
-
-/* Test Code */
-import importScenario from './importer.js'
-import TaxModel from '../models/taxModel.js'
-import mongoose from 'mongoose'
-import dotenv from 'dotenv'
-dotenv.config({path: '../.env'})
-import fs from 'fs'
-import { exit } from 'process'
-
-const MONGO_URL = process.env.MONGO_URL
-
-mongoose.connect(MONGO_URL).then(() => {
-    console.log("Connected to MongoDB")
-})
-
-const taxRates = await TaxModel.findOne({})
-console.log("Tax rates:", taxRates)
-
-const filePath = './scenario.yaml'
-try {
-    const data = fs.readFileSync(filePath, 'utf8')
-    let scenario = importScenario(data)
-
-    let results = financialSim(scenario, taxRates)
-
-    console.log(results)
-    exit(0)
-}
-catch (error) {
-    console.error("Error:", error)
-}

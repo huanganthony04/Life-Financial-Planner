@@ -10,11 +10,11 @@ class ValueDistribution {
    * @param {number|undefined} options.lower - Defined if distType is 'uniform'
    * @param {number|undefined} options.upper - Defined if distType is 'uniform'
    */
-  constructor({ type, value, mean, stdev, lower, upper }) {
-    this.distType = type;
+  constructor({ type, value, mean, mu, stdev, sigma, lower, upper }) {
+    this.distType = (type === "GBM" ? "normal" : type)
     this.value = value;
-    this.mean = mean;
-    this.sigma = stdev;
+    this.mean = mean ?? mu;
+    this.sigma = stdev ?? sigma;
     this.lower = lower;
     this.upper = upper;
     // custom validation here if needed.
