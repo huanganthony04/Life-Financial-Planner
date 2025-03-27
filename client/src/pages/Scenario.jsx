@@ -25,7 +25,6 @@ const Scenario = ({user}) => {
     const fetchUserScenarios = async (user) => {
         await axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
             .then((response) => {
-                console.log(response)
                 if (response.data.scenarios) {
                     setScenarios(response.data.scenarios)
                 }
@@ -40,8 +39,7 @@ const Scenario = ({user}) => {
     // Defining it here allows Scenarios page to refresh the list of scenarios
     const createScenario = async (scenario) => {
         await axios.post(`${BACKEND_URL}/api/scenario/create`, scenario, {withCredentials: true})
-            .then((response) => {
-                console.log(response)
+            .then(() => {
                 fetchUserScenarios(user)
             })
             .catch((error) => {
@@ -61,8 +59,7 @@ const Scenario = ({user}) => {
 
     const deleteScenario = useCallback(async (scenarioId) => {
         await axios.post(`${BACKEND_URL}/api/scenario/delete`, {scenarioId}, {withCredentials: true})
-        .then((response) => {
-            console.log(response)
+        .then(() => {
             fetchUserScenarios(user)
         })
         .catch((error) => {
