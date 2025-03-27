@@ -8,6 +8,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL
 
 const router = express.Router()
 
+//Get scenarios by user
 router.get('/api/scenario/:userId', async (req, res) => {
 
     const userId = req.params.userId

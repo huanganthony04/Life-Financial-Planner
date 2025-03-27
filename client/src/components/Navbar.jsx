@@ -2,6 +2,7 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import homeLogo from '../assets/icons/home.svg'
 import listLogo from '../assets/icons/list.svg'
+import resultsLogo from '../assets/icons/bar_chart.svg'
 
 import './Navbar.css'
 
@@ -25,6 +26,14 @@ const Navbar = () => {
             >
                 <img className="nav-button-icon" src={listLogo}/>
                 Scenarios
+            </NavLink>
+
+            <NavLink 
+                to="/results" 
+                className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
+            >
+                <img className="nav-button-icon" src={resultsLogo}/>
+                Results
             </NavLink>
 
             {/* Uncomment this when the UserProfile page is ready

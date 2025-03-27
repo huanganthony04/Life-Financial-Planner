@@ -24,14 +24,14 @@ const Scenario = ({user}) => {
 
     const fetchUserScenarios = async (user) => {
         await axios.get(`${BACKEND_URL}/api/scenario/${user.userId}`, {withCredentials: true})
-            .then((response) => {
-                if (response.data.scenarios) {
-                    setScenarios(response.data.scenarios)
-                }
-            })
-            .catch((error) => {
-                console.log(error)
-            })
+        .then((response) => {
+            if (response.data.scenarios) {
+                setScenarios(response.data.scenarios)
+            }
+        })
+        .catch((error) => {
+            console.log(error)
+        })
     }
 
     // Function to create a scenario

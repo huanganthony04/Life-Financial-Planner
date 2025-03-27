@@ -1,0 +1,39 @@
+#results-header {
+    border-bottom: 1px solid darkgray;
+    padding: 10px 0;
+}
+
+#scenario-selection {
+    display: flex;
+    max-width: 800px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin: auto;
+}
+
+#selected-scenario-title {
+    flex-grow: 1;
+    border: 1px solid darkgray;
+    padding: 5px 10px;
+    border-radius: 10px;
+}
+
+#scenario-selection-button {
+    height: 2rem;
+    min-width: 100px;
+    padding: 0px 1rem;
+    margin: 0 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: rgb(63, 216, 114);
+    color: white;
+    cursor: pointer;
+  }
+  
+#scenario-selection-button:hover {
+background-color: rgb(53, 206, 104);
+}
+#scenario-selection-button:active {
+background-color: rgb(43, 196, 94);
+}
