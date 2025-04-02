@@ -15,6 +15,7 @@ export default importScenario
 
 
 /* Test code */
+/*
 const filePath = './scenario.yaml'
 try {
     const data = fs.readFileSync(filePath, 'utf8')
@@ -24,3 +25,4 @@ try {
 catch (error) {
     console.error("Error reading the file:", error)
 }
+*/

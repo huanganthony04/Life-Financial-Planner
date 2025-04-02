@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { valueDistributionSchema, investmentTypeSchema, investmentSchema, incomeEventSchema, expenseEventSchema, investEventSchema, rebalanceEventSchema } from './schemas.js'
+import { valueDistributionSchema, investmentTypeSchema, investmentSchema, incomeEventSchema, expenseEventSchema, investEventSchema, rebalanceEventSchema } from './Schemas.js'
 const { Schema } = mongoose;
 
 //Used for fixed values or Normal/Uniform distributions/GBM.

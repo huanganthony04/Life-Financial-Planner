@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { valueDistributionSchema, investmentSchema, incomeEventSchema, expenseEventSchema, investEventSchema, rebalanceEventSchema } from './schemas.js'
+import { valueDistributionSchema, investmentSchema, incomeEventSchema, expenseEventSchema, investEventSchema, rebalanceEventSchema } from './Schemas.js'
 const { Schema } = mongoose;
 
 const ScenarioSchema = new Schema({

@@ -1,5 +1,5 @@
 import express from 'express'
-import FederalTax from '../models/taxModel.js'
+import FederalTax from '../models/TaxModel.js'
 
 const router = express.Router()
 

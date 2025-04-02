@@ -1,5 +1,5 @@
 import express from 'express'
-import StateTax from '../models/stateTaxModel.js'
+import StateTax from '../models/StateTaxModel.js'
 
 const router = express.Router()
 

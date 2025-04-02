@@ -4,7 +4,7 @@ import express from 'express'
 import multer from 'multer'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import StateTax from '../models/stateTaxModel.js'
+import StateTax from '../models/StateTaxModel.js'
 
 const router = express.Router()
 const upload = multer({ dest: 'uploads/' }) // or wherever you store temporary uploads

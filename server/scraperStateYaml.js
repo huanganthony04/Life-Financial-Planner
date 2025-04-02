@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import fs from 'fs'
 import yaml from 'js-yaml'
-import StateTax from './models/stateTaxModel.js'
+import StateTax from './models/StateTaxModel.js'
 
 import 'dotenv/config'
 

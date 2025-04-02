@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 import axios from 'axios'
 import { load } from 'cheerio'
-import FederalTax from './models/taxModel.js'  
+import FederalTax from './models/TaxModel.js'  
 
 import 'dotenv/config'
 
