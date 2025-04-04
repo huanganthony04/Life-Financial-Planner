@@ -1,6 +1,7 @@
 import express from 'express'
 import { OAuth2Client } from 'google-auth-library'
 import UserModel from '../models/UserModel.js'
+import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID
@@ -23,25 +24,18 @@ const verifyGoogleToken = async function (idToken) {
 
 const router = express.Router()
 
+// Do NOT use getUserAuth Middleware here because not being logged in is not an error
 router.get('/api/getuser', async (req, res) => {
-    if (req.session.userId !== undefined) {
-        await UserModel.findOne({_id: req.session.userId})
-        .then((user) => {
-            if (user) {
-                console.log("User found")
-                return res.status(200).json({userId: req.session.userId, email: req.session.email})
-            }
-            else {
-                console.log("User not found")
-                req.session.destroy();
-                res.clearCookie('connect.sid')
-                return res.status(200).json(null)
-            }
-        })
+
+    if (!req.session.userId) {
+        return res.status(200).json(null)
     }
     else {
-        console.log("User not logged in")
-        return res.status(200).json(null)
+        const user = await UserModel.findOne({_id: req.session.userId})
+        if (!user) {
+            return res.status(200).json(null)
+        }
+        return res.status(200).json({userId: user._id, email: user.email})
     }
 })
 

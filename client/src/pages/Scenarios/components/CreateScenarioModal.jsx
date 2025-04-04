@@ -1,9 +1,8 @@
 import { useRef } from 'react'
 import ReactDOM from 'react-dom'
 import YAML from 'yaml'
-import writeIcon from '../assets/icons/write.svg'
-import fileIcon from '../assets/icons/file.svg'
-import './CreateScenarioModal.css'
+import writeIcon from '/src/assets/icons/write.svg'
+import fileIcon from '/src/assets/icons/file.svg'
 
 const ScenarioCreate = ({open, onClose, openScenarioFileModal, openScenarioNameModal}) => {
 

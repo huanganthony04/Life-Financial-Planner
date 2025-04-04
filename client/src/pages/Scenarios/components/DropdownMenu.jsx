@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import './DropdownMenu.css'
 
 const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario}) => {
 

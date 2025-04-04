@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import ReactDOM from 'react-dom'
-import './CreateScenarioModal.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 

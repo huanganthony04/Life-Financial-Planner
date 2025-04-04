@@ -7,6 +7,7 @@ import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import importScenario from '../components/importer.js'
 import runSimulation from '../components/simulator.js'
+import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
 
 const FRONTEND_URL = process.env.FRONTEND_URL
@@ -31,9 +32,9 @@ router.get('/api/scenario/byuser', async (req, res) => {
     }
 })
 
-router.post('/api/scenario/create/', async (req, res) => {
+router.post('/api/scenario/create/', getUserAuth, async (req, res) => {
 
-    const userId = req.session.userId
+    const userId = req.user._id
     if (!userId) {
         return res.status(401).json({error: 'You are not logged in!'})
     }
@@ -69,10 +70,10 @@ router.post('/api/scenario/create/', async (req, res) => {
 })
 
 //Get a specific scenario
-router.get('/api/scenario/', async (req, res) => {
+router.get('/api/scenario/', getUserAuth, async (req, res) => {
 
     const scenarioId = req.query.id
-    const userId = req.session.userId
+    const userId = req.user._id
 
     const scenario = await ScenarioModel.findOne({_id: scenarioId })
 
@@ -89,19 +90,10 @@ router.get('/api/scenario/', async (req, res) => {
 })
 
 //Save an existing scenario
-router.post('/api/scenario/save/', async (req, res) => {
+router.post('/api/scenario/save/', getUserAuth, async (req, res) => {
     
-    const userId = req.session.userId
-    if (!userId) {
-        return res.status(401).json({error: 'You are not logged in!'})
-    }
-
-    const user = await UserModel.findOne({_id: userId})
-    if (!user) {
-        return res.status(401).json({error: 'User not found!'})
-    }
-
     const scenarioId = req.body.scenarioId
+    const userId = req.user._id
 
     const scenario = await ScenarioModel.findOne({_id: scenarioId})
     if (!scenario) {
@@ -125,18 +117,10 @@ router.post('/api/scenario/save/', async (req, res) => {
 })
 
 //Delete a scenario
-router.post('/api/scenario/delete/', async (req, res) => {
+router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
     
-    const userId = req.session.userId
-    if (!userId) {
-        return res.status(401).json({error: 'You are not logged in!'})
-    }
-    const user = await UserModel.findOne({_id: userId})
-    if (!user) {
-        return res.status(401).json({error: 'User not found!'})
-    }
-
     const scenarioId = req.body.scenarioId
+    const userId = req.user._id
 
     const scenario = await ScenarioModel.findOne({_id: scenarioId})
     if (!scenario) {
@@ -144,7 +128,7 @@ router.post('/api/scenario/delete/', async (req, res) => {
     }
 
     if (scenario.owner !== userId) {
-        return res.status(403).json({error: 'You do not have permission to delete this scenario!'})
+        return res.status(403).json({error: 'Only the owner may delete this scenario!'})
     }
 
     try {

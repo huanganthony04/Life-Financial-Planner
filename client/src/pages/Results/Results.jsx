@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
-import ResultViewer from '../components/ResultViewer'
-import SelectScenarioModal from '../components/SelectScenarioModal'
+import ResultViewer from './components/ResultViewer'
+import SelectScenarioModal from './components/SelectScenarioModal'
 import './Results.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -68,15 +68,13 @@ const Results = ({user}) => {
   return (
     <>
       <div id="results-header">
-        <div id="scenario-select">
-          <div id="scenario-selection">
-            <div id="selected-scenario-title">{scenario ? scenario.name : "No Scenario Selected"}</div>
-            <button className="green-button" onClick={() => setSelectScenarioOpen(true)}>
-              <h4>
-                  Select Scenario
-              </h4>
-            </button>
-          </div>
+        <div id="scenario-selection">
+          <div id="selected-scenario-title">{scenario ? scenario.name : "No Scenario Selected"}</div>
+          <button className="green-button" onClick={() => setSelectScenarioOpen(true)}>
+            <h4>
+                Select Scenario
+            </h4>
+          </button>
         </div>
       </div>
       <div id="results-body">

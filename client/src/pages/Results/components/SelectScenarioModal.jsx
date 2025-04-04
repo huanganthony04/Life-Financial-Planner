@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import axios from 'axios'
-import ScenarioModalListItem from './ScenarioModalListItem'
-import './SelectScenarioModal.css'
+import ScenarioModalListItem from '/src/components/ScenarioModalListItem.jsx'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
@@ -25,9 +24,6 @@ const ScenarioCreate = ({open, onClose, user, selectScenario}) => {
   useEffect(() => {
     if (user) {
         fetchUserScenarios(user)
-    }
-    else {
-        console.log("User not logged in")
     }
   }, [user])
 
@@ -57,7 +53,7 @@ const ScenarioCreate = ({open, onClose, user, selectScenario}) => {
           {scenariosList(scenarios)}
         </div>
         <div id="scenario-modal-footer">
-          <button id="back-button" className="close-modal-button" onClick={() => {onClose()}}>
+          <button id="back-button" className="scenario-modal-button" onClick={() => {onClose()}}>
               <h4>Back</h4>
           </button>
         </div>
