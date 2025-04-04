@@ -2,8 +2,7 @@ import './Editor.css'
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
-import ExpenseEvent from '../components/expenseEvent'
-import UserProfile from '../components/UserProfile'
+import ExpenseEvent from './components/expenseEvent'
 
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL

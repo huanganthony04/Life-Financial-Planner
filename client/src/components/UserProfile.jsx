@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
 import React from 'react';
-import ValueDist from './valueDistribution';
 import { NavLink } from 'react-router-dom';
 
 import './ProfilePage.css';
