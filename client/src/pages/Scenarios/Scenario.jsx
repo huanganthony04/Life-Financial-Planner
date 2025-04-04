@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
-import searchLogo from '../assets/icons/search.svg'
-import addfileLogo from '../assets/icons/add_file.svg'
-import CreateScenarioFileModal from '../components/CreateScenarioFileModal'
-import CreateScenarioNameModal from '../components/CreateScenarioNameModal'
-import CreateScenarioModal from '../components/CreateScenarioModal'
-import ScenarioListItem from '../components/ScenarioListItem'
+import searchLogo from '/src/assets/icons/search.svg'
+import addfileLogo from '/src/assets/icons/add_file.svg'
+import CreateScenarioFileModal from './components/CreateScenarioFileModal'
+import CreateScenarioNameModal from './components/CreateScenarioNameModal'
+import CreateScenarioModal from './components/CreateScenarioModal'
+import ScenarioListItem from './components/ScenarioListItem'
 import './Scenario.css'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -69,9 +69,6 @@ const Scenario = ({user}) => {
     useEffect(() => {
         if (user) {
             fetchUserScenarios(user)
-        }
-        else {
-            console.log("User not logged in")
         }
     }, [user])
 
