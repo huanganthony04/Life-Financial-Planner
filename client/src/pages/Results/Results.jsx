@@ -78,7 +78,7 @@ const Results = ({user}) => {
         </div>
       </div>
       <div id="results-body">
-        {scenario ? (results ? <ResultViewer resultList={results.resultList}/> : noResults()) : noScenario()}
+        {scenario ? (results ? <ResultViewer resultId={results._id} resultList={results.resultList}/> : noResults()) : noScenario()}
       </div>
 
       <SelectScenarioModal
