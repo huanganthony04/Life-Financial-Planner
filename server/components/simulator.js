@@ -386,11 +386,13 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
     else {
         adjustedIncome -= federalTaxRates.standardDeductionSingle
     }
+    adjustedIncome = Math.max(0, adjustedIncome)
 
     // Each cell in taxRates has two fields, limit and rate.
     for (const bracket of federalTaxRates.taxBrackets) {
         let limit = bracket.max
-        let rate = bracket.rate
+        // TODO: Rates are currently stored numbers not decimals. Divide by 100 for now, fix tax rates maybe?
+        let rate = bracket.rate / 100
 
         if (adjustedIncome > limit) {
             tax += (limit - previous_limit) * rate
@@ -409,7 +411,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
     if (isMarried) {
         for (const bracket of stateTaxRates.marriedBrackets) {
             let limit = bracket.max
-            let rate = bracket.rate
+            let rate = bracket.rate / 100
     
             if (adjustedIncome > limit) {
                 tax += (limit - previous_limit) * rate
@@ -424,7 +426,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
     else {
         for (const bracket of stateTaxRates.singleBrackets) {
             let limit = bracket.max
-            let rate = bracket.rate
+            let rate = bracket.rate / 100
     
             if (adjustedIncome > limit) {
                 tax += (limit - previous_limit) * rate
@@ -737,3 +739,25 @@ function adjustInflation(incomeEvents, expenseEvents, simFederalTaxRates, simSta
 }
 
 export default financialSim
+
+// Test Code
+/*
+import mongoose from 'mongoose'
+import { ScenarioModel } from '../models/ScenarioModel.js'
+import FederalTaxModel from '../models/TaxModel.js'
+import StateTaxModel from '../models/StateTaxModel.js'
+import dotenv from 'dotenv'
+dotenv.config({path: new URL('../.env', import.meta.url)})
+
+const mongoUrl = process.env.MONGO_URL
+
+// Connect to MongoDB
+mongoose.connect(mongoUrl)
+
+const scenario = await ScenarioModel.findOne().lean()
+let federalTaxRates = await FederalTaxModel.findOne().lean()
+let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
+
+// Run the simulation
+let results = financialSim(scenario, federalTaxRates, stateTaxRates)
+*/
