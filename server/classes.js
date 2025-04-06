@@ -12,6 +12,7 @@ class ValueDistribution {
    */
   constructor({ type, value, mean, mu, stdev, sigma, lower, upper }) {
     this.distType = (type === "GBM" ? "normal" : type)
+    console.log(this.distType)
     this.value = value;
     this.mean = mean ?? mu;
     this.sigma = stdev ?? sigma;
@@ -169,17 +170,18 @@ class RebalanceEvent {
 
 class Scenario {
   /**
+   * Constructor for the scenario class. Supply only objects, do not use other instances of subclasses of scenario like ValueDistribution, InvestmentType, etc.
    * @param {Object} options
    * @param {string} [options.name="Unnamed Scenario"]
    * @param {string} options.owner
    * @param {string[]} options.editors
    * @param {boolean} options.maritalStatus
    * @param {number[]} options.birthYears
-   * @param {Array<Object>} options.lifeExpectancy - Each element is passed to `ValueDistribution`
+   * @param {Array<{Object}>} options.lifeExpectancy - Each element is passed to `ValueDistribution`
    * @param {Array<Object>} [options.investmentTypes=[]] - Each element is passed to `InvestmentType`
    * @param {Array<Object>} [options.eventSeries=[]] - Each element must have a `type` property ('income', 'expense', 'invest', or 'rebalance')
    * @param {Array<Object>} [options.investments=[]] - Each element is passed to `Investment`
-   * @param {Object} options.inflationAssumption - Passed to `ValueDistribution`
+   * @param {ValueDistribution} options.inflationAssumption - Passed to `ValueDistribution`
    * @param {number} options.afterTaxContributionLimit
    * @param {string[]} options.spendingStrategy
    * @param {string[]} options.expenseWithdrawalStrategy

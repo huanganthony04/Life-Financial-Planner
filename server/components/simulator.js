@@ -1,6 +1,11 @@
 import { ValueDistribution, InvestmentType, Investment, Scenario } from '../classes.js'
 
-//Generate a normal distribution using Box-Muller transform
+/**
+ * Generate a normal distribution using Box-Muller transform
+ * @param {number} mean The mean of the normal distribution
+ * @param {number} sigma The standard deviation of the normal distribution
+    * @returns {number} A random sample from the normal distribution
+ * */
 function normalSample(mean, sigma) {
     if (mean == null || sigma == null || Number.isNaN(mean) || Number.isNaN(sigma)) {
         throw new Error("Invalid mean or sigma value")
@@ -10,6 +15,14 @@ function normalSample(mean, sigma) {
     let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2)
     return mean + sigma * z0
 }
+
+/**
+ * Simulate a financial scenario
+ * @param {Scenario} Scenario The scenario to simulate
+ * @param {Object} federalTaxRates The federal tax rates to use for the simulation
+ * @param {Object} stateTaxRates The state tax rates to use for the simulation
+ * @returns {Array} An array of results for each year of the simulation
+ * */
 
 function financialSim(Scenario, federalTaxRates, stateTaxRates) {
 
@@ -42,7 +55,7 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
     if (cash_investment == null) {
         let it = new InvestmentType({
             name: "cash",
-            description: "Cash investment",
+            description: "cash",
             returnAmtOrPct: "amount",
             returnDistribution: new ValueDistribution({ type: "fixed", value: 0 }),
             expenseRatio: 0,
@@ -57,6 +70,8 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
             id: "cash"
         })
     }
+
+    Scenario.investments.push(cash_investment)
 
     //Get the life expectancy
     let lifeExpectancy;
