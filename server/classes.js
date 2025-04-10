@@ -12,7 +12,6 @@ class ValueDistribution {
    */
   constructor({ type, value, mean, mu, stdev, sigma, lower, upper }) {
     this.distType = (type === "GBM" ? "normal" : type)
-    console.log(this.distType)
     this.value = value;
     this.mean = mean ?? mu;
     this.sigma = stdev ?? sigma;
@@ -29,10 +28,10 @@ class InvestmentType {
    * @param {string} options.name
    * @param {string} options.description
    * @param {'percent'|'amount'} options.returnAmtOrPct
-   * @param {ValueDistribution} options.returnDistribution
+   * @param {Object} options.returnDistribution
    * @param {number} options.expenseRatio
    * @param {'percent'|'amount'} options.incomeAmtOrPct
-   * @param {ValueDistribution} options.incomeDistribution
+   * @param {Object} options.incomeDistribution
    * @param {boolean} options.taxability
    */
   constructor({ name, description, returnAmtOrPct, returnDistribution, expenseRatio, incomeAmtOrPct, incomeDistribution, taxability }) {
@@ -55,11 +54,12 @@ class Investment {
    * @param {'non-retirement'|'pre-tax'|'after-tax'} options.taxStatus
    * @param {string} [options.id] - If not provided, computed from investmentType.name and taxStatus.
    */
-  constructor({ investmentType, value, taxStatus, id }) {
+  constructor({ investmentType, value = 0, taxStatus, id }) {
     this.investmentType = investmentType;
     this.value = value;
     this.taxStatus = taxStatus;
     this.id = id || `${this.investmentType.name} ${this.taxStatus}`;
+    this.costBasis = value;
   }
 }
 

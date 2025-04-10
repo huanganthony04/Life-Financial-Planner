@@ -17,84 +17,40 @@ function normalSample(mean, sigma) {
 }
 
 /**
- * Simulate a financial scenario
- * @param {Scenario} Scenario The scenario to simulate
- * @param {Object} federalTaxRates The federal tax rates to use for the simulation
- * @param {Object} stateTaxRates The state tax rates to use for the simulation
- * @returns {Array} An array of results for each year of the simulation
- * */
+ * Preprocesses a scenario for financialSim, determining values for distributions, and setting undefined values for defaults.
+ * @param {Scenario} scenario 
+ */
+function scenarioProcessor(scenario) {
 
-function financialSim(Scenario, federalTaxRates, stateTaxRates) {
-
-    let inflation_rate = 0
-    let prevYearIncome = 0
-    let prevYearSS = 0
-    let curYearIncome = 0
-    let curYearSS = 0
-    let prevYearGains = 0
-    let curYearGains = 0
-    let prevYearTaxes = 0
-    let results = []
-    let simFederalTaxRates = structuredClone(federalTaxRates)
-    let simStateTaxRates = structuredClone(stateTaxRates)
-
-    let presentYear = new Date().getFullYear()
-
-    //Get the cash investment
-    let cash_investment;
-
-    for (const investment of Scenario.investments) {
-
-        if (investment.investmentType.name == "cash") {
-            cash_investment = investment
-            break
+    if (scenario.investments == null) {
+        scenario.investments = []
+    }
+    if (scenario.incomeEvents == null) {
+        scenario.incomeEvents = []
+    }
+    if (scenario.expenseEvents == null) {
+        scenario.expenseEvents = []
+    }
+    if (scenario.investEvents == null) {
+        scenario.investEvents = []
+    }
+    if (scenario.rebalanceEvents == null) {
+        scenario.rebalanceEvents = []
+    }
+    if (scenario.expenseWithdrawalStrategy == null) {
+        if (scenario.investments.length > 0) {
+            scenario.expenseWithdrawalStrategy = scenario.investments.map(i => i.id)
+        }
+        else {
+            scenario.expenseWithdrawalStrategy = []
         }
     }
 
-    //Add cash investment if no cash investment exists
-    if (cash_investment == null) {
-        let it = new InvestmentType({
-            name: "cash",
-            description: "cash",
-            returnAmtOrPct: "amount",
-            returnDistribution: new ValueDistribution({ type: "fixed", value: 0 }),
-            expenseRatio: 0,
-            incomeAmtOrPct: "amount",
-            incomeDistribution: new ValueDistribution({ type: "fixed", value: 0 }),
-            taxability: false
-        })
-        cash_investment = new Investment({
-            investmentType: it,
-            value: 0,
-            taxStatus: "non-retirement",
-            id: "cash"
-        })
-    }
-
-    Scenario.investments.push(cash_investment)
-
-    //Get the life expectancy
-    let lifeExpectancy;
-    if (Scenario.lifeExpectancy[0].distType == "fixed") {
-        lifeExpectancy = Scenario.lifeExpectancy[0].value
-    }
-    else {
-        //Create normal distribution for life expectancy
-        let mean = Scenario.lifeExpectancy[0].mean
-        let sigma = Scenario.lifeExpectancy[0].sigma
-        lifeExpectancy = normalSample(mean, sigma)
-    }
-
-    //Get the birth year of the user
-    let birthYear = Scenario.birthYears[0]
-
-    let remainingYears = birthYear + lifeExpectancy - presentYear
-
     // Event preprocessing
-    let allEvents = Scenario.incomeEvents
-        .concat(Scenario.expenseEvents)
-        .concat(Scenario.investEvents)
-        .concat(Scenario.rebalanceEvents)
+    let allEvents = scenario.incomeEvents
+        .concat(scenario.expenseEvents)
+        .concat(scenario.investEvents)
+        .concat(scenario.rebalanceEvents)
 
     // Determine the start/end year of events that have a distribution as a start year.
     for (let event of allEvents) {
@@ -164,6 +120,85 @@ function financialSim(Scenario, federalTaxRates, stateTaxRates) {
             event.start.startWith = undefined
         }
     }
+
+    return scenario
+}
+
+/**
+ * Simulate a financial scenario
+ * @param {Scenario} Scenario The scenario to simulate
+ * @param {Object} federalTaxRates The federal tax rates to use for the simulation
+ * @param {Object} stateTaxRates The state tax rates to use for the simulation
+ * @returns {Array} An array of results for each year of the simulation
+ * */
+
+function financialSim(Scenario, federalTaxRates, stateTaxRates) {
+
+    Scenario = scenarioProcessor(Scenario)
+
+    let inflation_rate = 0
+    let prevYearIncome = 0
+    let prevYearSS = 0
+    let curYearIncome = 0
+    let curYearSS = 0
+    let prevYearGains = 0
+    let curYearGains = 0
+    let prevYearTaxes = 0
+    let results = []
+    let simFederalTaxRates = structuredClone(federalTaxRates)
+    let simStateTaxRates = structuredClone(stateTaxRates)
+
+    let presentYear = new Date().getFullYear()
+
+    //Get the cash investment
+    let cash_investment;
+
+    for (const investment of Scenario.investments) {
+
+        if (investment.id == "cash") {
+            cash_investment = investment
+            break
+        }
+    }
+
+    //Add cash investment if no cash investment exists
+    if (cash_investment == null) {
+        let it = new InvestmentType({
+            name: "cash",
+            description: "cash",
+            returnAmtOrPct: "amount",
+            returnDistribution: { type: "fixed", value: 0 },
+            expenseRatio: 0,
+            incomeAmtOrPct: "amount",
+            incomeDistribution: { type: "fixed", value: 0 },
+            taxability: false
+        })
+        cash_investment = new Investment({
+            investmentType: it,
+            value: 0,
+            taxStatus: "non-retirement",
+            id: "cash"
+        })
+    }
+
+    Scenario.investments.push(cash_investment)
+
+    //Get the life expectancy
+    let lifeExpectancy;
+    if (Scenario.lifeExpectancy[0].distType == "fixed") {
+        lifeExpectancy = Scenario.lifeExpectancy[0].value
+    }
+    else {
+        //Create normal distribution for life expectancy
+        let mean = Scenario.lifeExpectancy[0].mean
+        let sigma = Scenario.lifeExpectancy[0].sigma
+        lifeExpectancy = normalSample(mean, sigma)
+    }
+
+    //Get the birth year of the user
+    let birthYear = Scenario.birthYears[0]
+
+    let remainingYears = birthYear + lifeExpectancy - presentYear
 
     // Beginning of the main simulation loop
 
@@ -270,10 +305,10 @@ function calculateIncome(currentYear, incomeEvents, inflation_rate) {
         if (incomeEvent.inflationAdjusted) {
             incomeEvent.initialAmount *= (1 + inflation_rate)
         }
+    }
 
     return [ income, socialSecurity ]
 
-    }
 }
 
 function updateInvestments(investments) {
@@ -531,10 +566,9 @@ function calculateExpensesND(currentYear, expenseEvents) {
                 expenseEvent.initialAmount *= 1 + change
             }
         }
-    
-    return expenses
-
     }
+
+    return expenses
 
 }
         
