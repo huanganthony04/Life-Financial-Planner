@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { ValueDistribution, InvestmentType, Investment, EventStart, IncomeEvent, ExpenseEvent, InvestEvent, RebalanceEvent, Scenario } from '../classes.js';
-import financialSim from '../components/simulator.js';
+import runSimulation from '../simulator/simulation.js';
 
 
 // No Inflation 10000 yearly income for 40 years
@@ -59,7 +59,7 @@ const taxRateNone = {
     standardDeductionMarried: 0,
     standardDeductionSingle: 0,
 }
-let results = financialSim(Scenario10KNoInflation, taxRateNone, taxRateNone)
+let results = runSimulation(Scenario10KNoInflation, taxRateNone, taxRateNone)
 
 test('$10000 Annual Income has $80000 after the 8th year', () => {
     expect(results[8].investments.find(i => i.id === 'cash').value).toBe(80000)
