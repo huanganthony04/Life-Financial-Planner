@@ -1,4 +1,4 @@
-import { ValueDistribution, InvestmentType, Investment, Scenario } from '../classes.js'
+import { IncomeEvent } from "../classes.js"
 
 /**
  * Generate a normal distribution using Box-Muller transform
@@ -17,259 +17,15 @@ function normalSample(mean, sigma) {
 }
 
 /**
- * Preprocesses a scenario for financialSim, determining values for distributions, and setting undefined values for defaults.
- * @param {Scenario} scenario 
+ * Calculates the income for a given year based on income events.
+ * @param {Number} currentYear 
+ * @param {Array<IncomeEvent>} incomeEvents 
+ * @returns {{income: Number, socialSecurity: Number}} An object containing the total income and social security income for the year
  */
-function scenarioProcessor(scenario) {
 
-    if (scenario.investments == null) {
-        scenario.investments = []
-    }
-    if (scenario.incomeEvents == null) {
-        scenario.incomeEvents = []
-    }
-    if (scenario.expenseEvents == null) {
-        scenario.expenseEvents = []
-    }
-    if (scenario.investEvents == null) {
-        scenario.investEvents = []
-    }
-    if (scenario.rebalanceEvents == null) {
-        scenario.rebalanceEvents = []
-    }
-    if (scenario.expenseWithdrawalStrategy == null) {
-        if (scenario.investments.length > 0) {
-            scenario.expenseWithdrawalStrategy = scenario.investments.map(i => i.id)
-        }
-        else {
-            scenario.expenseWithdrawalStrategy = []
-        }
-    }
+function calculateIncome(currentYear, incomeEvents) {
 
-    // Event preprocessing
-    let allEvents = scenario.incomeEvents
-        .concat(scenario.expenseEvents)
-        .concat(scenario.investEvents)
-        .concat(scenario.rebalanceEvents)
-
-    // Determine the start/end year of events that have a distribution as a start year.
-    for (let event of allEvents) {
-
-        //Determine the duration of the event
-        if (event.duration.distType === "fixed") continue;
-        else if (event.duration.distType === "normal") {
-            let mean = event.duration.mean
-            let sigma = event.duration.sigma
-            let duration = normalSample(mean, sigma)
-            event.duration = new ValueDistribution({ type: "fixed", value: duration })
-        }
-        else {
-            let lower = event.duration.lower
-            let upper = event.duration.upper
-            let duration = Math.random() * (upper - lower) + lower
-            event.duration = new ValueDistribution({ type: "fixed", value: duration })
-        }
-    }
-
-    for (let event of allEvents) {
-        //Determine the start year of the event (if it doesn't have a startWith)
-        if (!event.start.startWith) {
-            if (event.start.startDistribution.distType === "fixed") continue;
-            else if (event.start.startDistribution.distType === "normal") {
-                let mean = event.start.startDistribution.mean
-                let sigma = event.start.startDistribution.sigma
-                let startYear = normalSample(mean, sigma)
-                event.start.startDistribution = new ValueDistribution({ type: "fixed", value: Math.round(startYear) })
-            }
-            else {
-                let lower = event.start.startDistribution.lower
-                let upper = event.start.startDistribution.upper
-                let startYear = Math.random() * (upper - lower) + lower
-                event.start.startDistribution = new ValueDistribution({ type: "fixed", value: Math.round(startYear) })
-            }
-        }
-    }
-
-    // Replace all events with 'startWith' with the year of the event that it starts with
-    for (let event of allEvents) {
-        //Since an event's startWith can also have another startWith, we need to traverse up 
-        //the events by their startWith until we reach an event with an actual year.
-        let eventStack = []
-        let eventPtr = event
-        while (eventPtr.start.startWith) {
-            eventStack.push(eventPtr)
-            eventPtr = allEvents.find(e => e.name === eventPtr.start.startWith)
-        }
-
-        //We have an event with a start year, and all the events that depend on it.
-        let startDist = eventPtr.start.startDistribution
-        let startYear;
-        if (startDist.distType == "fixed") {
-            startYear = startDist.value
-        }
-        else if (startDist.distType == "normal") {
-            startYear = normalSample(startDist.mean, startDist.sigma)
-        }
-        else {
-            startYear = Math.random() * (startDist.upper - startDist.lower) + startDist.lower
-        }
-
-        //Set the start year for all events in the stack
-        for (let event of eventStack) {
-            event.start.startDistribution = new ValueDistribution({ type: "fixed", value: startYear })
-            event.start.startWith = undefined
-        }
-    }
-
-    return scenario
-}
-
-/**
- * Simulate a financial scenario
- * @param {Scenario} Scenario The scenario to simulate
- * @param {Object} federalTaxRates The federal tax rates to use for the simulation
- * @param {Object} stateTaxRates The state tax rates to use for the simulation
- * @returns {Array} An array of results for each year of the simulation
- * */
-
-function financialSim(Scenario, federalTaxRates, stateTaxRates) {
-
-    Scenario = scenarioProcessor(Scenario)
-
-    let inflation_rate = 0
-    let prevYearIncome = 0
-    let prevYearSS = 0
-    let curYearIncome = 0
-    let curYearSS = 0
-    let prevYearGains = 0
-    let curYearGains = 0
-    let prevYearTaxes = 0
-    let results = []
-    let simFederalTaxRates = structuredClone(federalTaxRates)
-    let simStateTaxRates = structuredClone(stateTaxRates)
-
-    let presentYear = new Date().getFullYear()
-
-    //Get the cash investment
-    let cash_investment;
-
-    for (const investment of Scenario.investments) {
-
-        if (investment.id == "cash") {
-            cash_investment = investment
-            break
-        }
-    }
-
-    //Add cash investment if no cash investment exists
-    if (cash_investment == null) {
-        let it = new InvestmentType({
-            name: "cash",
-            description: "cash",
-            returnAmtOrPct: "amount",
-            returnDistribution: { type: "fixed", value: 0 },
-            expenseRatio: 0,
-            incomeAmtOrPct: "amount",
-            incomeDistribution: { type: "fixed", value: 0 },
-            taxability: false
-        })
-        cash_investment = new Investment({
-            investmentType: it,
-            value: 0,
-            taxStatus: "non-retirement",
-            id: "cash"
-        })
-    }
-
-    Scenario.investments.push(cash_investment)
-
-    //Get the life expectancy
-    let lifeExpectancy;
-    if (Scenario.lifeExpectancy[0].distType == "fixed") {
-        lifeExpectancy = Scenario.lifeExpectancy[0].value
-    }
-    else {
-        //Create normal distribution for life expectancy
-        let mean = Scenario.lifeExpectancy[0].mean
-        let sigma = Scenario.lifeExpectancy[0].sigma
-        lifeExpectancy = normalSample(mean, sigma)
-    }
-
-    //Get the birth year of the user
-    let birthYear = Scenario.birthYears[0]
-
-    let remainingYears = birthYear + lifeExpectancy - presentYear
-
-    // Beginning of the main simulation loop
-
-    let currentYear = presentYear
-
-    for (let i = 0; i < remainingYears; i++) {
-        
-        results.push({
-            investments: structuredClone(Scenario.investments), 
-            incomeEvents: structuredClone(Scenario.incomeEvents), 
-            expenseEvents: structuredClone(Scenario.expenseEvents),
-            investEvents: structuredClone(Scenario.investEvents),
-            year: currentYear
-        })
-
-        if (Scenario.inflationAssumption.distType === "fixed") {
-            inflation_rate = Scenario.inflationAssumption.value
-        }
-        else {
-            let mean = Scenario.inflationAssumption.mean
-            let sigma = Scenario.inflationAssumption.sigma
-            inflation_rate = normalSample(mean, sigma)
-        }
-
-        // Get income from income events
-        [ curYearIncome, curYearSS ] = calculateIncome(currentYear, Scenario.incomeEvents)
-        cash_investment.value += curYearIncome + curYearSS
-
-        // Update investments
-        let investmentIncome = updateInvestments(Scenario.investments)
-        curYearIncome += investmentIncome
-
-        // Pay non-discretionary expenses
-
-        // Calculate last year's taxes
-        prevYearTaxes = calculateTaxes(prevYearIncome, prevYearSS, prevYearGains, simFederalTaxRates, simStateTaxRates, Scenario.maritalStatus)
-
-        let expensesND = calculateExpensesND(currentYear, Scenario.expenseEvents)
-        curYearGains = payExpensesND(expensesND + prevYearTaxes, Scenario.investments, cash_investment, Scenario.expenseWithdrawalStrategy)
-
-        // Pay discretionary expenses
-        payExpensesD(currentYear, Scenario.expenseEvents, cash_investment, Scenario.financialGoal)
-
-        // Run investment event
-        runInvestEvent(i, Scenario.investEvents, cash_investment, Scenario.investments)
-
-        // Run rebalance event
-        // curYearGains += runRebalanceEvent(events, Scenario.investments)
-        
-        prevYearIncome = curYearIncome
-        prevYearGains = curYearGains
-
-        // Adjust everything affected by inflation
-        adjustInflation(Scenario.incomeEvents, Scenario.expenseEvents, simFederalTaxRates, simStateTaxRates, inflation_rate)
-
-        currentYear++
-
-    }
-
-    results.push({
-        investments: structuredClone(Scenario.investments), 
-        incomeEvents: structuredClone(Scenario.incomeEvents), 
-        expenseEvents: structuredClone(Scenario.expenseEvents),
-        investEvents: structuredClone(Scenario.investEvents),
-        year: currentYear
-    })
-    return results
-
-}
-
-function calculateIncome(currentYear, incomeEvents, inflation_rate) {
+    console.log(incomeEvents)
 
     let income = 0
     let socialSecurity = 0
@@ -302,12 +58,9 @@ function calculateIncome(currentYear, incomeEvents, inflation_rate) {
                 incomeEvent.initialAmount *= 1 + incomeEvent.changeDistribution.value
             }
         }
-        if (incomeEvent.inflationAdjusted) {
-            incomeEvent.initialAmount *= (1 + inflation_rate)
-        }
     }
 
-    return [ income, socialSecurity ]
+    return { income, socialSecurity }
 
 }
 
@@ -516,7 +269,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
     return tax
 }
 
-function calculateExpensesND(currentYear, expenseEvents) {
+function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
 
     let expenses = 0
 
@@ -572,7 +325,7 @@ function calculateExpensesND(currentYear, expenseEvents) {
 
 }
         
-function payExpensesND(amount, investments, cash_investment, withdrawalStrategy) {
+function payNonDiscretionaryExpenses(amount, investments, cash_investment, withdrawalStrategy) {
 
     //Check if there is enough cash to pay the expenses
     if (cash_investment.value > amount) {
@@ -605,7 +358,11 @@ function payExpensesND(amount, investments, cash_investment, withdrawalStrategy)
 
 }
     
-function payExpensesD(currentYear, expenseEvents, cash_investment, financialGoal) {
+function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, financialGoal) {
+
+    if (financialGoal == null || Number.isNaN(financialGoal)) {
+        throw new Error("Invalid financial goal value")
+    }
 
     // Take out all excess cash from the cash investment
     let cashAvailable = cash_investment.value - financialGoal
@@ -748,65 +505,6 @@ function runRebalanceEvent(rebalanceEvent, investments) {
 }
 */
 
-function adjustInflation(incomeEvents, expenseEvents, simFederalTaxRates, simStateTaxRates, inflation) {
 
-    for (let incomeEvent of incomeEvents) {
-        if (incomeEvent.inflationAdjusted) {
-            incomeEvent.initialAmount *= (1 + inflation)
-        }
-    }
-
-    for (let expenseEvent of expenseEvents) {
-        if (expenseEvent.inflationAdjusted) {
-            expenseEvent.initialAmount *= (1 + inflation)
-        }
-    }
-
-    // Adjust the federal tax brackets by inflation
-    for (let i = 0; i < simFederalTaxRates.taxBrackets.length; i++) {
-        simFederalTaxRates.taxBrackets[i].max *= (1 + inflation)
-    }
-
-    simFederalTaxRates.standardDeductionSingle *= (1 + inflation)
-    simFederalTaxRates.standardDeductionMarried *= (1 + inflation)
-
-    for (let i = 0; i < simFederalTaxRates.capitalGainsBrackets.length; i++) {
-        simFederalTaxRates.capitalGainsBrackets[i].max *= (1 + inflation)
-    }
-
-    simFederalTaxRates.standardDeductionHeadOfHousehold *= (1 + inflation)
-    simFederalTaxRates.standardDeductionMarried *= (1 + inflation)
-    simFederalTaxRates.standardDeductionSingle *= (1 + inflation)
-
-    // Adjust the state tax brackets by inflation
-    for (let i = 0; i < simStateTaxRates.marriedBrackets.length; i++) {
-        simStateTaxRates.marriedBrackets[i].max *= (1 + inflation)
-    }
-    for (let i = 0; i < simStateTaxRates.singleBrackets.length; i++) {
-        simStateTaxRates.singleBrackets[i].max *= (1 + inflation)
-    }
-}
-
-export default financialSim
-
-// Test Code
-/*
-import mongoose from 'mongoose'
-import { ScenarioModel } from '../models/ScenarioModel.js'
-import FederalTaxModel from '../models/TaxModel.js'
-import StateTaxModel from '../models/StateTaxModel.js'
-import dotenv from 'dotenv'
-dotenv.config({path: new URL('../.env', import.meta.url)})
-
-const mongoUrl = process.env.MONGO_URL
-
-// Connect to MongoDB
-mongoose.connect(mongoUrl)
-
-const scenario = await ScenarioModel.findOne().lean()
-let federalTaxRates = await FederalTaxModel.findOne().lean()
-let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
-
-// Run the simulation
-let results = financialSim(scenario, federalTaxRates, stateTaxRates)
-*/
+export { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
+    payDiscretionaryExpenses, runInvestEvent, updateInvestments, calculateTaxes }

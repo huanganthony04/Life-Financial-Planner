@@ -142,13 +142,14 @@ class InvestEvent {
    * @param {boolean|undefined} options.glidePath
    * @param {Map<string, number>|Object|undefined} options.assetAllocation2
    */
-  constructor({ name, start, duration, assetAllocation, glidePath, assetAllocation2 }) {
+  constructor({ name, start, duration, assetAllocation, glidePath, assetAllocation2, maxCash = 0 }) {
     this.name = name;
     this.start = new EventStart(start);
     this.duration = new ValueDistribution(duration);
     this.assetAllocation = assetAllocation;
     this.glidePath = glidePath;
     this.assetAllocation2 = assetAllocation2;
+    this.maxCash = maxCash;
   }
 }
 
@@ -177,7 +178,7 @@ class Scenario {
    * @param {string[]} options.editors
    * @param {boolean} options.maritalStatus
    * @param {number[]} options.birthYears
-   * @param {Array<{Object}>} options.lifeExpectancy - Each element is passed to `ValueDistribution`
+   * @param {Array<Object>} options.lifeExpectancy - Each element is passed to `ValueDistribution`
    * @param {Array<Object>} [options.investmentTypes=[]] - Each element is passed to `InvestmentType`
    * @param {Array<Object>} [options.eventSeries=[]] - Each element must have a `type` property ('income', 'expense', 'invest', or 'rebalance')
    * @param {Array<Object>} [options.investments=[]] - Each element is passed to `Investment`

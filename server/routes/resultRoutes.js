@@ -6,7 +6,7 @@ import ResultsModel from '../models/ResultsModel.js'
 import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import importScenario from '../components/importer.js'
-import runSimulation from '../components/simulator.js'
+import runSimulation from '../simulator/simulation.js'
 import 'dotenv/config'
 
 const FRONTEND_URL = process.env.FRONTEND_URL

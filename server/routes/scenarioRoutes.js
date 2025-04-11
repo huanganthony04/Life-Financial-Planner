@@ -6,7 +6,7 @@ import ResultsModel from '../models/ResultsModel.js'
 import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import importScenario from '../components/importer.js'
-import runSimulation from '../components/simulator.js'
+import runSimulation from '../simulator/simulation.js'
 import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
 
@@ -120,14 +120,14 @@ router.post('/api/scenario/save/', getUserAuth, async (req, res) => {
 router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
     
     const scenarioId = req.body.scenarioId
-    const userId = req.user._id
+    const user = req.user
 
     const scenario = await ScenarioModel.findOne({_id: scenarioId})
     if (!scenario) {
         return res.status(404).json({error: 'Scenario not found!'})
     }
 
-    if (scenario.owner !== userId) {
+    if (scenario.owner !== user._id) {
         return res.status(403).json({error: 'Only the owner may delete this scenario!'})
     }
 
@@ -215,12 +215,8 @@ router.get('/api/scenario/run', async (req, res) => {
     let federalTaxRates = await FederalTaxModel.findOne().lean()
     let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
 
-
     // Run the simulation
     let results = runSimulation(scenario, federalTaxRates, stateTaxRates)
-
-    console.log(results)
-
     
     // Create a new ResultsModel instance
     let resultsModel = new ResultsModel({
