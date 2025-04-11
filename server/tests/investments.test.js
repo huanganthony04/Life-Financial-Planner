@@ -8,7 +8,7 @@ test('5% Return on Investment, No Cost Basis', () => {
         new Investment({
             investmentType: new InvestmentType({
                 name: 'Investment1',
-                returnAmtOrPct: "pct",
+                returnAmtOrPct: "percent",
                 returnDistribution: { type: 'fixed', value: 0.05 },
                 incomeAmtOrPct: "amount",
                 incomeDistribution: { type: 'fixed', value: 0.00 },
@@ -55,8 +55,8 @@ test('5% Return on Investment, Income of 1%', () => {
         new Investment({
             investmentType: new InvestmentType({
                 name: 'Investment1',
-                returnAmtOrPct: "amount",
-                returnDistribution: { type: 'fixed', value: 500 },
+                returnAmtOrPct: "percent",
+                returnDistribution: { type: 'fixed', value: 0.05 },
                 incomeAmtOrPct: "percent",
                 incomeDistribution: { type: 'fixed', value: 0.01 },
                 taxability: 'true'
@@ -67,9 +67,11 @@ test('5% Return on Investment, Income of 1%', () => {
         })
     ]
 
-    updateInvestments(InvestmentSet)
+    let dividends = updateInvestments(InvestmentSet)
 
-    expect(InvestmentSet[0].value).toBe(10602.5)
+    expect(InvestmentSet[0].value).toBeCloseTo(10605, 1)
+    expect(dividends).toBeCloseTo(100, 1)
+    expect(InvestmentSet[0].costBasis).toBeCloseTo(10100, 1)
 
 })
 
@@ -79,8 +81,8 @@ test('5% Return on Investment, Income of 1%, expense ratio of 1%', () => {
         new Investment({
             investmentType: new InvestmentType({
                 name: 'Investment1',
-                returnAmtOrPct: "amount",
-                returnDistribution: { type: 'fixed', value: 500 },
+                returnAmtOrPct: "percent",
+                returnDistribution: { type: 'fixed', value: 0.05 },
                 incomeAmtOrPct: "percent",
                 incomeDistribution: { type: 'fixed', value: 0.01 },
                 taxability: 'true',
@@ -95,10 +97,9 @@ test('5% Return on Investment, Income of 1%, expense ratio of 1%', () => {
 
     let dividends = updateInvestments(InvestmentSet)
 
-    expect(InvestmentSet[0].value).toBeCloseTo(10500, 1)
+    expect(InvestmentSet[0].value).toBeCloseTo(10501.475, 1)
     expect(dividends).toBeCloseTo(100, 1)
     expect(InvestmentSet[0].costBasis).toBeCloseTo(10100, 1)
-    expect(InvestmentSet[0].value).toBeCloseTo(10498.95, 1)
 
 })
 

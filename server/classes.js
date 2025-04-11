@@ -1,5 +1,14 @@
 /* This was generated from ScenarioModel.js using ChatGPT */
 
+/**
+ * @typedef {Object} ValueDistribution
+ * @property {'fixed'|'normal'|'uniform'} distType - The type of distribution
+ * @property {Number} value - The fixed value, if the distribution is fixed
+ * @property {Number} mean - The mean, if the distribution is normal
+ * @property {Number} sigma - The standard deviation, if the distribution is normal
+ * @property {Number} lower - The lower part of the range, if the distribution is uniform
+ * @property {Number} upper - The upper part of the range, if the distribution is uniform
+ */
 class ValueDistribution {
   /**
    * @param {Object} options
@@ -54,12 +63,12 @@ class Investment {
    * @param {'non-retirement'|'pre-tax'|'after-tax'} options.taxStatus
    * @param {string} [options.id] - If not provided, computed from investmentType.name and taxStatus.
    */
-  constructor({ investmentType, value = 0, taxStatus, id }) {
+  constructor({ investmentType, value = 0, taxStatus, id, costBasis }) {
     this.investmentType = investmentType;
     this.value = value;
     this.taxStatus = taxStatus;
     this.id = id || `${this.investmentType.name} ${this.taxStatus}`;
-    this.costBasis = value;
+    this.costBasis = costBasis ?? value;
   }
 }
 

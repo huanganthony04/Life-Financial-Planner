@@ -48,7 +48,9 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         }
 
         // Get income from income events
-        ({ curYearIncome, curYearSS } = calculateIncome(currentYear, Scenario.incomeEvents))
+        let { income, socialSecurity } = calculateIncome(currentYear, Scenario.incomeEvents)
+        curYearIncome = income
+        curYearSS = socialSecurity
         cash_investment.value += curYearIncome + curYearSS
 
         // Update investments
