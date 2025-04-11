@@ -25,8 +25,6 @@ function normalSample(mean, sigma) {
 
 function calculateIncome(currentYear, incomeEvents) {
 
-    console.log(incomeEvents)
-
     let income = 0
     let socialSecurity = 0
 
