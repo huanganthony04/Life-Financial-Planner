@@ -43,15 +43,19 @@ class InvestmentType {
    * @param {Object} options.incomeDistribution
    * @param {boolean} options.taxability
    */
-  constructor({ name, description, returnAmtOrPct, returnDistribution, expenseRatio, incomeAmtOrPct, incomeDistribution, taxability }) {
+  constructor({ name, description, returnAmtOrPct = 'amount', returnDistribution, expenseRatio = 0, incomeAmtOrPct = 'amount', incomeDistribution, taxability = true }) {
     this.name = name;
-    this.description = description;
-    this.returnAmtOrPct = returnAmtOrPct;
-    this.returnDistribution = new ValueDistribution(returnDistribution);
-    this.expenseRatio = expenseRatio;
-    this.incomeAmtOrPct = incomeAmtOrPct;
-    this.incomeDistribution = new ValueDistribution(incomeDistribution);
-    this.taxability = taxability;
+    this.description = description
+    this.returnAmtOrPct = returnAmtOrPct
+    if (returnDistribution) {
+      this.returnDistribution = new ValueDistribution(returnDistribution)
+    }
+    this.expenseRatio = expenseRatio
+    this.incomeAmtOrPct = incomeAmtOrPct
+    if (incomeDistribution) {
+      this.incomeDistribution = new ValueDistribution(incomeDistribution)
+    }
+    this.taxability = taxability
   }
 }
 
@@ -63,11 +67,11 @@ class Investment {
    * @param {'non-retirement'|'pre-tax'|'after-tax'} options.taxStatus
    * @param {string} [options.id] - If not provided, computed from investmentType.name and taxStatus.
    */
-  constructor({ investmentType, value = 0, taxStatus, id, costBasis }) {
+  constructor({ investmentType, value = 0, taxStatus = 'non-retirement', id, costBasis }) {
     this.investmentType = investmentType;
     this.value = value;
     this.taxStatus = taxStatus;
-    this.id = id || `${this.investmentType.name} ${this.taxStatus}`;
+    this.id = id ?? `${investmentType.name} ${taxStatus}`;
     this.costBasis = costBasis ?? value;
   }
 }

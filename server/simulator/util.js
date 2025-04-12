@@ -53,7 +53,7 @@ function calculateIncome(currentYear, incomeEvents) {
         let startYear = incomeEvent.start.startDistribution.value
         let endYear = startYear + incomeEvent.duration.value
 
-        if (currentYear < startYear || currentYear > endYear) {
+        if (currentYear < startYear || currentYear >= endYear) {
             continue
         }
 
@@ -240,46 +240,25 @@ function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
         let startYear = expenseEvent.start.startDistribution.value
         let endYear = startYear + expenseEvent.duration.value
 
-        if (currentYear < startYear || currentYear > endYear) {
+        if (currentYear < startYear || currentYear >= endYear) {
             continue
         }
 
-        if (expenseEvent.isDiscretionary) continue;
+        if (expenseEvent.discretionary) continue;
 
         //Add the expense to the total expenses
         expenses += expenseEvent.initialAmount
 
         //Calculate the expected annual change
 
-        if (expenseEvent.changeDistribution.distType == "fixed") {
-            if (expenseEvent.changeAmtOrPct == "amount") {
-                expenseEvent.initialAmount += expenseEvent.changeDistribution.value
-            }
-            else {
-                expenseEvent.initialAmount *= 1 + expenseEvent.changeDistribution.value
-            }
-        }
-        else if (expenseEvent.changeDistribution.distType == "normal") {
-            let mean = expenseEvent.changeDistribution.mean
-            let sigma = expenseEvent.changeDistribution.sigma
-            let change = normalSample(mean, sigma)
-            if (expenseEvent.changeAmtOrPct == "amount") {
-                expenseEvent.initialAmount += change
-            }
-            else {
-                expenseEvent.initialAmount *= 1 + change
-            }
+        if (expenseEvent.changeAmtOrPct === "amount") {
+            let value = getValueFromDistribution(expenseEvent.changeDistribution)
+            expenseEvent.initialAmount += value
         }
         else {
-            let lower = expenseEvent.changeDistribution.lower
-            let upper = expenseEvent.changeDistribution.upper
-            let change = Math.random() * (upper - lower) + lower
-            if (expenseEvent.changeAmtOrPct == "amount") {
-                expenseEvent.initialAmount += change
-            }
-            else {
-                expenseEvent.initialAmount *= 1 + change
-            }
+            let rate = getValueFromDistribution(expenseEvent.changeDistribution)
+            let value = expenseEvent.initialAmount * rate
+            expenseEvent.initialAmount += value
         }
     }
 
@@ -300,17 +279,19 @@ function payNonDiscretionaryExpenses(amount, investments, cash_investment, withd
 
     let capitalGains = 0
 
-    for (const assetName of withdrawalStrategy) {
-        let investment = investments.find(i => i.id === assetName)
+    for (const assetId of withdrawalStrategy) {
+        let investment = investments.find(i => i.id === assetId)
         if (investment.value < amount) {
             //Sell the entire investment to pay the expenses
             amount -= investment.value
             capitalGains += investment.value - investment.costBasis
+            investment.value = 0
+            investment.costBasis = 0
         }
         else {
             //Sell a portion of the investment to pay the expenses
             let portion = amount / investment.value
-            capitalGains += investment.value * portion - investment.costBasis * portion
+            capitalGains += amount - investment.costBasis * portion
             investment.value -= amount
             investment.costBasis -= investment.costBasis * portion
         }
