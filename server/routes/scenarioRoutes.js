@@ -118,29 +118,34 @@ router.post('/api/scenario/save/', getUserAuth, async (req, res) => {
 
 //Delete a scenario
 router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
-    
-    const scenarioId = req.body.scenarioId
-    const user = req.user
+    const scenarioId = req.body.scenarioId;
+    const user = req.user;
 
-    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+    const scenario = await ScenarioModel.findOne({_id: scenarioId});
     if (!scenario) {
-        return res.status(404).json({error: 'Scenario not found!'})
+        return res.status(404).json({error: 'Scenario not found!'});
     }
 
     if (scenario.owner !== user._id) {
-        return res.status(403).json({error: 'Only the owner may delete this scenario!'})
+        return res.status(403).json({error: 'Only the owner may delete this scenario!'});
     }
 
     try {
-        await ScenarioModel.deleteOne({_id: scenarioId})
-        user.ownedScenarios = user.ownedScenarios.filter(scenario => scenario.toString() !== scenarioId)
-        return res.status(200).json({success: true})
+        await ScenarioModel.deleteOne({_id: scenarioId});
+        
+        // Use the $pull operator to remove the scenario ID from ownedScenarios
+        await UserModel.updateOne(
+            { _id: user._id },
+            { $pull: { ownedScenarios: scenarioId } }
+        );
+        
+        return res.status(200).json({success: true});
     }
     catch(error) {
-        console.log(error)
-        return res.status(500).json({error: error})
+        console.error(error);
+        return res.status(500).json({error: error});
     }
-})
+});
 
 router.post('/api/postEventnew', async (req, res) => {
 
