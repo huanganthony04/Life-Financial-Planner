@@ -11,6 +11,7 @@ function ValueDist({ setdistMode,setMu,setSigma,setUpper,setLower,setFixedValue}
         
         const selectedValue= event.target.value;
         setdistMode(selectedValue);
+        console.log("selected value is ",selectedValue);
         setVisibleDiv((prev)=>(prev===selectedValue?null :selectedValue));//is prevValue==selected if it is set val to null which hides? if its not then sets visibleDiv to selectedValue to show div corresponding to new selection option
     }
     
@@ -62,6 +63,7 @@ function ValueDist({ setdistMode,setMu,setSigma,setUpper,setLower,setFixedValue}
               name="mu"
               id="mu"
               placeholder="mean (enter decimal)"
+              onChange = {(e) => setMu(e.target.value)}
             
             ></input>
             <input

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import ExpenseEvent from './components/expenseEvent'
+import IncomeEvent from './components/incomeEvent'
 
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
@@ -55,6 +56,7 @@ const Editor = () => {
       </div>
 
       {tabState=='expense'&&(<div className='tabform'><ExpenseEvent className='tabform' scenarioId={scenarioId}></ExpenseEvent></div>)}
+      {tabState=='income'&&(<div className='tabform'><IncomeEvent className='tabform' scenarioId={scenarioId}></IncomeEvent></div>)}
         <button onClick={() => navigate('/scenario')}>Return to scenarios</button>
 
     </div>

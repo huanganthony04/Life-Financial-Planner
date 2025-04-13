@@ -169,6 +169,55 @@ router.post('/api/postEventnew', async (req, res) => {
 
    expenseEventList.push(map1);
 console.log("map made");
+console.log(map1);
+   try {
+    await scenario.save();
+    console.log("saved");
+    return res.status(200).json({scenarioId: scenario._id})
+}
+catch(error) {
+    console.log(error)
+    return res.status(500).json({error: error})
+}
+   
+   
+
+   //find out which index or where his expense event is and replace it 
+   //after modifying save the scenario wih scenario.save() or something
+
+
+
+
+})
+
+
+router.post('/api/postIncomenew', async (req, res) => {
+
+
+
+    console.log("postEventnew reached");
+    const scenarioId= req.body.scenarioId;
+    const scenario = await ScenarioModel.findOne({_id: scenarioId })
+    
+    //need to fix format for start, duraion, as valdist 
+    //assemble it as a dict before you send to end point 
+    const incomeEventList= scenario.incomeEvents;
+    var map1= {
+        name:req.body.title,  
+        start:req.body.start,
+        description: req.body.summary, 
+        socialSecurity:req.body.socialSecurityStatus,
+        inflationAdjusted:req.body.inflationStatus,  
+        duration: req.body.duration, 
+        userFraction: req.body.userFrac,
+        changeAmtOrPct:req.body.amountOrPercent, 
+        initialAmount:req.body.initial,
+        changeDistribution:req.body.changeDistribution
+
+    }
+
+   incomeEventList.push(map1);
+console.log("map made");
    try {
     await scenario.save()
     console.log("saved");
