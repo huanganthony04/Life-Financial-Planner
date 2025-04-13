@@ -1,5 +1,14 @@
 /* This was generated from ScenarioModel.js using ChatGPT */
 
+/**
+ * @typedef {Object} ValueDistribution
+ * @property {'fixed'|'normal'|'uniform'} distType - The type of distribution
+ * @property {Number} value - The fixed value, if the distribution is fixed
+ * @property {Number} mean - The mean, if the distribution is normal
+ * @property {Number} sigma - The standard deviation, if the distribution is normal
+ * @property {Number} lower - The lower part of the range, if the distribution is uniform
+ * @property {Number} upper - The upper part of the range, if the distribution is uniform
+ */
 class ValueDistribution {
   /**
    * @param {Object} options
@@ -34,15 +43,19 @@ class InvestmentType {
    * @param {Object} options.incomeDistribution
    * @param {boolean} options.taxability
    */
-  constructor({ name, description, returnAmtOrPct, returnDistribution, expenseRatio, incomeAmtOrPct, incomeDistribution, taxability }) {
+  constructor({ name, description, returnAmtOrPct = 'amount', returnDistribution, expenseRatio = 0, incomeAmtOrPct = 'amount', incomeDistribution, taxability = true }) {
     this.name = name;
-    this.description = description;
-    this.returnAmtOrPct = returnAmtOrPct;
-    this.returnDistribution = new ValueDistribution(returnDistribution);
-    this.expenseRatio = expenseRatio;
-    this.incomeAmtOrPct = incomeAmtOrPct;
-    this.incomeDistribution = new ValueDistribution(incomeDistribution);
-    this.taxability = taxability;
+    this.description = description
+    this.returnAmtOrPct = returnAmtOrPct
+    if (returnDistribution) {
+      this.returnDistribution = new ValueDistribution(returnDistribution)
+    }
+    this.expenseRatio = expenseRatio
+    this.incomeAmtOrPct = incomeAmtOrPct
+    if (incomeDistribution) {
+      this.incomeDistribution = new ValueDistribution(incomeDistribution)
+    }
+    this.taxability = taxability
   }
 }
 
@@ -54,12 +67,12 @@ class Investment {
    * @param {'non-retirement'|'pre-tax'|'after-tax'} options.taxStatus
    * @param {string} [options.id] - If not provided, computed from investmentType.name and taxStatus.
    */
-  constructor({ investmentType, value = 0, taxStatus, id }) {
+  constructor({ investmentType, value = 0, taxStatus = 'non-retirement', id, costBasis }) {
     this.investmentType = investmentType;
     this.value = value;
     this.taxStatus = taxStatus;
-    this.id = id || `${this.investmentType.name} ${this.taxStatus}`;
-    this.costBasis = value;
+    this.id = id ?? `${investmentType.name} ${taxStatus}`;
+    this.costBasis = costBasis ?? value;
   }
 }
 

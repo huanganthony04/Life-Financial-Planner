@@ -1,4 +1,4 @@
-import { IncomeEvent } from "../classes.js"
+import { IncomeEvent, ValueDistribution } from "../classes.js"
 
 /**
  * Generate a normal distribution using Box-Muller transform
@@ -17,6 +17,26 @@ function normalSample(mean, sigma) {
 }
 
 /**
+ * Given a value distribution, sample it and return a value.
+ * @param {ValueDistribution} ValueDistribution
+ */
+function getValueFromDistribution(ValueDistribution) {
+    if (ValueDistribution.distType === "fixed") {
+        return ValueDistribution.value
+    }
+    else if (ValueDistribution.distType === "uniform") {
+        let lower = ValueDistribution.lower
+        let upper = ValueDistribution.upper
+        return Math.random() * (upper - lower) + lower
+    }
+    else {
+        let mean = ValueDistribution.mean
+        let sigma = ValueDistribution.sigma
+        return normalSample(mean, sigma)
+    }
+}
+
+/**
  * Calculates the income for a given year based on income events.
  * @param {Number} currentYear 
  * @param {Array<IncomeEvent>} incomeEvents 
@@ -24,8 +44,6 @@ function normalSample(mean, sigma) {
  */
 
 function calculateIncome(currentYear, incomeEvents) {
-
-    console.log(incomeEvents)
 
     let income = 0
     let socialSecurity = 0
@@ -35,7 +53,7 @@ function calculateIncome(currentYear, incomeEvents) {
         let startYear = incomeEvent.start.startDistribution.value
         let endYear = startYear + incomeEvent.duration.value
 
-        if (currentYear < startYear || currentYear > endYear) {
+        if (currentYear < startYear || currentYear >= endYear) {
             continue
         }
 
@@ -70,40 +88,36 @@ function updateInvestments(investments) {
 
     for (let investment of investments) {
 
+        const asset = investment.investmentType
+        let dividends = 0
+
+        // Calculate and reinvest any dividends and interest
+        if (asset.incomeAmtOrPct === "amount") {
+            let value = getValueFromDistribution(asset.incomeDistribution)
+            investment.value += value
+            investment.costBasis += value
+            dividends += value
+        }
+        else {
+            //Percent rate
+            let rate = getValueFromDistribution(asset.incomeDistribution)
+            let value = investment.value * rate
+            investment.value += value
+            investment.costBasis += value
+            dividends += value
+        }
+
         let new_value;
 
-        const asset = investment.investmentType
-
         // Get the expected new value
-        if (asset.returnAmtOrPct == "amount") {
-            if (asset.returnDistribution.distType == "fixed") {
-                new_value = asset.returnDistribution.value + investment.value
-            }
-            else if (asset.returnDistribution.distType == "normal") {
-                let mean = asset.returnDistribution.mean
-                let sigma = asset.returnDistribution.sigma
-                new_value = normalSample(mean, sigma) + investment.value
-            }
-            else {
-                let lower = asset.returnDistribution.lower
-                let upper = asset.returnDistribution.upper
-                new_value = Math.random() * (upper - lower) + lower + investment.value
-            }
+        if (asset.returnAmtOrPct === "amount") {
+            let value = getValueFromDistribution(asset.returnDistribution)
+            new_value = investment.value + value
         }
-        else if (asset.returnAmtOrPct == "percent") {
-            if (asset.returnDistribution.distType == "fixed") {
-                new_value = investment.value * (1 + asset.returnDistribution.value)
-            }
-            else if (asset.returnDistribution.distType == "normal") {
-                let mean = asset.returnDistribution.mean
-                let sigma = asset.returnDistribution.sigma
-                new_value = investment.value * (1 + normalSample(mean, sigma))
-            }
-            else {
-                let lower = asset.returnDistribution.lower
-                let upper = asset.returnDistribution.upper
-                new_value = investment.value * (1 + Math.random() * (upper - lower) + lower)
-            }
+        else {
+            //Percent rate
+            let rate = getValueFromDistribution(asset.returnDistribution)
+            new_value = investment.value * (1 + rate)
         }
 
         let average_value = (new_value + investment.value) / 2
@@ -114,58 +128,6 @@ function updateInvestments(investments) {
         // Pay the expense ratio
         if (asset.expenseRatio) {
             investment.value -= average_value * asset.expenseRatio
-        }
-
-        let dividends = 0
-
-        // Calculate and reinvest any dividends and interest
-        if (asset.incomeAmtOrPct === "amount") {
-            if (asset.incomeDistribution.distType === "fixed") {
-                investment.value += asset.incomeDistribution.value
-                investment.costBasis += asset.incomeDistribution.value
-                dividends += asset.incomeDistribution.value
-            }
-            else if (asset.incomeDistribution.distType === "normal") {
-                let mean = asset.incomeDistribution.mean
-                let sigma = asset.incomeDistribution.sigma
-                let sample = normalSample(mean, sigma)
-                investment.value += sample
-                investment.costBasis += sample
-                dividends += sample
-            }
-            else {
-                let lower = asset.incomeDistribution.lower
-                let upper = asset.incomeDistribution.upper
-                let sample = Math.random() * (upper - lower) + lower
-                investment.value += sample
-                investment.costBasis += sample
-                dividends += sample
-            }
-        }
-
-        else {
-            if (asset.incomeDistribution.distType === "fixed") {
-                let dividend = investment.value * (1 + asset.incomeDistribution.value) - investment.value
-                investment.value += dividend
-                investment.costBasis += dividend
-                dividends += dividend
-            }
-            else if (asset.incomeDistribution.distType === "normal") {
-                let mean = asset.incomeDistribution.mean
-                let sigma = asset.incomeDistribution.sigma
-                let dividend = investment.value * (1 + normalSample(mean, sigma)) - investment.value
-                investment.value += dividend
-                investment.costBasis += dividend
-                dividends += dividend
-            }
-            else {
-                let lower = asset.incomeDistribution.lower
-                let upper = asset.incomeDistribution.upper
-                let dividend = investment.value * (1 + Math.random() * (upper - lower) + lower) - investment.value
-                investment.value += dividend
-                investment.costBasis += dividend
-                dividends += dividend
-            }
         }
 
         // Add the dividends to the total dividends
@@ -278,46 +240,25 @@ function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
         let startYear = expenseEvent.start.startDistribution.value
         let endYear = startYear + expenseEvent.duration.value
 
-        if (currentYear < startYear || currentYear > endYear) {
+        if (currentYear < startYear || currentYear >= endYear) {
             continue
         }
 
-        if (expenseEvent.isDiscretionary) continue;
+        if (expenseEvent.discretionary) continue;
 
         //Add the expense to the total expenses
         expenses += expenseEvent.initialAmount
 
         //Calculate the expected annual change
 
-        if (expenseEvent.changeDistribution.distType == "fixed") {
-            if (expenseEvent.changeAmtOrPct == "amount") {
-                expenseEvent.initialAmount += expenseEvent.changeDistribution.value
-            }
-            else {
-                expenseEvent.initialAmount *= 1 + expenseEvent.changeDistribution.value
-            }
-        }
-        else if (expenseEvent.changeDistribution.distType == "normal") {
-            let mean = expenseEvent.changeDistribution.mean
-            let sigma = expenseEvent.changeDistribution.sigma
-            let change = normalSample(mean, sigma)
-            if (expenseEvent.changeAmtOrPct == "amount") {
-                expenseEvent.initialAmount += change
-            }
-            else {
-                expenseEvent.initialAmount *= 1 + change
-            }
+        if (expenseEvent.changeAmtOrPct === "amount") {
+            let value = getValueFromDistribution(expenseEvent.changeDistribution)
+            expenseEvent.initialAmount += value
         }
         else {
-            let lower = expenseEvent.changeDistribution.lower
-            let upper = expenseEvent.changeDistribution.upper
-            let change = Math.random() * (upper - lower) + lower
-            if (expenseEvent.changeAmtOrPct == "amount") {
-                expenseEvent.initialAmount += change
-            }
-            else {
-                expenseEvent.initialAmount *= 1 + change
-            }
+            let rate = getValueFromDistribution(expenseEvent.changeDistribution)
+            let value = expenseEvent.initialAmount * rate
+            expenseEvent.initialAmount += value
         }
     }
 
@@ -338,17 +279,19 @@ function payNonDiscretionaryExpenses(amount, investments, cash_investment, withd
 
     let capitalGains = 0
 
-    for (const assetName of withdrawalStrategy) {
-        let investment = investments.find(i => i.id === assetName)
+    for (const assetId of withdrawalStrategy) {
+        let investment = investments.find(i => i.id === assetId)
         if (investment.value < amount) {
             //Sell the entire investment to pay the expenses
             amount -= investment.value
             capitalGains += investment.value - investment.costBasis
+            investment.value = 0
+            investment.costBasis = 0
         }
         else {
             //Sell a portion of the investment to pay the expenses
             let portion = amount / investment.value
-            capitalGains += investment.value * portion - investment.costBasis * portion
+            capitalGains += amount - investment.costBasis * portion
             investment.value -= amount
             investment.costBasis -= investment.costBasis * portion
         }
