@@ -40,7 +40,6 @@ const Scenario = ({user}) => {
     const createScenario = useCallback(async (scenario) => {
         await axios.post(`${BACKEND_URL}/api/scenario/create`, scenario, {withCredentials: true})
             .then(() => {
-                console.log('test')
                 setScenModalOpen(false)
                 setScenFileModalOpen(false)
                 setScenNameModalOpen(false)
@@ -65,6 +64,22 @@ const Scenario = ({user}) => {
             console.log(error)
         })
     }, [user])
+
+    const exportScenario = useCallback(async (scenarioId, name = 'scenario') => {
+        await axios.get(`${BACKEND_URL}/api/scenario/export?id=${scenarioId}`, {withCredentials: true})
+        .then((response) => {
+            const blob = new Blob([response.data], { type: 'text/yaml' })
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${name}.yaml`
+            a.click()
+            window.URL.revokeObjectURL(url)
+        })
+        .catch((error) => {
+            console.log(error)
+        })
+    }, [user])
   
     useEffect(() => {
         if (user) {
@@ -82,6 +97,7 @@ const Scenario = ({user}) => {
                     // Function to edit/delete scenarios
                     editScenario={editScenario}
                     deleteScenario={deleteScenario}
+                    exportScenario={exportScenario}
                 />
             )
         })

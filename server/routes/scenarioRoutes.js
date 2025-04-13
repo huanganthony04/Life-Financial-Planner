@@ -6,6 +6,7 @@ import ResultsModel from '../models/ResultsModel.js'
 import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import importScenario from '../components/importer.js'
+import exportScenario from '../components/exporter.js'
 import runSimulation from '../simulator/simulation.js'
 import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
@@ -51,6 +52,10 @@ router.post('/api/scenario/create/', getUserAuth, async (req, res) => {
     }
 
     let scenarioObj = importScenario(req.body)
+    if (!scenarioObj) {
+        return res.status(400).json({error: 'Invalid scenario data!'})
+    }
+    
     scenarioObj.name = name
     scenarioObj.owner = userId
     scenarioObj.editors = [userId]
@@ -140,6 +145,25 @@ router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
         console.log(error)
         return res.status(500).json({error: error})
     }
+})
+
+router.get('/api/scenario/export', getUserAuth, async (req, res) => {
+
+    const userId = req.user._id
+    const scenarioId = req.query.id
+
+    const scenario = await ScenarioModel.findOne({_id: scenarioId}).lean()
+    if (!scenario) {
+        return res.status(404).json({error: 'Scenario not found!'})
+    }
+    if (scenario.owner !== userId && !scenario.editors.includes(userId)) {
+        return res.status(403).json({error: 'You do not have permission to export this scenario!'})
+    }
+
+    res.setHeader('Conent-Disposition', 'attachment; filename=scenario.yaml')
+    res.setHeader('Content-Type', 'application/x-yaml')
+    res.status(200).send(exportScenario(scenario))
+
 })
 
 router.post('/api/postEventnew', async (req, res) => {

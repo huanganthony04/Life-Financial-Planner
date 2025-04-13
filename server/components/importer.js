@@ -6,9 +6,15 @@ import fs from 'fs'
 
 function importScenario(parsedData) {
 
-    const scenario = new Scenario(parsedData)
-
-    return scenario
+    try {
+        console.log(parsedData)
+        const scenario = new Scenario(parsedData)
+        return scenario
+    }
+    catch (error) {
+        console.error("Error importing scenario:", error)
+        return null
+    }
 }
 
 export default importScenario
