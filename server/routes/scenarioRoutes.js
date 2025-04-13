@@ -32,6 +32,25 @@ router.get('/api/scenario/byuser', async (req, res) => {
     }
 })
 
+router.get('/api/scenarioByID/', async (req,res)=>{
+    //console.log()
+    console.log("yoooo");
+    let scenarioId= req.params.scenarioId;
+    try{
+    const scenario1=await ScenarioModel.findOne({_id: scenarioId});
+    console.log("yoooo");
+    const expenseEventList= scenario1.expenseEvents;
+
+    
+    return res.status(200).json({expenseEventList: expenseEventList});
+    }
+    catch{
+        console.log("scenario not found")
+        return res.status(401).json({error: 'scenario  not found!'});
+    }
+    
+})
+
 router.post('/api/scenario/create/', getUserAuth, async (req, res) => {
 
     const userId = req.user._id

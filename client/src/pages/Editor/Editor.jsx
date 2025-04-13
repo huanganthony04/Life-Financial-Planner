@@ -4,7 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import ExpenseEvent from './components/expenseEvent'
 import IncomeEvent from './components/incomeEvent'
-
+import { InvestEvent } from '../../../../server/classes'
+import InvestmentEvent from './components/investmentEvent'
+import RebalanceEvent from './components/rebalanceEvent'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
@@ -38,6 +40,7 @@ const Editor = () => {
   const navigate = useNavigate()
 
   const[tabState,setTab]=useState('');
+  
 
   const expenseSwitch=()=>{
     setTab('expense');
@@ -45,18 +48,26 @@ const Editor = () => {
   const incomeSwitch=()=>{
     setTab('income');
   }
+  const investmentSwitch=()=>{
+    setTab('investment');
+  }
+  const rebalanceSwitch=()=>{
+    setTab('rebalance');
+  }
 
   return (
     <div id="editor-page" className="page">
       <div id='tab_container'>
       <div id="expenseEventTab" className='tabs' onClick={expenseSwitch}>Expense</div>
       <div id="incomeEventTab" className='tabs'onClick={incomeSwitch}>Income</div>
-      <div id="invesmentEventTab" className='tabs'>Investment</div>
-      <div id="invesmentEventTab" className='tabs'>Rebalance</div>
+      <div id="invesmentEventTab" className='tabs' onClick={investmentSwitch}>Investment</div>
+      <div id="rebalanceEventTab" className='tabs'onClick={rebalanceSwitch}>Rebalance</div>
       </div>
 
       {tabState=='expense'&&(<div className='tabform'><ExpenseEvent className='tabform' scenarioId={scenarioId}></ExpenseEvent></div>)}
       {tabState=='income'&&(<div className='tabform'><IncomeEvent className='tabform' scenarioId={scenarioId}></IncomeEvent></div>)}
+      {tabState=='investment'&&(<div className='tabform'><InvestmentEvent className='tabform' scenarioId={scenarioId}></InvestmentEvent></div>)}
+      {tabState=='rebalance'&&(<div className='tabform'><RebalanceEvent className='tabform' scenarioId={scenarioId}></RebalanceEvent></div>)}
         <button onClick={() => navigate('/scenario')}>Return to scenarios</button>
 
     </div>

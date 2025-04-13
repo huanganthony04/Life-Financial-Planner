@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import React from 'react';
 import ValueDist from './valueDistribution';
+import ExpenseEventList from './expenseEventList';
 
 function ExpenseEvent({ scenarioId}) {
     const [title, setTitle] = useState('name');
@@ -367,6 +368,7 @@ function ExpenseEvent({ scenarioId}) {
             *indicates mandatory fields
           </p>
         </div>
+        <ExpenseEventList scenarioId={scenarioId}></ExpenseEventList>
       </div>
     );
 

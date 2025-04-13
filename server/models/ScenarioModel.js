@@ -165,6 +165,7 @@ const expenseEventSchema = new Schema({
 const investEventSchema = new Schema({
 
     name: String,
+    description:String,
     start: {type: eventStartSchema, required: true},
     duration: {type: valueDistributionSchema, required: true},
     assetAllocation: {
@@ -183,6 +184,7 @@ const investEventSchema = new Schema({
 const rebalanceEventSchema = new Schema({
 
     name: String,
+    description:String,
     start: {type: eventStartSchema, required: true},
     duration: {type: valueDistributionSchema, required: true},
     assetAllocation: {
