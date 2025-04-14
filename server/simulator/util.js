@@ -218,7 +218,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
         }
 
         let taxable_gains = Math.min(remaining_gains, Math.max(0, limit - Math.max(previous_limit, income)))
-        tax += taxable_gains * rate
+        tax += taxable_gains * rate / 100
         remaining_gains -= taxable_gains
         previous_limit = limit
 

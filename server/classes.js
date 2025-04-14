@@ -184,7 +184,9 @@ class RebalanceEvent {
 
 class Scenario {
   /**
-   * Constructor for the scenario class. Supply pure vanilla object representations of Scenario. 
+   * Constructor for the scenario class. Supply pure vanilla object representations of Scenario parsed directly from YAML.
+   * Does NOT WORK with Objects already created with this Constructor, or with any stored in the database.
+   * Use ONLY TO CREATE NEW SCENARIOS FROM YAML or from objects structured like the YAML files!!!!
    * Do not use subclasses in fields like ValueDistribution, InvestmentType, etc.
    * @param {Object} options
    * @param {string} [options.name="Unnamed Scenario"]
@@ -232,7 +234,7 @@ class Scenario {
     this.investments = investments.map((investment) => {
       const investmentType = this.investmentTypes.find((type) => type.name === investment.investmentType);
       if (!investmentType) {
-        throw new Error(`Investment type ${investment.investmentType.name} not found`);
+        throw new Error(`Investment type ${investment.investmentType.name} not found, investments are ${JSON.stringify(this.investmentTypes)}`);
       }
       return new Investment({ ...investment, investmentType });
     })
