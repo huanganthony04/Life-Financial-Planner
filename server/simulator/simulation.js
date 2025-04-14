@@ -24,7 +24,8 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
     let prevYearTaxes = 0
     let results = []
 
-    let { cash_investment, presentYear, remainingYears } = scenarioProcessor(Scenario)
+    let { processedScenario, cash_investment, presentYear, remainingYears } = scenarioProcessor(Scenario)
+    Scenario = processedScenario
 
     let currentYear = presentYear
 
@@ -71,7 +72,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         payDiscretionaryExpenses(currentYear, Scenario.expenseEvents, cash_investment, Scenario.financialGoal)
 
         // Run investment event
-        runInvestEvent(i, Scenario.investEvents, cash_investment, Scenario.investments)
+        runInvestEvent(currentYear, Scenario.investEvents, cash_investment, Scenario.investments)
 
         // Run rebalance event
         // curYearGains += runRebalanceEvent(events, Scenario.investments)

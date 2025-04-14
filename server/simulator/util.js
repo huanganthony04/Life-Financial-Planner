@@ -272,8 +272,8 @@ function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
         
 function payNonDiscretionaryExpenses(amount, investments, cash_investment, withdrawalStrategy) {
 
-    if (Number.isNaN(amount) || amount <= 0) {
-        throw new Error("Invalid amount value")
+    if (Number.isNaN(amount) || amount < 0) {
+        throw new Error("Invalid amount value: " + amount)
     }
 
     //Check if there is enough cash to pay the expenses
@@ -349,10 +349,11 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
 function runInvestEvent(currentYear, investEvents, cash_investment, investments) {
 
     let activeInvestEvent = null
+    let startYear, endYear
 
     for (let investEvent of investEvents) {
-        let startYear = investEvent.start.startDistribution.value
-        let endYear = startYear + investEvent.duration.value
+        startYear = investEvent.start.startDistribution.value
+        endYear = startYear + investEvent.duration.value
         if (currentYear < startYear || currentYear > endYear) {
             continue
         }
@@ -367,6 +368,7 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
     }
 
     let excess_cash = cash_investment.value - activeInvestEvent.maxCash
+    cash_investment.value = activeInvestEvent.maxCash
 
     if (excess_cash <= 0) {
         return
@@ -380,7 +382,7 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
 
         let progress = 0
         if (activeInvestEvent.duration.value !== 0) {
-            progress = (currentYear - activeInvestEvent.start.value) / activeInvestEvent.duration.value
+            progress = (currentYear - startYear) / activeInvestEvent.duration.value
         }
 
         for (const [asset, alloc] of Object.entries(assetAlloc)) {
