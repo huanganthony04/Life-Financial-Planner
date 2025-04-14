@@ -229,7 +229,7 @@ class Scenario {
     this.name = name;
     this.owner = owner;
     this.editors = editors;
-    this.maritalStatus = (maritalStatus === 'couple' ? true : false);
+    this.maritalStatus = maritalStatus;
     this.birthYears = birthYears;
     
     if (

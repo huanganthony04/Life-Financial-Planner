@@ -40,7 +40,6 @@ const Scenario = ({user}) => {
     const createScenario = useCallback(async (scenario) => {
         await axios.post(`${BACKEND_URL}/api/scenario/create`, scenario, {withCredentials: true})
             .then(() => {
-                console.log('test')
                 setScenModalOpen(false)
                 setScenFileModalOpen(false)
                 setScenNameModalOpen(false)
@@ -86,7 +85,7 @@ const Scenario = ({user}) => {
             )
         })
     }
-
+    
     return (
         <>
             <div id="scenario-utils">
