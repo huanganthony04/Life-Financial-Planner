@@ -6,6 +6,7 @@ import ResultsModel from '../models/ResultsModel.js'
 import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import importScenario from '../components/importer.js'
+import exportScenario from '../components/exporter.js'
 import runSimulation from '../simulator/simulation.js'
 import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
@@ -52,7 +53,6 @@ router.get('/api/scenarioByID/', async (req,res)=>{
 })
 
 router.post('/api/scenario/create/', getUserAuth, async (req, res) => {
-
     const userId = req.user._id
     if (!userId) {
         return res.status(401).json({error: 'You are not logged in!'})
@@ -70,6 +70,10 @@ router.post('/api/scenario/create/', getUserAuth, async (req, res) => {
     }
 
     let scenarioObj = importScenario(req.body)
+    if (!scenarioObj) {
+        return res.status(400).json({error: 'Invalid scenario data!'})
+    }
+    
     scenarioObj.name = name
     scenarioObj.owner = userId
     scenarioObj.editors = [userId]
@@ -138,30 +142,54 @@ router.post('/api/scenario/save/', getUserAuth, async (req, res) => {
     }
 })
 
-//Delete a scenario
+///Delete a scenario
 router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
-    
-    const scenarioId = req.body.scenarioId
-    const user = req.user
+    const scenarioId = req.body.scenarioId;
+    const user = req.user;
 
-    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+    const scenario = await ScenarioModel.findOne({_id: scenarioId});
     if (!scenario) {
-        return res.status(404).json({error: 'Scenario not found!'})
+        return res.status(404).json({error: 'Scenario not found!'});
     }
 
     if (scenario.owner !== user._id) {
-        return res.status(403).json({error: 'Only the owner may delete this scenario!'})
+        return res.status(403).json({error: 'Only the owner may delete this scenario!'});
     }
 
     try {
-        await ScenarioModel.deleteOne({_id: scenarioId})
-        user.ownedScenarios = user.ownedScenarios.filter(scenario => scenario.toString() !== scenarioId)
-        return res.status(200).json({success: true})
+        await ScenarioModel.deleteOne({_id: scenarioId});
+
+        // Use the $pull operator to remove the scenario ID from ownedScenarios
+        await UserModel.updateOne(
+            { _id: user._id },
+            { $pull: { ownedScenarios: scenarioId } }
+        );
+
+        return res.status(200).json({success: true});
     }
     catch(error) {
-        console.log(error)
-        return res.status(500).json({error: error})
+        console.error(error);
+        return res.status(500).json({error: error});
     }
+});
+
+router.get('/api/scenario/export', getUserAuth, async (req, res) => {
+
+    const userId = req.user._id
+    const scenarioId = req.query.id
+
+    const scenario = await ScenarioModel.findOne({_id: scenarioId}).lean()
+    if (!scenario) {
+        return res.status(404).json({error: 'Scenario not found!'})
+    }
+    if (scenario.owner !== userId && !scenario.editors.includes(userId)) {
+        return res.status(403).json({error: 'You do not have permission to export this scenario!'})
+    }
+
+    res.setHeader('Conent-Disposition', 'attachment; filename=scenario.yaml')
+    res.setHeader('Content-Type', 'application/x-yaml')
+    res.status(200).send(exportScenario(scenario))
+
 })
 
 router.post('/api/postEventnew', async (req, res) => {
