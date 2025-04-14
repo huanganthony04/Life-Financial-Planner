@@ -95,12 +95,15 @@ router.get('/api/scenario/', getUserAuth, async (req, res) => {
     const userId = req.user._id
 
     const scenario = await ScenarioModel.findOne({_id: scenarioId })
+    console.log("hi");
 
     if (!scenario) {
+        console.log('Scenario not found!');
         return res.status(404).json({error: 'Scenario not found!'})
     }
 
     if (scenario.owner !== userId && !scenario.editors.includes(userId)) {
+        console.log("'You do not have permission to access this scenario!'")
         return res.status(403).json({error: 'You do not have permission to access this scenario!'})
     }
 
@@ -207,6 +210,52 @@ catch(error) {
 
 
 
+})
+
+router.post('/api/postEventUpdate', async (req, res) => {
+
+
+
+    console.log("postEventUpdate reached");
+    const scenarioId= req.body.scenarioId;
+    const expenseEventId= req.body.expenseEventId;
+    console.log(expenseEventId+"expeneEventId");
+
+    const updatedFields = {
+        "expenseEvents.$.name": req.body.title,
+        "expenseEvents.$.start": req.body.start,
+        "expenseEvents.$.description": req.body.summary,
+        "expenseEvents.$.discretionary": req.body.discretionaryStatus,
+        "expenseEvents.$.inflationAdjusted": req.body.inflationStatus,
+        "expenseEvents.$.duration": req.body.duration,
+        "expenseEvents.$.userFraction": req.body.userFrac,
+        "expenseEvents.$.changeAmtOrPct": req.body.amountOrPercent,
+        "expenseEvents.$.initialAmount": req.body.initial,
+        "expenseEvents.$.changeDistribution": req.body.changeDistribution
+      };
+      try {
+        const result = await ScenarioModel.findOneAndUpdate(
+          {
+            _id: scenarioId,
+            "expenseEvents._id": expenseEventId
+          },
+          {
+            $set: updatedFields
+          },
+          { new: true }
+        );
+      
+        if (!result) {
+            console.log("postEventUpdate 404 expense event or scenario not found");
+          return res.status(404).json({ error: "Expense Event or Scenario not found" });
+        }
+      
+        return res.status(200).json({ message: "Expense event updated", scenario: result });
+      } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+   
 })
 
 

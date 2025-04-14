@@ -4,20 +4,20 @@ import React from 'react';
 import ValueDist from './valueDistribution';
 import ExpenseEventList from './expenseEventList';
 
-function ExpenseEvent({ scenarioId}) {
-    const [title, setTitle] = useState('name');
+function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
+    const [title, setTitle] = useState(singleExpenseMap.name);
    
-    const [discretionaryStatus, setDiscretionary] = useState(true);
-    const [inflationStatus, setInflation] = useState(true);
+    const [discretionaryStatus, setDiscretionary] = useState(singleExpenseMap.discretionary);
+    const [inflationStatus, setInflation] = useState(singleExpenseMap.inflationAdjusted);
 
-    const [summary, setSummary] = useState('description');
+    const [summary, setSummary] = useState(singleExpenseMap.description);
     //const [start, setStart] = useState('');
     var start='';
     //const [duration, setDuration] = useState('');
     var duration='';
-    const [userFrac, setUserFrac] = useState(1.0);
-    const [amountOrPercent, setAP] = useState("amount");
-    const [initial, setInitial] = useState('');
+    const [userFrac, setUserFrac] = useState(singleExpenseMap.userFraction);
+    const [amountOrPercent, setAP] = useState(singleExpenseMap.changeAmtOrPct);
+    const [initial, setInitial] = useState(singleExpenseMap.initialAmount);
 
     const[startsWith1,setStartWith]=useState('');
 
@@ -27,11 +27,19 @@ function ExpenseEvent({ scenarioId}) {
     const handleDiscretion=()=>{
         setDiscretionary(!discretionaryStatus)
     }
-
-    const [distMode,setdistMode]=useState('normal');
+//distMode is for changeDist
+    const [distMode,setdistMode]=useState(singleExpenseMap.changeDistribution.distType);
     const [fixedValue, setFixedValue] = useState('');
+    if(singleExpenseMap.changeDistribution.distType=='fixed'){
+        //setFixedValue(singleExpenseMap.changeDistribution.value);
+    }
+
     const [mu,setMu]=useState('');
+    if(singleExpenseMap.changeDistribution.distType=='normal'){
+        //setMu(singleExpenseMap.changeDistribution.mean);
+    }
     const [sigma,setSigma]=useState('');
+
     const [upper,setUpper]=useState('');
     const [lower,setLower]=useState('');
 
@@ -53,7 +61,7 @@ function ExpenseEvent({ scenarioId}) {
     var changeDistribution='';
 
     //dist1 is distType for value valDist of eventstart
-    if(distMode1=="fixed"){
+    if(distMode1=="fixed"&&fixedValue1!=''){
         start={
           startDistribution:{
             distType: distMode1,
@@ -64,7 +72,7 @@ function ExpenseEvent({ scenarioId}) {
         }
     }
         
-        if(distMode1=="uniform"){
+        if(distMode1=="uniform"&&upper1!=''&&lower1!=''){
           start={
             startDistribution:{
               distType: distMode1,
@@ -76,7 +84,7 @@ function ExpenseEvent({ scenarioId}) {
           }
 
         }
-        if(distMode1=="normal"){
+        if(distMode1=="normal"&&mu1!=''&&sigma1!=''){
             start={
               startDistribution:{
                 distType: distMode1,
@@ -90,14 +98,14 @@ function ExpenseEvent({ scenarioId}) {
         }
 
 
-        if(distMode2=="fixed"){
+        if(distMode2=="fixed"&&fixedValue2!=''){
             duration={
                 distType: distMode2,
                 value:fixedValue2,
     
             }
         }
-            if(distMode2=="uniform"){
+            if(distMode2=="uniform"&&upper2!=''&&lower!=''){
                 duration={
                     distType: distMode2,
                    upper:upper2,
@@ -105,7 +113,7 @@ function ExpenseEvent({ scenarioId}) {
     
                 }
             }
-            if(distMode2=="normal"){
+            if(distMode2=="normal"&&mu2!=''&&sigma2!=''){
                 duration={
                     distType: distMode2,
                     mean:mu2,
@@ -116,7 +124,7 @@ function ExpenseEvent({ scenarioId}) {
         
     
 
-        if(distMode=="normal"){
+        if(distMode=="normal"&&mu!=''&&sigma!=''){
              changeDistribution={
                 distType: distMode,
                 mean:mu,
@@ -125,7 +133,7 @@ function ExpenseEvent({ scenarioId}) {
             }
        
         }
-        if(distMode=="fixed"){
+        if(distMode=="fixed"&&fixedValue!=''){
              changeDistribution={
                 distType: distMode,
                 value:fixedValue,
@@ -133,7 +141,7 @@ function ExpenseEvent({ scenarioId}) {
             }
 
         }
-        if(distMode=="uniform"){
+        if(distMode=="uniform"&&upper!=''&&lower!=''){
              changeDistribution={
                 distType: distMode,
                 upper:upper,
@@ -147,30 +155,32 @@ function ExpenseEvent({ scenarioId}) {
     async function post(){
 
        
-        let response = await axios.post("http://localhost:8080/api/postEventnew", {scenarioId:scenarioId,title:title,changeDistribution:changeDistribution, 
+        let response = await axios.post("http://localhost:8080/api/postEventUpdate", {expenseEventId:expenseEventId, scenarioId:scenarioId,title:title,changeDistribution:changeDistribution, 
           summary: summary, discretionaryStatus:discretionaryStatus,inflationStatus:inflationStatus, start: start, 
           duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
             console.log("post sending");
       }
 
       const handlePostQuestion = () => {
-
+        console.log(start);
+        console.log("start above val");
         let errors = false;
-        if(distMode1=="fixed"&&fixedValue1==''){
-          errors=true;
-      }
-  if(distMode1=="uniform"&&(upper1==''||lower1=='')){errors=true}
-  if(distMode1=="normal"&&(mu1==''||sigma1=='')){errors=true}
 
-  if(distMode2=="fixed"&&fixedValue2==''){errors=true}
-  if(distMode2=="uniform"&&(upper2==''||lower=='')){errors=true}
-  if(distMode2=="normal"&&(mu2==''||sigma2=='')){errors=true}
+            if(distMode1=="fixed"&&fixedValue1==''){
+                errors=true;
+            }
+        if(distMode1=="uniform"&&(upper1==''||lower1=='')){errors=true}
+        if(distMode1=="normal"&&(mu1==''||sigma1=='')){errors=true}
 
-  if(distMode=="normal"&&(mu==''||sigma=='')){errors=true}
-    if(distMode=="fixed"&&fixedValue==''){errors=true}
-  if(distMode=="uniform"&&(upper==''||lower=='')){
-      errors=true;
-  }
+        if(distMode2=="fixed"&&fixedValue2==''){errors=true}
+        if(distMode2=="uniform"&&(upper2==''||lower=='')){errors=true}
+        if(distMode2=="normal"&&(mu2==''||sigma2=='')){errors=true}
+
+        if(distMode=="normal"&&(mu==''||sigma=='')){errors=true}
+          if(distMode=="fixed"&&fixedValue==''){errors=true}
+        if(distMode=="uniform"&&(upper==''||lower=='')){
+            errors=true;
+        }
         if(start==''||duration==''||changeDistribution==''||initial==''){
             errors=true;
             if(start==''){console.log("start is blank")}
@@ -188,9 +198,6 @@ function ExpenseEvent({ scenarioId}) {
         }
         if(!errors){
           post();
-        }
-        if(errors==true){
-          console.log("field is blank");
         }
       }
 
@@ -343,6 +350,7 @@ function ExpenseEvent({ scenarioId}) {
               //defaultChecked
               checked={inflationStatus}//checked is vlaue of a checkbox
               onChange = {handleCheckbox}
+
               /> 
             </form>
           
@@ -386,9 +394,9 @@ function ExpenseEvent({ scenarioId}) {
             *indicates mandatory fields
           </p>
         </div>
-        <ExpenseEventList scenarioId={scenarioId}></ExpenseEventList>
+        
       </div>
     );
 
   }
-  export default ExpenseEvent;
+  export default EditExpenseEvent;

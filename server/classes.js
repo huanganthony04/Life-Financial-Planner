@@ -1,23 +1,39 @@
 /* This was generated from ScenarioModel.js using ChatGPT */
 
+/**
+ * @typedef {Object} ValueDistribution
+ * @property {'fixed'|'normal'|'uniform'} distType - The type of distribution
+ * @property {Number} value - The fixed value, if the distribution is fixed
+ * @property {Number} mean - The mean, if the distribution is normal
+ * @property {Number} sigma - The standard deviation, if the distribution is normal
+ * @property {Number} lower - The lower part of the range, if the distribution is uniform
+ * @property {Number} upper - The upper part of the range, if the distribution is uniform
+ */
 class ValueDistribution {
   /**
+   * Accepts either a `distType` or `type` key for the distribution type.
+   *
    * @param {Object} options
-   * @param {'normal'|'fixed'|'GBM'|'uniform'} options.distType
-   * @param {number|undefined} options.value - Only defined if distType is 'fixed'
-   * @param {number|undefined} options.mean - Defined if distType is 'normal' or 'GBM'
-   * @param {number|undefined} options.stdev - Defined if distType is 'normal' or 'GBM'
-   * @param {number|undefined} options.lower - Defined if distType is 'uniform'
-   * @param {number|undefined} options.upper - Defined if distType is 'uniform'
+   * @param {'normal'|'fixed'|'GBM'|'uniform'} [options.distType] - The type of distribution.
+   * @param {'normal'|'fixed'|'GBM'|'uniform'} [options.type] - Alternative key for distribution type.
+   * @param {number|undefined} options.value - Only defined if distribution is fixed.
+   * @param {number|undefined} options.mean - Defined if distribution is normal or GBM.
+   * @param {number|undefined} options.stdev - Defined if distribution is normal or GBM.
+   * @param {number|undefined} options.mu - Alternative to mean if needed.
+   * @param {number|undefined} options.sigma - Alternative to stdev if needed.
+   * @param {number|undefined} options.lower - Defined if distribution is uniform.
+   * @param {number|undefined} options.upper - Defined if distribution is uniform.
    */
-  constructor({ type, value, mean, mu, stdev, sigma, lower, upper }) {
-    this.distType = (type === "GBM" ? "normal" : type)
+  constructor({ type, distType, value, mean, mu, stdev, sigma, lower, upper } = {}) {
+    // Support both distType and type in the incoming object.
+    const distributionType = distType || type;
+    this.distType = (distributionType === "GBM" ? "normal" : distributionType);
     this.value = value;
     this.mean = mean ?? mu;
     this.sigma = stdev ?? sigma;
     this.lower = lower;
     this.upper = upper;
-    // custom validation here if needed.
+    // Add any additional custom validation if needed.
   }
 }
 
@@ -34,15 +50,19 @@ class InvestmentType {
    * @param {Object} options.incomeDistribution
    * @param {boolean} options.taxability
    */
-  constructor({ name, description, returnAmtOrPct, returnDistribution, expenseRatio, incomeAmtOrPct, incomeDistribution, taxability }) {
+  constructor({ name, description, returnAmtOrPct = 'amount', returnDistribution, expenseRatio = 0, incomeAmtOrPct = 'amount', incomeDistribution, taxability = true }) {
     this.name = name;
-    this.description = description;
-    this.returnAmtOrPct = returnAmtOrPct;
-    this.returnDistribution = new ValueDistribution(returnDistribution);
-    this.expenseRatio = expenseRatio;
-    this.incomeAmtOrPct = incomeAmtOrPct;
-    this.incomeDistribution = new ValueDistribution(incomeDistribution);
-    this.taxability = taxability;
+    this.description = description
+    this.returnAmtOrPct = returnAmtOrPct
+    if (returnDistribution) {
+      this.returnDistribution = new ValueDistribution(returnDistribution)
+    }
+    this.expenseRatio = expenseRatio
+    this.incomeAmtOrPct = incomeAmtOrPct
+    if (incomeDistribution) {
+      this.incomeDistribution = new ValueDistribution(incomeDistribution)
+    }
+    this.taxability = taxability
   }
 }
 
@@ -54,12 +74,12 @@ class Investment {
    * @param {'non-retirement'|'pre-tax'|'after-tax'} options.taxStatus
    * @param {string} [options.id] - If not provided, computed from investmentType.name and taxStatus.
    */
-  constructor({ investmentType, value = 0, taxStatus, id }) {
+  constructor({ investmentType, value = 0, taxStatus = 'non-retirement', id, costBasis }) {
     this.investmentType = investmentType;
     this.value = value;
     this.taxStatus = taxStatus;
-    this.id = id || `${this.investmentType.name} ${this.taxStatus}`;
-    this.costBasis = value;
+    this.id = id ?? `${investmentType.name} ${taxStatus}`;
+    this.costBasis = costBasis ?? value;
   }
 }
 
@@ -211,7 +231,22 @@ class Scenario {
     this.editors = editors;
     this.maritalStatus = (maritalStatus === 'couple' ? true : false);
     this.birthYears = birthYears;
-    this.lifeExpectancy = lifeExpectancy.map((obj) => new ValueDistribution(obj));
+    
+    if (
+      !Array.isArray(lifeExpectancy) ||
+      !(lifeExpectancy.length === 1 || lifeExpectancy.length === 2)
+    ) {
+      console.warn('Setting to default lifeExpectancy value.');
+      // For a fixed distribution, only include distType and value.
+      lifeExpectancy = [
+        {
+          distType: 'fixed', // Must be 'fixed' (or 'normal' or 'uniform') per the enum.
+          value: 75
+        }
+      ];
+    }
+    this.lifeExpectancy = lifeExpectancy.map(obj => new ValueDistribution(obj));
+
     this.investmentTypes = investmentTypes.map((type) => new InvestmentType(type));
 
     // Link up investments with their corresponding investment types
@@ -229,7 +264,16 @@ class Scenario {
     this.investEvents = eventSeries.filter((event) => event.type === 'invest').map((event) => new InvestEvent(event));
     this.rebalanceEvents = eventSeries.filter((event) => event.type === 'rebalance').map((event) => new RebalanceEvent(event));
 
+    if (!inflationAssumption) {
+      console.warn('Setting to default inflation assumption.');
+      inflationAssumption = {
+        distType: 'fixed',
+        value: 2.0 // Representing a 2% inflation rate.
+        // Again, leave out any fields not applicable for a fixed distribution.
+      };
+    }
     this.inflationAssumption = new ValueDistribution(inflationAssumption);
+
     this.afterTaxContributionLimit = afterTaxContributionLimit;
     this.spendingStrategy = spendingStrategy;
     this.expenseWithdrawalStrategy = expenseWithdrawalStrategy;
@@ -238,4 +282,12 @@ class Scenario {
   }
 }
 
-export { ValueDistribution, InvestmentType, Investment, EventStart, IncomeEvent, ExpenseEvent, InvestEvent, RebalanceEvent, Scenario };
+export { ValueDistribution, 
+  InvestmentType, 
+  Investment, 
+  EventStart, 
+  IncomeEvent, 
+  ExpenseEvent, 
+  InvestEvent, 
+  RebalanceEvent, 
+  Scenario };
