@@ -2,7 +2,7 @@ import scenarioProcessor from "./preprocessor.js"
 import applyInflation from "./inflation.js"
 import { normalSample, calculateIncome, updateInvestments, calculateTaxes, 
     calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
-    payDiscretionaryExpenses, runInvestEvent,  
+    payDiscretionaryExpenses, runInvestEvent, getResults,
 } from "./util.js"
 
 /**
@@ -10,7 +10,7 @@ import { normalSample, calculateIncome, updateInvestments, calculateTaxes,
  * @param {Scenario} Scenario The scenario to simulate
  * @param {Object} federalTaxRates The federal tax rates to use for the simulation
  * @param {Object} stateTaxRates The state tax rates to use for the simulation
- * @returns {Array} An array of results for each year of the simulation
+ * @returns {Map<string, number>[]} An array of results for each year of the simulation
  * */
 export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
     
@@ -31,13 +31,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
 
     for (let i = 0; i < remainingYears; i++) {
         
-        results.push({
-            investments: structuredClone(Scenario.investments), 
-            incomeEvents: structuredClone(Scenario.incomeEvents), 
-            expenseEvents: structuredClone(Scenario.expenseEvents),
-            investEvents: structuredClone(Scenario.investEvents),
-            year: currentYear
-        })
+        results.push(getResults(Scenario.investments))
 
         if (Scenario.inflationAssumption.distType === "fixed") {
             inflation_rate = Scenario.inflationAssumption.value
@@ -83,13 +77,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         currentYear++
     }
 
-    results.push({
-        investments: structuredClone(Scenario.investments), 
-        incomeEvents: structuredClone(Scenario.incomeEvents), 
-        expenseEvents: structuredClone(Scenario.expenseEvents),
-        investEvents: structuredClone(Scenario.investEvents),
-        year: currentYear
-    })
+    results.push(getResults(Scenario.investments))
     return results
 
 }

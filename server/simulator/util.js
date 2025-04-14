@@ -327,7 +327,7 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
         let startYear = expenseEvent.start.startDistribution.value
         let endYear = startYear + expenseEvent.duration.value
 
-        if (currentYear < startYear || currentYear > endYear) {
+        if (currentYear < startYear || currentYear >= endYear) {
             continue
         }
 
@@ -458,6 +458,21 @@ function runRebalanceEvent(rebalanceEvent, investments) {
 }
 */
 
+/**
+ * Get the scenario's current investment values and return as a map of ID : Value
+ * @param {Number} currentYear 
+ * @param {Array<Object>} investments 
+ * @returns {Map<string, number>} A map of investment IDs to their current values
+ */
+function getResults(investments) {
+    let map = new Map()
+
+    investments.forEach((investment) => {
+        map.set(investment.id, investment.value)
+    })
+
+    return map
+}
 
 export { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
-    payDiscretionaryExpenses, runInvestEvent, updateInvestments, calculateTaxes }
+    payDiscretionaryExpenses, runInvestEvent, updateInvestments, calculateTaxes, getResults }
