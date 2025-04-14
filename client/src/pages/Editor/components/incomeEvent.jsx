@@ -2,12 +2,11 @@ import { useState } from 'react';
 import axios from 'axios';
 import React from 'react';
 import ValueDist from './valueDistribution';
-import ExpenseEventList from './expenseEventList';
 
-function ExpenseEvent({ scenarioId}) {
+function IncomeEvent({ scenarioId}) {
     const [title, setTitle] = useState('name');
    
-    const [discretionaryStatus, setDiscretionary] = useState(true);
+    const [socialSecurityStatus, setSSN] = useState(true);
     const [inflationStatus, setInflation] = useState(true);
 
     const [summary, setSummary] = useState('description');
@@ -15,17 +14,17 @@ function ExpenseEvent({ scenarioId}) {
     var start='';
     //const [duration, setDuration] = useState('');
     var duration='';
+const[startsWith1,setStartWith]=useState('');
+
     const [userFrac, setUserFrac] = useState(1.0);
     const [amountOrPercent, setAP] = useState("amount");
     const [initial, setInitial] = useState('');
 
-    const[startsWith1,setStartWith]=useState('');
-
     const handleCheckbox=()=>{
         setInflation(!inflationStatus)
     }
-    const handleDiscretion=()=>{
-        setDiscretionary(!discretionaryStatus)
+    const handleSSN=()=>{
+        setSSN(!socialSecurityStatus)
     }
 
     const [distMode,setdistMode]=useState('normal');
@@ -51,9 +50,8 @@ function ExpenseEvent({ scenarioId}) {
 
     //const [changeDistribution,setChangeDist]=useState('');
     var changeDistribution='';
-
-    //dist1 is distType for value valDist of eventstart
-    if(distMode1=="fixed"){
+     //dist1 is distType for value valDist of eventstart
+     if(distMode1=="fixed"){
         start={
           startDistribution:{
             distType: distMode1,
@@ -147,30 +145,13 @@ function ExpenseEvent({ scenarioId}) {
     async function post(){
 
        
-        let response = await axios.post("http://localhost:8080/api/postEventnew", {scenarioId:scenarioId,title:title,changeDistribution:changeDistribution, 
-          summary: summary, discretionaryStatus:discretionaryStatus,inflationStatus:inflationStatus, start: start, 
-          duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
+        let response = await axios.post("http://localhost:8080/api/postIncomenew", {scenarioId:scenarioId,title:title,changeDistribution:changeDistribution, summary: summary, socialSecurityStatus:socialSecurityStatus,inflationStatus:inflationStatus, start: start, duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
             console.log("post sending");
       }
 
       const handlePostQuestion = () => {
 
         let errors = false;
-        if(distMode1=="fixed"&&fixedValue1==''){
-          errors=true;
-      }
-  if(distMode1=="uniform"&&(upper1==''||lower1=='')){errors=true}
-  if(distMode1=="normal"&&(mu1==''||sigma1=='')){errors=true}
-
-  if(distMode2=="fixed"&&fixedValue2==''){errors=true}
-  if(distMode2=="uniform"&&(upper2==''||lower=='')){errors=true}
-  if(distMode2=="normal"&&(mu2==''||sigma2=='')){errors=true}
-
-  if(distMode=="normal"&&(mu==''||sigma=='')){errors=true}
-    if(distMode=="fixed"&&fixedValue==''){errors=true}
-  if(distMode=="uniform"&&(upper==''||lower=='')){
-      errors=true;
-  }
         if(start==''||duration==''||changeDistribution==''||initial==''){
             errors=true;
             if(start==''){console.log("start is blank")}
@@ -189,64 +170,14 @@ function ExpenseEvent({ scenarioId}) {
         if(!errors){
           post();
         }
-        if(errors==true){
-          console.log("field is blank");
-        }
       }
 
-    /*
-    const [title, setTitle] = useState('');
-    
-    const [text, setText] = useState('');
-    const [tags, setTags] = useState('');
-  
-    const [titleError, setTitleError] = useState('');
-    const [summaryError, setSummaryError] = useState('');
-    const [textError, setTextError] = useState('');
-    const [tagsError, setTagsError] = useState('');
-
-    async function post({tagsArray}){
-      let response = await axios.post("http://localhost:8000/addQuestion", {title:title, summary: summary, text: text, tagsArray: tagsArray, user: user});
-      await setSearchValue();
-      let  query = "q/" + response.data;
-      await setqueryString(query);
-      await setQuestionWithTag();
-      await pageChange("Questions");
-    }
-
-    const handlePostQuestion = () => {
-      setTitleError ('');
-      setSummaryError ('');
-      setTextError ('');
-      setTagsError('');
-      let errors = false;
-      let tagsArray = tags.split(" ");
-      if (title.length > 50 || title.length === 0){
-        setTitleError('Invalid Title Length');
-        errors = true;
-      }
-      if (summary.length === 0 || summary.length > 140) {
-        setSummaryError('Invalid Summary length');
-        errors = true;
-      }
-      if (text.length === 0) {
-        setTextError('Text should not be empty');
-        errors = true;
-      } 
-      if (tagsArray.length > 5 || tags.length === 0){
-        setTagsError("Invalid number of tags");
-        errors = true;
-      }
-      if(!errors){
-        post({tagsArray});
-      }
-    }
-      */
+ 
   
     return (
       <div id = "question_form_container" className = "container">
         <div id = "question_form" className = "form">
-          <h2> Expense Event Name </h2>
+          <h2> Income Event Name </h2>
           <p> Limit Name to 50 characters or less</p>
           <form id = "q_title_form">
             <input 
@@ -347,17 +278,17 @@ function ExpenseEvent({ scenarioId}) {
             </form>
           
             
-            <form id = "Discretionary">
-                <>Discretionary:</>
-                <>{discretionaryStatus?"true":"false"}</>
+            <form id = "SocialSecurity">
+                <>Social Security:</>
+                <>{socialSecurityStatus?"true":"false"}</>
             <input 
 
               type="checkbox" 
-              name = "Discretionary" 
-              id ="Discretionary" 
-              value={discretionaryStatus}
+              name = "ssn" 
+              id ="ssn" 
+              value={socialSecurityStatus}
               defaultChecked 
-              onChange = {handleDiscretion}
+              onChange = {handleSSN}
               />
             </form>
             <h4>User Fraction:(Default 1.0 if not specified) </h4>
@@ -386,9 +317,8 @@ function ExpenseEvent({ scenarioId}) {
             *indicates mandatory fields
           </p>
         </div>
-        <ExpenseEventList scenarioId={scenarioId}></ExpenseEventList>
       </div>
     );
 
   }
-  export default ExpenseEvent;
+  export default IncomeEvent;
