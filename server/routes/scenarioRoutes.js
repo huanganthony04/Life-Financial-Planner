@@ -259,6 +259,53 @@ router.post('/api/postEventUpdate', async (req, res) => {
 })
 
 
+router.post('/api/postIncomeUpdate', async (req, res) => {
+
+
+
+    console.log("postIncomeUpdate reached");
+    const scenarioId= req.body.scenarioId;
+    const incomeEventId= req.body.IncomeEventId;
+    console.log(incomeEventId+"incomeEventId");
+
+    const updatedFields = {
+        "incomeEvents.$.name": req.body.title,
+        "incomeEvents.$.start": req.body.start,
+        "incomeEvents.$.description": req.body.summary,
+        "incomeEvents.$.socialSecurity": req.body.socialSecurity,
+        "incomeEvents.$.inflationAdjusted": req.body.inflationStatus,
+        "incomeEvents.$.duration": req.body.duration,
+        "incomeEvents.$.userFraction": req.body.userFrac,
+        "incomeEvents.$.changeAmtOrPct": req.body.amountOrPercent,
+        "incomeEvents.$.initialAmount": req.body.initial,
+        "incomeEvents.$.changeDistribution": req.body.changeDistribution
+      };
+      try {
+        const result = await ScenarioModel.findOneAndUpdate(
+          {
+            _id: scenarioId,
+            "incomeEvents._id": incomeEventId
+          },
+          {
+            $set: updatedFields
+          },
+          { new: true }
+        );
+      
+        if (!result) {
+            console.log("postIncomeUpdate 404 income event or scenario not found");
+          return res.status(404).json({ error: "Income Event or Scenario not found" });
+        }
+      
+        return res.status(200).json({ message: "Income event updated", scenario: result });
+      } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+   
+})
+
+
 router.post('/api/postIncomenew', async (req, res) => {
 
 
