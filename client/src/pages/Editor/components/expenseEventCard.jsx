@@ -10,7 +10,7 @@ function ExpenseEventCard({ singleExpenseItem , editState,tog,togFunc}) {
 
 
 const editToggle=()=>{
-    togFunc(!tog)
+    togFunc(!tog);
     editState(
         singleExpenseItem
     );
