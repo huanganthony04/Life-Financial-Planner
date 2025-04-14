@@ -47,8 +47,12 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
             inflation_rate = normalSample(mean, sigma)
         }
 
+        applyInflation(Scenario, federalTaxRates, stateTaxRates, inflation_rate)
+
         // Get income from income events
-        ({ curYearIncome, curYearSS } = calculateIncome(currentYear, Scenario.incomeEvents))
+        let { income, socialSecurity } = calculateIncome(currentYear, Scenario.incomeEvents)
+        curYearIncome = income
+        curYearSS = socialSecurity
         cash_investment.value += curYearIncome + curYearSS
 
         // Update investments
@@ -75,11 +79,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         prevYearIncome = curYearIncome
         prevYearGains = curYearGains
 
-        // Adjust everything affected by inflation
-        applyInflation(Scenario, federalTaxRates, stateTaxRates, inflation_rate)
-
         currentYear++
-
     }
 
     results.push({

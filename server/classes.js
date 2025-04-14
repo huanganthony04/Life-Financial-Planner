@@ -191,7 +191,8 @@ class RebalanceEvent {
 
 class Scenario {
   /**
-   * Constructor for the scenario class. Supply only objects, do not use other instances of subclasses of scenario like ValueDistribution, InvestmentType, etc.
+   * Constructor for the scenario class. Supply pure vanilla object representations of Scenario. 
+   * Do not use subclasses in fields like ValueDistribution, InvestmentType, etc.
    * @param {Object} options
    * @param {string} [options.name="Unnamed Scenario"]
    * @param {string} options.owner
@@ -229,7 +230,7 @@ class Scenario {
     this.name = name;
     this.owner = owner;
     this.editors = editors;
-    this.maritalStatus = (maritalStatus === 'couple' ? true : false);
+    this.maritalStatus = maritalStatus;
     this.birthYears = birthYears;
     
     if (

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario}) => {
+const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario, exportScenario}) => {
 
     const dropdownRef = useRef(null)
 
@@ -16,7 +16,11 @@ const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario})
 
     const handleDelete = () => {
         deleteScenario(scenarioId)
-    }   
+    }  
+
+    const handleExport = () => {
+        exportScenario(scenarioId)
+    }
 
     useEffect(() => {
         if (open) {
@@ -46,7 +50,7 @@ const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario})
             <button className="dropdown-menu-button">
                 <h4 className="dropdown-menu-item-text">Share</h4>
             </button>
-            <button className="dropdown-menu-button">
+            <button className="dropdown-menu-button" onClick={handleExport}>
                 <h4 className="dropdown-menu-item-text">Export as YAML</h4>
             </button>
         </div>

@@ -5,7 +5,7 @@ import DropdownMenu from './DropdownMenu'
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 
-const ScenarioListItem = ({name, scenarioId, editScenario, deleteScenario}) => {
+const ScenarioListItem = ({name, scenarioId, editScenario, deleteScenario, exportScenario}) => {
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
@@ -22,6 +22,7 @@ const ScenarioListItem = ({name, scenarioId, editScenario, deleteScenario}) => {
                 scenarioId={scenarioId}
                 editScenario={editScenario}
                 deleteScenario={deleteScenario}
+                exportScenario={exportScenario}
             />
         </div>
     )
