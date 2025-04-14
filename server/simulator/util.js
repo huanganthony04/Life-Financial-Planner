@@ -317,9 +317,8 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
 
     // Take out all excess cash from the cash investment
     let cashAvailable = cash_investment.value - financialGoal
-    cash_investment.value = financialGoal
-
     if (cashAvailable <= 0) return
+    else cash_investment.value = financialGoal
 
     for (let expenseEvent of expenseEvents) {
         if (!expenseEvent.isDiscretionary) continue
