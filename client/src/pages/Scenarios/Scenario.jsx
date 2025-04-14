@@ -102,7 +102,7 @@ const Scenario = ({user}) => {
             )
         })
     }
-
+    
     return (
         <>
             <div id="scenario-utils">
