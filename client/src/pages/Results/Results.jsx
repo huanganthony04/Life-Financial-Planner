@@ -24,7 +24,6 @@ const Results = ({user}) => {
   const runSimulation = async (scenarioId) => {
     await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenarioId}`, {withCredentials: true})
       .then((response) => {
-          console.log(response.data)
           setResults(response.data)
       })
       .catch((error) => {
@@ -36,7 +35,6 @@ const Results = ({user}) => {
   const getResults = async (scenarioId) => {
     await axios.get(`${BACKEND_URL}/api/results?id=${scenarioId}`, {withCredentials: true})
       .then((response) => {
-          console.log(response.data)
           setResults(response.data)
       })
       .catch(() => {

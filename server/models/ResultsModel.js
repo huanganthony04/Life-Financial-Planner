@@ -4,8 +4,23 @@ const { Schema } = mongoose;
 //Used for fixed values or Normal/Uniform distributions/GBM.
 //Used in life expectancy, investment return/income, etc
 
+const singleYearResultSchema = new Schema({
+    investments: {
+        type: Schema.Types.Mixed,
+        default: {}
+    },
+    incomes: {
+        type: Schema.Types.Mixed,
+        default: {}
+    },
+    expenses: {
+        type: Schema.Types.Mixed,
+        default: {}
+    },
+}, {_id: false })
+
 const individualSimulationResultSchema = new Schema({
-    results: [{type: Map, of: Number}]
+    results: [singleYearResultSchema]
 }, { _id: false })
 
 const resultSchema = new Schema({

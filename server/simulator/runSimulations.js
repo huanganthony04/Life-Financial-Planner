@@ -7,7 +7,7 @@ import simulation from './simulation.js';
  * @param {Number} num - The number of simulations to run
  * @param {Object} federalTaxRates - The federal tax rates to use for the simulation
  * @param {Object} stateTaxRates - The state tax rates to use for the simulation
- * @returns {Array<Array<Object<string, number>>>} An array of results for each year of the simulation
+ * @returns {{investments: Object, incomes: Object, expenses: Object}[][]} An array of results for each year of the simulation
  */
 export default function runSimulations(Scenario, num = 10, federalTaxRates, stateTaxRates) {
 

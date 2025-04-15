@@ -4,8 +4,8 @@ import { Chart as ChartJS } from 'chart.js/auto'
 import { Line, Bar, Doughnut } from 'react-chartjs-2'
 
 /**
- * 
- * @param {{result: {scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {results: Map<String, Number>[]}[]}}} props
+ * Create a line chart showing the average value of the selection over time, with shaded regions depicting ranges from the average.
+ * @param {{result: {scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {results: {investments, incomes, expenses}[]}[]}}} props
  */
 const ShadedAssetChart = ({result, selection = 'investments'}) => {
 
@@ -33,7 +33,7 @@ const ShadedAssetChart = ({result, selection = 'investments'}) => {
         for (let year = 0; year < numYears; year++) {
             let values = result.simulationResults.map((sim) => {
                 let sum = 0
-                Object.values(sim.results[year]).forEach((value) => {
+                Object.values(sim.results[year].investments).forEach((value) => {
                     sum += value
                 })
                 return sum

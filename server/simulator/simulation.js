@@ -10,7 +10,7 @@ import { normalSample, calculateIncome, updateInvestments, calculateTaxes,
  * @param {Scenario} Scenario The scenario to simulate
  * @param {Object} federalTaxRates The federal tax rates to use for the simulation
  * @param {Object} stateTaxRates The state tax rates to use for the simulation
- * @returns {Map<string, number>[]} An array of results for each year of the simulation
+ * @returns {{investments: Object, incomes: Object, expenses: Object}[]} An array of results for each year of the simulation
  * */
 export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
     
@@ -31,7 +31,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
 
     for (let i = 0; i < remainingYears; i++) {
         
-        results.push(getResults(Scenario.investments))
+        results.push(getResults(Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
 
         if (Scenario.inflationAssumption.distType === "fixed") {
             inflation_rate = Scenario.inflationAssumption.value
@@ -77,7 +77,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         currentYear++
     }
 
-    results.push(getResults(Scenario.investments))
+    results.push(getResults(Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
     return results
 
 }

@@ -460,17 +460,30 @@ function runRebalanceEvent(rebalanceEvent, investments) {
 /**
  * Get the scenario's current investment values and return as a map of ID : Value
  * @param {Number} currentYear 
- * @param {Array<Object>} investments 
- * @returns {Map<string, number>} A map of investment IDs to their current values
+ * @param {Array<Object>} investments
+ * @param {Array<Object>} incomeEvents
+ * @param {Array<Object>} expenseEvents
+ * @returns {{investments: Object, incomes: Object, expenses: Object}} A an object of investment IDs to their current values
  */
-function getResults(investments) {
-    let map = new Map()
+function getResults(investments, incomeEvents, expenseEvents) {
+    
+    let investmentResults = {}
+    let incomeResults = {}
+    let expenseResults = {}
 
     investments.forEach((investment) => {
-        map.set(investment.id, investment.value)
+        investmentResults[investment.id] = investment.value
     })
 
-    return map
+    incomeEvents.forEach((incomeEvent) => {
+        incomeResults[incomeEvent.name] = incomeEvent.initialAmount
+    })
+
+    expenseEvents.forEach((expenseEvent) => {
+        expenseResults[expenseEvent.name] = expenseEvent.initialAmount
+    })
+
+    return { investments: investmentResults, incomes: incomeResults, expenses: expenseResults }
 }
 
 export { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,

@@ -4,8 +4,8 @@ import { Chart as ChartJS } from 'chart.js/auto'
 import { Line, Bar, Doughnut } from 'react-chartjs-2'
 
 /**
- * 
- * @param {{result: {scenarioId: String, startYear: Number, simulationResults: {results: Map<String, Number>[]}[]}}} props
+ * Create a bar chart showing the values of all investments over time.
+ * @param {{result: {scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {results: {investments, incomes, expenses}[]}[]}}} props
  */
 const AssetChart = ({result}) => {
 
@@ -24,14 +24,14 @@ const AssetChart = ({result}) => {
             labels.push(startYear + i)
         }
 
-        let assets = Object.keys(result.simulationResults[0].results[0])
+        let assets = Object.keys(result.simulationResults[0].results[0].investments)
 
         let datasets = []
         for(let asset of assets) {
             let data = []
             for (let year = 0; year < numYears; year++) {
                 let values = result.simulationResults.map((sim) => {
-                    return sim.results[year][asset]
+                    return sim.results[year].investments[asset]
                 })
                 data.push(median(values))
             }
