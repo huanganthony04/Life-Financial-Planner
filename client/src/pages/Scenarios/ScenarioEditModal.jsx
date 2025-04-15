@@ -1,102 +1,131 @@
+// ScenarioEditModal.jsx
 import { useState } from 'react'
 import ReactDOM from 'react-dom'
 
 /**
- * ScenarioCreateNameModal
+ * ScenarioEditModal
  *
- * This modal collects enough information to create a new Scenario according to
- * our Mongoose schema. The form is split into multiple steps.
+ * This modal is used to edit an existing Scenario.
+ * It reuses the multi-step wizard interface from your creation modal.
+ * On submission, it calls updateScenario(updatedScenario) (a prop function) to update
+ * the database with the new data.
  *
- * Steps:
- * 1: Scenario Name
- * 2: Marital Status
- * 3: Birth Year (and Spouse Birth Year if married)
- * 4: Life Expectancy & Distribution Parameters (separate for you and spouse)
- * 5: Financial Goal and Inflation Assumption with distribution parameters
- * 6: After-Tax Contribution Limit
- * 7: Residence State
- *
- * The overlay does not close on an accidental click.
+ * Props:
+ * - open: boolean to control modal visibility.
+ * - onClose: function to call when modal should be closed.
+ * - scenario: the current scenario object to prepopulate the fields.
+ * - updateScenario: async function that takes the updated scenario data and updates the DB.
  */
-const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
+const ScenarioEditModal = ({ open, onClose, scenario, updateScenario }) => {
   // Step tracking
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 7
 
-  // Global form fields
-  const [name, setName] = useState("")
-  const [maritalStatus, setMaritalStatus] = useState(false) // false = individual, true = married
-  const [birthYear, setBirthYear] = useState("")
-  const [spouseBirthYear, setSpouseBirthYear] = useState("")
-  const [lifeExpectancy, setLifeExpectancy] = useState("")
-  const [spouseLifeExpectancy, setSpouseLifeExpectancy] = useState("")
-  const [financialGoal, setFinancialGoal] = useState("")
-  const [inflationAssumption, setInflationAssumption] = useState("")
-  const [afterTaxContributionLimit, setAfterTaxContributionLimit] = useState("")
-  const [residenceState, setResidenceState] = useState("")
+  // Prepopulate global form fields from the scenario.
+  const [name, setName] = useState(scenario?.name || "")
+  const [maritalStatus, setMaritalStatus] = useState(scenario?.maritalStatus || false)
+  const [birthYear, setBirthYear] = useState(
+    scenario?.birthYears && scenario.birthYears[0] ? scenario.birthYears[0].toString() : ""
+  )
+  const [spouseBirthYear, setSpouseBirthYear] = useState(
+    scenario?.birthYears && scenario.birthYears.length > 1 ? scenario.birthYears[1].toString() : ""
+  )
+  // For lifeExpectancy, we assume each element is a distribution.
+  const [lifeExpectancy, setLifeExpectancy] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy[0] && scenario.lifeExpectancy[0].value !== undefined
+      ? scenario.lifeExpectancy[0].value.toString()
+      : ""
+  )
+  const [spouseLifeExpectancy, setSpouseLifeExpectancy] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy.length > 1 && scenario.lifeExpectancy[1].value !== undefined
+      ? scenario.lifeExpectancy[1].value.toString()
+      : ""
+  )
+  const [financialGoal, setFinancialGoal] = useState(
+    scenario?.financialGoal !== undefined ? scenario.financialGoal.toString() : ""
+  )
+  const [inflationAssumption, setInflationAssumption] = useState(
+    scenario?.inflationAssumption && scenario.inflationAssumption.value !== undefined
+      ? scenario.inflationAssumption.value.toString()
+      : ""
+  )
+  const [afterTaxContributionLimit, setAfterTaxContributionLimit] = useState(
+    scenario?.afterTaxContributionLimit !== undefined ? scenario.afterTaxContributionLimit.toString() : ""
+  )
+  const [residenceState, setResidenceState] = useState(scenario?.residenceState || "")
 
   // Distribution fields for life expectancy (for you)
-  const [lifeExpDistType, setLifeExpDistType] = useState("fixed")
-  const [lifeExpMean, setLifeExpMean] = useState("")
-  const [lifeExpSigma, setLifeExpSigma] = useState("")
-  const [lifeExpLower, setLifeExpLower] = useState("")
-  const [lifeExpUpper, setLifeExpUpper] = useState("")
+  const [lifeExpDistType, setLifeExpDistType] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy[0] ? scenario.lifeExpectancy[0].distType || "fixed" : "fixed"
+  )
+  const [lifeExpMean, setLifeExpMean] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy[0]?.mean ? scenario.lifeExpectancy[0].mean.toString() : ""
+  )
+  const [lifeExpSigma, setLifeExpSigma] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy[0]?.sigma ? scenario.lifeExpectancy[0].sigma.toString() : ""
+  )
+  const [lifeExpLower, setLifeExpLower] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy[0]?.lower ? scenario.lifeExpectancy[0].lower.toString() : ""
+  )
+  const [lifeExpUpper, setLifeExpUpper] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy[0]?.upper ? scenario.lifeExpectancy[0].upper.toString() : ""
+  )
   // Distribution fields for spouse (if married)
-  const [spouseLifeExpDistType, setSpouseLifeExpDistType] = useState("fixed")
-  const [spouseLifeExpMean, setSpouseLifeExpMean] = useState("")
-  const [spouseLifeExpSigma, setSpouseLifeExpSigma] = useState("")
-  const [spouseLifeExpLower, setSpouseLifeExpLower] = useState("")
-  const [spouseLifeExpUpper, setSpouseLifeExpUpper] = useState("")
+  const [spouseLifeExpDistType, setSpouseLifeExpDistType] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy.length > 1 ? scenario.lifeExpectancy[1].distType || "fixed" : "fixed"
+  )
+  const [spouseLifeExpMean, setSpouseLifeExpMean] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy.length > 1 && scenario.lifeExpectancy[1]?.mean ? scenario.lifeExpectancy[1].mean.toString() : ""
+  )
+  const [spouseLifeExpSigma, setSpouseLifeExpSigma] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy.length > 1 && scenario.lifeExpectancy[1]?.sigma ? scenario.lifeExpectancy[1].sigma.toString() : ""
+  )
+  const [spouseLifeExpLower, setSpouseLifeExpLower] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy.length > 1 && scenario.lifeExpectancy[1]?.lower ? scenario.lifeExpectancy[1].lower.toString() : ""
+  )
+  const [spouseLifeExpUpper, setSpouseLifeExpUpper] = useState(
+    scenario?.lifeExpectancy && scenario.lifeExpectancy.length > 1 && scenario.lifeExpectancy[1]?.upper ? scenario.lifeExpectancy[1].upper.toString() : ""
+  )
   // Distribution fields for inflation
-  const [inflationDistType, setInflationDistType] = useState("fixed")
-  const [inflationMean, setInflationMean] = useState("")
-  const [inflationSigma, setInflationSigma] = useState("")
-  const [inflationLower, setInflationLower] = useState("")
-  const [inflationUpper, setInflationUpper] = useState("")
+  const [inflationDistType, setInflationDistType] = useState(
+    scenario?.inflationAssumption ? scenario.inflationAssumption.distType || "fixed" : "fixed"
+  )
+  const [inflationMean, setInflationMean] = useState(
+    scenario?.inflationAssumption && scenario.inflationAssumption.mean ? scenario.inflationAssumption.mean.toString() : ""
+  )
+  const [inflationSigma, setInflationSigma] = useState(
+    scenario?.inflationAssumption && scenario.inflationAssumption.sigma ? scenario.inflationAssumption.sigma.toString() : ""
+  )
+  const [inflationLower, setInflationLower] = useState(
+    scenario?.inflationAssumption && scenario.inflationAssumption.lower ? scenario.inflationAssumption.lower.toString() : ""
+  )
+  const [inflationUpper, setInflationUpper] = useState(
+    scenario?.inflationAssumption && scenario.inflationAssumption.upper ? scenario.inflationAssumption.upper.toString() : ""
+  )
 
-  // Use a separate error state for step-level errors
+  // Separate error state for step-level errors
   const [stepError, setStepError] = useState("")
 
-  // Inline style objects for improved appearance
-  const labelStyle = {
-    marginBottom: '4px',
-    fontWeight: 'bold',
-    display: 'block'
-  }
-  const inputStyle = {
-    padding: '10px',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-    marginBottom: '10px',
-    width: '100%',
-    fontSize: '1rem'
-  }
-  const selectStyle = {
-    ...inputStyle,
-    appearance: 'none',
-    backgroundColor: '#fff'
-  }
+  // Inline style objects
+  const labelStyle = { marginBottom: '4px', fontWeight: 'bold', display: 'block' }
+  const inputStyle = { padding: '10px', borderRadius: '4px', border: '1px solid #ccc', marginBottom: '10px', width: '100%', fontSize: '1rem' }
+  const selectStyle = { ...inputStyle, appearance: 'none', backgroundColor: '#fff' }
 
   // Cancel confirmation handler
   const handleCancel = () => {
-    if (window.confirm("Are you sure you want to cancel? Your unsaved changes will be lost.")) {
-      resetForm()
+    if (window.confirm("Are you sure you want to cancel? All unsaved changes will be lost.")) {
       onClose()
     }
   }
 
-  // Prevent accidental dismissal by ignoring overlay clicks.
+  // Prevent accidental modal close by overlay click
   const handleOverlayClick = () => {
     setStepError("Please use the Cancel button to close this modal.")
     setTimeout(() => setStepError(""), 3000)
   }
-  // Stops propagation so that clicks inside the modal aren’t handled by the overlay.
-  const stopPropagation = (e) => {
-    e.stopPropagation()
-  }
+  const stopPropagation = (e) => e.stopPropagation()
 
   // Helper function for building a distribution object.
-  // For non-fixed types, remove the "value" property.
   const buildDistribution = (distType, baseValue, meanOpt, sigmaOpt, lowerOpt, upperOpt) => {
     const numValue = Number(baseValue)
     if (distType === "fixed") {
@@ -116,7 +145,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
     }
   }
 
-  // Per-step validation
+  // Per-step validation: (same logic as in the create modal)
   const validateCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -146,7 +175,6 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
     return ""
   }
 
-  // Navigation for steps: Validate when clicking Next
   const handleNext = () => {
     const errorMsg = validateCurrentStep()
     if (errorMsg !== "") {
@@ -159,6 +187,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
       }
     }
   }
+
   const handleBack = () => {
     if (currentStep > 1) {
       setStepError("")
@@ -166,49 +195,12 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
     }
   }
 
-  // Function to reset the form state
-  const resetForm = () => {
-    setCurrentStep(1)
-    setName("")
-    setMaritalStatus(false)
-    setBirthYear("")
-    setSpouseBirthYear("")
-    setLifeExpectancy("")
-    setSpouseLifeExpectancy("")
-    setFinancialGoal("")
-    setInflationAssumption("")
-    setAfterTaxContributionLimit("")
-    setResidenceState("")
-    
-    setLifeExpDistType("fixed")
-    setLifeExpMean("")
-    setLifeExpSigma("")
-    setLifeExpLower("")
-    setLifeExpUpper("")
-    
-    setSpouseLifeExpDistType("fixed")
-    setSpouseLifeExpMean("")
-    setSpouseLifeExpSigma("")
-    setSpouseLifeExpLower("")
-    setSpouseLifeExpUpper("")
-    
-    setInflationDistType("fixed")
-    setInflationMean("")
-    setInflationSigma("")
-    setInflationLower("")
-    setInflationUpper("")
-    
-    setStepError("")
-  }
-
-  // KEYBOARD HANDLER: onKeyDown for Enter and Escape.
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault()
       if (currentStep < totalSteps) {
         handleNext()
       } else {
-        // On final step, allow submission.
         handleSubmit(e)
       }
     } else if (e.key === "Escape") {
@@ -217,7 +209,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
     }
   }
 
-  // Handle form submission.
+  // When the form is submitted, call updateScenario with the updated scenario data.
   const handleSubmit = async (e) => {
     e.preventDefault()
     const errorMsg = validateCurrentStep()
@@ -239,9 +231,9 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
       ]
     }
     const inflationDistribution = buildDistribution(inflationDistType, inflationAssumption, inflationMean, inflationSigma, inflationLower, inflationUpper)
-    const scenarioData = {
+    const updatedScenario = {
       name: name.trim(),
-      owner: user ? user.userId : "",
+      // Do not update owner in the edit modal.
       maritalStatus,
       birthYears,
       lifeExpectancy: lifeExpectancyArray,
@@ -250,8 +242,8 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
       afterTaxContributionLimit: Number(afterTaxContributionLimit),
       residenceState: residenceState.toUpperCase()
     }
-    await createScenario(scenarioData)
-    resetForm()
+    // Call the provided updateScenario function (which should update the DB).
+    await updateScenario(updatedScenario)
     onClose()
   }
 
@@ -269,7 +261,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
         style={modalStyle}
       >
         <div id="scenario-modal-header">
-          <h2>Create Scenario (Step {currentStep} of {totalSteps})</h2>
+          <h2>Edit Scenario (Step {currentStep} of {totalSteps})</h2>
           {stepError && <p style={{ color: 'red' }}>{stepError}</p>}
         </div>
         <div id="scenario-modal-body">
@@ -669,13 +661,13 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
               </button>
             ) : (
               <button 
-                id="create-button" 
+                id="update-button" 
                 className="scenario-modal-button" 
                 type="submit" 
                 form="scenario-modal-form"
                 style={{ padding: '10px 20px', borderRadius: '4px', fontSize: '1rem' }}
               >
-                Create Scenario
+                Update Scenario
               </button>
             )}
           </div>
@@ -707,4 +699,4 @@ const modalStyle = {
   maxWidth: '90vw'
 }
 
-export default ScenarioCreateNameModal
+export default ScenarioEditModal
