@@ -215,9 +215,9 @@ const ScenarioSchema = new Schema({
     birthYears: {
         type: [Number],
     },
-    lifeExpectancy: {
-        type: valueDistributionSchema,
-    },
+    lifeExpectancy: [{
+  type: valueDistributionSchema,
+}],
     investments: [investmentSchema],
     incomeEvents: [incomeEventSchema],
     expenseEvents: [expenseEventSchema],

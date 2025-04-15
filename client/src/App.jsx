@@ -8,6 +8,7 @@ import Login from './pages/Login/Login.jsx'
 import Scenario from './pages/Scenarios/Scenario.jsx'
 import Editor from './pages/Editor/Editor.jsx'
 import Results from './pages/Results/Results.jsx'
+import ScenarioDetailPage from './pages/Scenarios/ScenarioDetailPage'
 import axios from 'axios'
 import './App.css'
 import UserProfile from '/src/components/UserProfile'
@@ -47,6 +48,10 @@ function App() {
 
         <Route path="/scenario" element={<Layout page="Scenario" user={user}/>}>
           <Route path="/scenario" element={<Scenario user={user}/>}/>
+        </Route>
+
+        <Route path="/scenario/detail" element={<Layout page="Scenario Detail" user={user}/>}>
+          <Route index element={<ScenarioDetailPage />} />
         </Route>
 
         <Route path="/scenario/edit" element={<Editor user={user}/>}/>
