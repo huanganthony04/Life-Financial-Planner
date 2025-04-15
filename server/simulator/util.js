@@ -218,7 +218,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
         }
 
         let taxable_gains = Math.min(remaining_gains, Math.max(0, limit - Math.max(previous_limit, income)))
-        tax += taxable_gains * rate
+        tax += taxable_gains * rate / 100
         remaining_gains -= taxable_gains
         previous_limit = limit
 
@@ -272,8 +272,8 @@ function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
         
 function payNonDiscretionaryExpenses(amount, investments, cash_investment, withdrawalStrategy) {
 
-    if (Number.isNaN(amount) || amount <= 0) {
-        throw new Error("Invalid amount value")
+    if (Number.isNaN(amount) || amount < 0) {
+        throw new Error("Invalid amount value: " + amount)
     }
 
     //Check if there is enough cash to pay the expenses
@@ -317,9 +317,8 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
 
     // Take out all excess cash from the cash investment
     let cashAvailable = cash_investment.value - financialGoal
-    cash_investment.value = financialGoal
-
     if (cashAvailable <= 0) return
+    else cash_investment.value = financialGoal
 
     for (let expenseEvent of expenseEvents) {
         if (!expenseEvent.isDiscretionary) continue
@@ -327,7 +326,7 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
         let startYear = expenseEvent.start.startDistribution.value
         let endYear = startYear + expenseEvent.duration.value
 
-        if (currentYear < startYear || currentYear > endYear) {
+        if (currentYear < startYear || currentYear >= endYear) {
             continue
         }
 
@@ -349,10 +348,11 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
 function runInvestEvent(currentYear, investEvents, cash_investment, investments) {
 
     let activeInvestEvent = null
+    let startYear, endYear
 
     for (let investEvent of investEvents) {
-        let startYear = investEvent.start.startDistribution.value
-        let endYear = startYear + investEvent.duration.value
+        startYear = investEvent.start.startDistribution.value
+        endYear = startYear + investEvent.duration.value
         if (currentYear < startYear || currentYear > endYear) {
             continue
         }
@@ -367,6 +367,7 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
     }
 
     let excess_cash = cash_investment.value - activeInvestEvent.maxCash
+    cash_investment.value = activeInvestEvent.maxCash
 
     if (excess_cash <= 0) {
         return
@@ -380,7 +381,7 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
 
         let progress = 0
         if (activeInvestEvent.duration.value !== 0) {
-            progress = (currentYear - activeInvestEvent.start.value) / activeInvestEvent.duration.value
+            progress = (currentYear - startYear) / activeInvestEvent.duration.value
         }
 
         for (const [asset, alloc] of Object.entries(assetAlloc)) {
@@ -456,6 +457,21 @@ function runRebalanceEvent(rebalanceEvent, investments) {
 }
 */
 
+/**
+ * Get the scenario's current investment values and return as a map of ID : Value
+ * @param {Number} currentYear 
+ * @param {Array<Object>} investments 
+ * @returns {Map<string, number>} A map of investment IDs to their current values
+ */
+function getResults(investments) {
+    let map = new Map()
+
+    investments.forEach((investment) => {
+        map.set(investment.id, investment.value)
+    })
+
+    return map
+}
 
 export { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
-    payDiscretionaryExpenses, runInvestEvent, updateInvestments, calculateTaxes }
+    payDiscretionaryExpenses, runInvestEvent, updateInvestments, calculateTaxes, getResults }

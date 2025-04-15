@@ -6,35 +6,38 @@ import { normalSample } from "./util.js"
  * @param {Scenario} scenario 
  */
 export default function scenarioProcessor(Scenario) {
-    if (Scenario.investments == null) {
-        Scenario.investments = []
+
+    let newScenario = structuredClone(Scenario)
+
+    if (newScenario.investments == null) {
+        newScenario.investments = []
     }
-    if (Scenario.incomeEvents == null) {
-        Scenario.incomeEvents = []
+    if (newScenario.incomeEvents == null) {
+        newScenario.incomeEvents = []
     }
-    if (Scenario.expenseEvents == null) {
-        Scenario.expenseEvents = []
+    if (newScenario.expenseEvents == null) {
+        newScenario.expenseEvents = []
     }
-    if (Scenario.investEvents == null) {
-        Scenario.investEvents = []
+    if (newScenario.investEvents == null) {
+        newScenario.investEvents = []
     }
-    if (Scenario.rebalanceEvents == null) {
-        Scenario.rebalanceEvents = []
+    if (newScenario.rebalanceEvents == null) {
+        newScenario.rebalanceEvents = []
     }
-    if (Scenario.expenseWithdrawalStrategy == null) {
-        if (Scenario.investments.length > 0) {
-            Scenario.expenseWithdrawalStrategy = Scenario.investments.map(i => i.id)
+    if (newScenario.expenseWithdrawalStrategy == null) {
+        if (newScenario.investments.length > 0) {
+            newScenario.expenseWithdrawalStrategy = newScenario.investments.map(i => i.id)
         }
         else {
-            Scenario.expenseWithdrawalStrategy = []
+            newScenario.expenseWithdrawalStrategy = []
         }
     }
 
     // Event preprocessing
-    let allEvents = Scenario.incomeEvents
-        .concat(Scenario.expenseEvents)
-        .concat(Scenario.investEvents)
-        .concat(Scenario.rebalanceEvents)
+    let allEvents = newScenario.incomeEvents
+        .concat(newScenario.expenseEvents)
+        .concat(newScenario.investEvents)
+        .concat(newScenario.rebalanceEvents)
 
     // Determine the start/end year of events that have a distribution as a start year.
     for (let event of allEvents) {
@@ -108,7 +111,7 @@ export default function scenarioProcessor(Scenario) {
     //Get the cash investment
     let cash_investment;
 
-    for (const investment of Scenario.investments) {
+    for (const investment of newScenario.investments) {
 
         if (investment.id == "cash") {
             cash_investment = investment
@@ -134,29 +137,29 @@ export default function scenarioProcessor(Scenario) {
             taxStatus: "non-retirement",
             id: "cash"
         })
-    }
 
-    Scenario.investments.push(cash_investment)
+        newScenario.investments.push(cash_investment)
+    }
 
     //Calculate the user's remaining years based on life expectancy and current year
     let presentYear = new Date().getFullYear()
 
     //Get the life expectancy
     let lifeExpectancy;
-    if (Scenario.lifeExpectancy[0].distType == "fixed") {
-        lifeExpectancy = Scenario.lifeExpectancy[0].value
+    if (newScenario.lifeExpectancy[0].distType == "fixed") {
+        lifeExpectancy = newScenario.lifeExpectancy[0].value
     }
     else {
         //Create normal distribution for life expectancy
-        let mean = Scenario.lifeExpectancy[0].mean
-        let sigma = Scenario.lifeExpectancy[0].sigma
+        let mean = newScenario.lifeExpectancy[0].mean
+        let sigma = newScenario.lifeExpectancy[0].sigma
         lifeExpectancy = normalSample(mean, sigma)
     }
 
     //Get the birth year of the user
-    let birthYear = Scenario.birthYears[0]
+    let birthYear = newScenario.birthYears[0]
 
     let remainingYears = birthYear + lifeExpectancy - presentYear
 
-    return { Scenario, cash_investment, presentYear, remainingYears }
+    return { processedScenario: newScenario, cash_investment, presentYear, remainingYears }
 }

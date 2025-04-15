@@ -7,7 +7,7 @@ import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import importScenario from '../components/importer.js'
 import exportScenario from '../components/exporter.js'
-import runSimulation from '../simulator/simulation.js'
+import runSimulations from '../simulator/runSimulations.js'
 import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
 
@@ -359,17 +359,20 @@ router.get('/api/scenario/run', async (req, res) => {
     let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
 
     // Run the simulation
-    let results = runSimulation(scenario, federalTaxRates, stateTaxRates)
+    let results = runSimulations(scenario, 10, federalTaxRates, stateTaxRates)
+    console.log(results)
     
     // Create a new ResultsModel instance
     let resultsModel = new ResultsModel({
-        resultList: results,
-        scenario: scenarioId,
+        scenarioId: scenarioId,
+        financialGoal: scenario.financialGoal,
+        startYear: new Date().getFullYear(),
+        simulationResults: results,
     })
 
     await resultsModel.save()
     .then(() => {
-        res.status(200).json(resultsModel.toObject())
+        res.status(200).json(resultsModel.toObject({flattenMaps: true}))
     })
     .catch((error) => {
         console.log(error)
