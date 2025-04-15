@@ -9,7 +9,7 @@ const individualSimulationResultSchema = new Schema({
 }, { _id: false })
 
 const resultSchema = new Schema({
-    scenarioId: { type: String, required: true },
+    scenarioId: { type: String, unique: true },
     financialGoal: { type: Number, required: true },
     startYear: { type: Number, required: true, default: new Date().getFullYear() },
     simulationResults: [individualSimulationResultSchema]
