@@ -40,6 +40,7 @@ const SuccessChart = ({result}) => {
         let dataset = {
             label: 'Success Rate',
             data: datapoints,
+            tension: 0.2,
             backgroundColor: '#81b4ff',
             borderColor: '#1e3a8a',
         }
@@ -67,7 +68,10 @@ const SuccessChart = ({result}) => {
             maintainAspectRatio: false,
             layout: {
                 padding: {
-                    top: 10,
+                    top: 20,
+                    bottom: 20,
+                    left: 20,
+                    right: 20
                 }
             },
             scales: {

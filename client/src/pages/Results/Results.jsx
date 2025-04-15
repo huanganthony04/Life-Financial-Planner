@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
-import AssetChart from './components/AssetChart'
 import SuccessChart from './components/SuccessChart'
+import ShadedAssetChart from './components/ShadedAssetChart'
+import AssetChart from './components/AssetChart'
 import SelectScenarioModal from './components/SelectScenarioModal'
 import './Results.css'
 
@@ -138,11 +139,29 @@ const Results = ({user}) => {
         </div>
         <div id="results-body">
           <h4>Probability of Success by Year</h4>
-          <div className="chart-container">
-            <SuccessChart result={results}/>
+          <div id="success-chart-container" className="chart-container">
+            <div className="chart-wrapper">
+              <SuccessChart result={results}/>
+            </div>
+          </div>
+          <h4>Asset Value by Year</h4>
+          <div id="shaded-asset-chart-container" className="chart-container">
+            <div className="chart-wrapper">
+              <ShadedAssetChart result={results}/>
+            </div>
+            <fieldset className="chart-selection">
+                <input type="radio" id="investments" name="chart-select" value="Investments" checked />
+                <label for="investments">Investments</label>
+
+                <input type="radio" id="income" name="chart-select" value="Income" />
+                <label for="income">Income</label>
+
+                <input type="radio" id="expenses" name="chart-select" value="Expenses" />
+                <label for="expenses">Expenses</label>
+              </fieldset>
           </div>
           <h4>Median Asset Values by Year</h4>
-          <div className="chart-container">
+          <div className="chart-wrapper">
             <AssetChart result={results}/>
           </div>
         </div>

@@ -75,4 +75,14 @@ canvas {
     margin: 20px;
     width: 100% !important;
     height: 100% !important;
+    max-width: 900px;
+    max-height: 700px;
+}
+
+fieldset {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0px;
+    border-top: 1px solid #ccc;
 }
