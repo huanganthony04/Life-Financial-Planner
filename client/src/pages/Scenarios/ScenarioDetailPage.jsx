@@ -303,7 +303,7 @@ const ScenarioDetailPage = () => {
               <div>
                 <strong>Asset Allocation:</strong>
                 {invest.assetAllocation ? (
-                  Array.from(invest.assetAllocation.entries()).map(([key, value]) => (
+                  Array.from(Object.entries(invest.assetAllocation)).map(([key, value]) => (
                     <div key={key} style={{ marginLeft: '1rem' }}>
                       {key}: {value}
                     </div>
@@ -316,7 +316,7 @@ const ScenarioDetailPage = () => {
               {invest.assetAllocation2 && (
                 <div>
                   <strong>Asset Allocation 2:</strong>
-                  {Array.from(invest.assetAllocation2.entries()).map(([key, value]) => (
+                  {Array.from(Object.entries(invest.assetAllocation2)).map(([key, value]) => (
                     <div key={key} style={{ marginLeft: '1rem' }}>
                       {key}: {value}
                     </div>
@@ -349,7 +349,7 @@ const ScenarioDetailPage = () => {
               <div>
                 <strong>Asset Allocation:</strong>
                 {rebalance.assetAllocation ? (
-                  Array.from(rebalance.assetAllocation.entries()).map(([key, value]) => (
+                  Array.from(Object.entries(rebalance.assetAllocation)).map(([key, value]) => (
                     <div key={key} style={{ marginLeft: '1rem' }}>
                       {key}: {value}
                     </div>

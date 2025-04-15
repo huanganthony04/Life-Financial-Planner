@@ -13,7 +13,7 @@ const Results = ({user}) => {
   const [selectScenarioOpen, setSelectScenarioOpen] = useState(false)
   const [scenario, setScenario] = useState(null)
   /**
- * @type {[{scenarioId: String, financialGoal: number, startYear: Number, simulationResults: Map<String, Number>[][]}, React.Dispatch<React.SetStateAction<string|null>>]}
+ * @type {[{scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {String, Number}[][]}, React.Dispatch<React.SetStateAction<string|null>>]}
  */
   const [results, setResults] = useState(null)
 
