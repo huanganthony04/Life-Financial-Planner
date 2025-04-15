@@ -359,8 +359,8 @@ router.get('/api/scenario/run', async (req, res) => {
     let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
 
     // Run the simulation
+    console.dir(scenario, {depth: null})
     let results = runSimulations(scenario, 10, federalTaxRates, stateTaxRates)
-    console.log(results)
     
     // Create a new ResultsModel instance
     let resultsModel = new ResultsModel({

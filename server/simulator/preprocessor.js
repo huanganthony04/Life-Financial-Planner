@@ -61,6 +61,7 @@ export default function scenarioProcessor(Scenario) {
     for (let event of allEvents) {
         //Determine the start year of the event (if it doesn't have a startWith)
         if (!event.start.startWith) {
+            console.log(event)
             if (event.start.startDistribution.distType === "fixed") continue;
             else if (event.start.startDistribution.distType === "normal") {
                 let mean = event.start.startDistribution.mean

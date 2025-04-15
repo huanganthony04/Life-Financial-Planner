@@ -7,7 +7,6 @@ import fs from 'fs'
 function importScenario(parsedData) {
 
     try {
-        console.log(parsedData)
         const scenario = new Scenario(parsedData)
         return scenario
     }
