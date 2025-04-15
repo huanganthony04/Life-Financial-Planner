@@ -140,7 +140,6 @@ router.post('/api/scenario/save/', getUserAuth, async (req, res) => {
     }
   });
   
-
 ///Delete a scenario
 router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
     const scenarioId = req.body.scenarioId;
@@ -163,6 +162,10 @@ router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
             { _id: user._id },
             { $pull: { ownedScenarios: scenarioId } }
         );
+
+        await ResultsModel.deleteOne(
+            { scenarioId: scenarioId }
+        )
 
         return res.status(200).json({success: true});
     }
@@ -359,8 +362,8 @@ router.get('/api/scenario/run', async (req, res) => {
     let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
 
     // Run the simulation
+    console.dir(scenario, {depth: null})
     let results = runSimulations(scenario, 10, federalTaxRates, stateTaxRates)
-    console.log(results)
     
     // Create a new ResultsModel instance
     let resultsModel = new ResultsModel({

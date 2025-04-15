@@ -77,7 +77,7 @@ test('$10000 Annual Income has $80000 after the 8th year', () => {
 
     let results = runSimulation(ScenarioObj, taxRateNone, taxRateNone)
 
-    expect(results[8].get('cash')).toBe(80000)
+    expect(results[8].investments['cash']).toBe(80000)
 })
 
 test('Advanced Simulation Test', async () => {
@@ -259,8 +259,8 @@ test('Advanced Simulation Test', async () => {
     let results = runSimulation(ScenarioObj, taxRateNone, taxRateNone)
     
     expect.soft(results.length).toBe(41)
-    expect.soft(results[0].get('cash')).toBeCloseTo(100, 2)
-    expect.soft(results[5].get('cash')).toBeLessThanOrEqual(1000)
-    expect.soft(results[40].get('S&P 500 non-retirement')).toBeLessThan(100000000)
+    expect.soft(results[0].investments['cash']).toBeCloseTo(100, 2)
+    expect.soft(results[5].investments['cash']).toBeLessThanOrEqual(1000)
+    expect.soft(results[40].investments['S&P 500 non-retirement']).toBeLessThan(100000000)
 
 })

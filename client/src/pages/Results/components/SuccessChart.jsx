@@ -4,14 +4,19 @@ import { Chart as ChartJS } from 'chart.js/auto'
 import { Line, Bar, Doughnut } from 'react-chartjs-2'
 
 /**
- * 
- * @param {{result: {scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {results: Map<String, Number>[]}[]}}} props
+ * Create a line chart showing the success rate of the simulation over time.
+ * @param {{result: {scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {results: {investments, incomes, expenses}[]}[]}}} props
  */
 const SuccessChart = ({result}) => {
 
     const [labels, setLabels] = useState([])
     const [datasets, setDatasets] = useState([])
 
+    /**
+     * Create the dataset for the success chart.
+     * @param {{result: {scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {results: {investments, incomes, expenses}[]}[]}}} result
+     * @returns {{labels: String[], datasets: {label: String, data: Number[], tension: Number, backgroundColor: String, borderColor: String}[]}}
+     */
     const createSuccessData = (result) => {
 
         let startYear = result.startYear
@@ -28,7 +33,7 @@ const SuccessChart = ({result}) => {
         for (let year = 0; year < numYears; year++) {
             let netWorths = result.simulationResults.map((sim) => {
                 let netWorth = 0;
-                Object.values(sim.results[year]).forEach(value => {
+                Object.values(sim.results[year].investments).forEach(value => {
                     netWorth += value
                 })
                 return netWorth;
@@ -56,6 +61,14 @@ const SuccessChart = ({result}) => {
         }
 
     }, [result])
+
+    const disableLegendClick = {
+        id: 'disableLegendClick',
+        // Disable hiding 'success rate' as that would just remove the chart
+        beforeInit(chart) {
+            chart.options.plugins.legend.onClick = (e) => {}
+        }
+    }
     return (
         <Line
         datasetIdKey={result? result._id : null}
@@ -94,6 +107,7 @@ const SuccessChart = ({result}) => {
                 }
             }
         }}
+        plugins={[disableLegendClick]}
       />
     )
 }

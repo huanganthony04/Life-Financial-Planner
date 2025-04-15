@@ -264,3 +264,11 @@
   border-top: 1px solid lightgray;
   border-bottom: 1px solid lightgray;
 }
+
+/*--------------------------------------------------*/
+/*                   Detail Page                    */
+/*--------------------------------------------------*/
+
+.scenario-detail-page {
+  overflow-y: auto;
+}

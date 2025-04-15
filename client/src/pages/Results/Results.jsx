@@ -10,10 +10,20 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 const Results = ({user}) => {
 
+  // For scenario selection
   const [selectScenarioOpen, setSelectScenarioOpen] = useState(false)
   const [scenario, setScenario] = useState(null)
+
+  // For setting the option for viewing a result's value in the shaded Asset Value By Year char
+  const [selectedOption, setSelectedOption] = useState('Investments')
+
+  const handleOptionChange = (event) => {
+    setSelectedOption(event.target.value)
+  }
+
+
   /**
- * @type {[{scenarioId: String, financialGoal: number, startYear: Number, simulationResults: Map<String, Number>[][]}, React.Dispatch<React.SetStateAction<string|null>>]}
+ * @type {[{scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {String, Number}[][]}, React.Dispatch<React.SetStateAction<string|null>>]}
  */
   const [results, setResults] = useState(null)
 
@@ -24,7 +34,6 @@ const Results = ({user}) => {
   const runSimulation = async (scenarioId) => {
     await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenarioId}`, {withCredentials: true})
       .then((response) => {
-          console.log(response.data)
           setResults(response.data)
       })
       .catch((error) => {
@@ -36,7 +45,6 @@ const Results = ({user}) => {
   const getResults = async (scenarioId) => {
     await axios.get(`${BACKEND_URL}/api/results?id=${scenarioId}`, {withCredentials: true})
       .then((response) => {
-          console.log(response.data)
           setResults(response.data)
       })
       .catch(() => {
@@ -123,7 +131,6 @@ const Results = ({user}) => {
       </>
     )
   }
-
   else {
     return (
       <>
@@ -147,17 +154,17 @@ const Results = ({user}) => {
           <h4>Asset Value by Year</h4>
           <div id="shaded-asset-chart-container" className="chart-container">
             <div className="chart-wrapper">
-              <ShadedAssetChart result={results}/>
+              <ShadedAssetChart result={results} selection={selectedOption}/>
             </div>
             <fieldset className="chart-selection">
-                <input type="radio" id="investments" name="chart-select" value="Investments" checked />
-                <label for="investments">Investments</label>
+                <input type="radio" id="investments" name="chart-select" value="Investments" checked={selectedOption === 'Investments'} onChange={handleOptionChange}/>
+                <label htmlFor="investments">Investments</label>
 
-                <input type="radio" id="income" name="chart-select" value="Income" />
-                <label for="income">Income</label>
+                <input type="radio" id="income" name="chart-select" value="Incomes" checked={selectedOption === 'Incomes'} onChange={handleOptionChange}/>
+                <label htmlFor="income">Income</label>
 
-                <input type="radio" id="expenses" name="chart-select" value="Expenses" />
-                <label for="expenses">Expenses</label>
+                <input type="radio" id="expenses" name="chart-select" value="Expenses" checked={selectedOption === 'Expenses'} onChange={handleOptionChange}/>
+                <label htmlFor="expenses">Expenses</label>
               </fieldset>
           </div>
           <h4>Median Asset Values by Year</h4>
