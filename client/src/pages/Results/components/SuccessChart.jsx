@@ -61,6 +61,14 @@ const SuccessChart = ({result}) => {
         }
 
     }, [result])
+
+    const disableLegendClick = {
+        id: 'disableLegendClick',
+        // Disable hiding 'success rate' as that would just remove the chart
+        beforeInit(chart) {
+            chart.options.plugins.legend.onClick = (e) => {}
+        }
+    }
     return (
         <Line
         datasetIdKey={result? result._id : null}
@@ -99,6 +107,7 @@ const SuccessChart = ({result}) => {
                 }
             }
         }}
+        plugins={[disableLegendClick]}
       />
     )
 }
