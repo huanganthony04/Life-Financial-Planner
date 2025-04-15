@@ -18,10 +18,6 @@ async function main() {
     const $tax = load(taxHtml)
 
     const taxTables = $tax('table')
-    console.log(`Found ${taxTables.length} tables on the tax brackets page.`)
-    taxTables.each((i, table) => {
-      console.log(`Tax Table ${i} classes: ${$tax(table).attr('class') || 'none'}`)
-    })
 
     const taxTable = $tax('table.complex-table.table-striped.table-bordered.table-responsive').first()
     if (!taxTable || taxTable.length === 0) {
@@ -46,16 +42,12 @@ async function main() {
         taxBrackets.push({ min, max, rate })
       }
     })
-    console.log('Scraped tax brackets:', taxBrackets)
+    console.log('Scraped tax brackets')
     const stdDeductionUrl = 'https://www.irs.gov/publications/p17#en_US_2024_publink1000283782'
     const { data: stdDeductionHtml } = await axios.get(stdDeductionUrl)
     const $std = load(stdDeductionHtml)
 
     const stdTables = $std('table')
-    console.log(`Found ${stdTables.length} tables on the standard deduction page.`)
-    stdTables.each((i, table) => {
-      console.log(`Standard Deduction Table ${i} classes: ${$std(table).attr('class') || 'none'}`)
-    })
 
     const stdDeductionTable = $std('table.table-condensed[summary="Table 10-1.Standard Deduction Chart for Most People*"]')
     if (!stdDeductionTable || stdDeductionTable.length === 0) {
