@@ -7,13 +7,16 @@ import 'dotenv/config'
 
 const MONGO_URI = process.env.MONGO_URL
 console.log("Connecting to:", MONGO_URI);
+const IRS_TAXRATE_URL = process.env.IRS_TAXRATE_URL
+const IRS_DEDUCTION_URL = process.env.IRS_DEDUCTION_URL
+const IRS_CAPITALGAINS_URL = process.env.IRS_CAPITALGAINS_URL
 
 async function main() {
   try {
     await mongoose.connect(MONGO_URI)
     console.log('Connected to MongoDB.')
 
-    const taxBracketsUrl = 'https://www.irs.gov/filing/federal-income-tax-rates-and-brackets'
+    const taxBracketsUrl = IRS_TAXRATE_URL
     const { data: taxHtml } = await axios.get(taxBracketsUrl)
     const $tax = load(taxHtml)
 
@@ -43,7 +46,7 @@ async function main() {
       }
     })
     console.log('Scraped tax brackets')
-    const stdDeductionUrl = 'https://www.irs.gov/publications/p17#en_US_2024_publink1000283782'
+    const stdDeductionUrl = IRS_DEDUCTION_URL
     const { data: stdDeductionHtml } = await axios.get(stdDeductionUrl)
     const $std = load(stdDeductionHtml)
 
@@ -89,7 +92,7 @@ async function main() {
       standardDeductionHeadOfHousehold
     })
 
-    const capitalGainsUrl = 'https://www.irs.gov/taxtopics/tc409'
+    const capitalGainsUrl = IRS_CAPITALGAINS_URL
     const { data: cgHtml } = await axios.get(capitalGainsUrl)
     const $cg = load(cgHtml)
 
