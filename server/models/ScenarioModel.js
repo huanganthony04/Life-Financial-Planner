@@ -170,13 +170,13 @@ const investEventSchema = new Schema({
     duration: {type: valueDistributionSchema, required: true},
     assetAllocation: {
         type: Map,
-        of: Number,
+        
         required: true
     },
     glidePath: Boolean,
     assetAllocation2: {
         type: Map,
-        of: Number
+       
     },
     
 })
@@ -215,9 +215,9 @@ const ScenarioSchema = new Schema({
     birthYears: {
         type: [Number],
     },
-    lifeExpectancy: {
+    lifeExpectancy: [{
         type: valueDistributionSchema,
-    },
+    }],
     investments: [investmentSchema],
     incomeEvents: [incomeEventSchema],
     expenseEvents: [expenseEventSchema],

@@ -9,7 +9,7 @@ function EditIncomeEvent({ scenarioId, IncomeEventId,singleIncomeMap}) {
     const [socialSecurityStatus, setSSN] = useState(singleIncomeMap.socialSecurityStatus);
     const [inflationStatus, setInflation] = useState(singleIncomeMap.inflationAdjusted);
 
-    const [summary, setSummary] = useState('description');
+    const [summary, setSummary] = useState(singleIncomeMap.description);
     //const [start, setStart] = useState('');
     var start='';
     //const [duration, setDuration] = useState('');

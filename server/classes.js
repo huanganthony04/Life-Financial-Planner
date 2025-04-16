@@ -11,29 +11,22 @@
  */
 class ValueDistribution {
   /**
-   * Accepts either a `distType` or `type` key for the distribution type.
-   *
    * @param {Object} options
-   * @param {'normal'|'fixed'|'GBM'|'uniform'} [options.distType] - The type of distribution.
-   * @param {'normal'|'fixed'|'GBM'|'uniform'} [options.type] - Alternative key for distribution type.
-   * @param {number|undefined} options.value - Only defined if distribution is fixed.
-   * @param {number|undefined} options.mean - Defined if distribution is normal or GBM.
-   * @param {number|undefined} options.stdev - Defined if distribution is normal or GBM.
-   * @param {number|undefined} options.mu - Alternative to mean if needed.
-   * @param {number|undefined} options.sigma - Alternative to stdev if needed.
-   * @param {number|undefined} options.lower - Defined if distribution is uniform.
-   * @param {number|undefined} options.upper - Defined if distribution is uniform.
+   * @param {'normal'|'fixed'|'GBM'|'uniform'} options.distType
+   * @param {number|undefined} options.value - Only defined if distType is 'fixed'
+   * @param {number|undefined} options.mean - Defined if distType is 'normal' or 'GBM'
+   * @param {number|undefined} options.stdev - Defined if distType is 'normal' or 'GBM'
+   * @param {number|undefined} options.lower - Defined if distType is 'uniform'
+   * @param {number|undefined} options.upper - Defined if distType is 'uniform'
    */
-  constructor({ type, distType, value, mean, mu, stdev, sigma, lower, upper } = {}) {
-    // Support both distType and type in the incoming object.
-    const distributionType = distType || type;
-    this.distType = (distributionType === "GBM" ? "normal" : distributionType);
+  constructor({ type, value, mean, mu, stdev, sigma, lower, upper }) {
+    this.distType = (type === "GBM" ? "normal" : type)
     this.value = value;
     this.mean = mean ?? mu;
     this.sigma = stdev ?? sigma;
     this.lower = lower;
     this.upper = upper;
-    // Add any additional custom validation if needed.
+    // custom validation here if needed.
   }
 }
 
@@ -191,7 +184,9 @@ class RebalanceEvent {
 
 class Scenario {
   /**
-   * Constructor for the scenario class. Supply pure vanilla object representations of Scenario. 
+   * Constructor for the scenario class. Supply pure vanilla object representations of Scenario parsed directly from YAML.
+   * Does NOT WORK with Objects already created with this Constructor, or with any stored in the database.
+   * Use ONLY TO CREATE NEW SCENARIOS FROM YAML or from objects structured like the YAML files!!!!
    * Do not use subclasses in fields like ValueDistribution, InvestmentType, etc.
    * @param {Object} options
    * @param {string} [options.name="Unnamed Scenario"]
@@ -230,31 +225,16 @@ class Scenario {
     this.name = name;
     this.owner = owner;
     this.editors = editors;
-    this.maritalStatus = maritalStatus;
+    this.maritalStatus = (maritalStatus === 'couple' ? true : false);
     this.birthYears = birthYears;
-    
-    if (
-      !Array.isArray(lifeExpectancy) ||
-      !(lifeExpectancy.length === 1 || lifeExpectancy.length === 2)
-    ) {
-      console.warn('Setting to default lifeExpectancy value.');
-      // For a fixed distribution, only include distType and value.
-      lifeExpectancy = [
-        {
-          distType: 'fixed', // Must be 'fixed' (or 'normal' or 'uniform') per the enum.
-          value: 75
-        }
-      ];
-    }
-    this.lifeExpectancy = lifeExpectancy.map(obj => new ValueDistribution(obj));
-
+    this.lifeExpectancy = lifeExpectancy.map((obj) => new ValueDistribution(obj));
     this.investmentTypes = investmentTypes.map((type) => new InvestmentType(type));
 
     // Link up investments with their corresponding investment types
     this.investments = investments.map((investment) => {
       const investmentType = this.investmentTypes.find((type) => type.name === investment.investmentType);
       if (!investmentType) {
-        throw new Error(`Investment type ${investment.investmentType.name} not found`);
+        throw new Error(`Investment type ${investment.investmentType.name} not found, investments are ${JSON.stringify(this.investmentTypes)}`);
       }
       return new Investment({ ...investment, investmentType });
     })
@@ -265,16 +245,7 @@ class Scenario {
     this.investEvents = eventSeries.filter((event) => event.type === 'invest').map((event) => new InvestEvent(event));
     this.rebalanceEvents = eventSeries.filter((event) => event.type === 'rebalance').map((event) => new RebalanceEvent(event));
 
-    if (!inflationAssumption) {
-      console.warn('Setting to default inflation assumption.');
-      inflationAssumption = {
-        distType: 'fixed',
-        value: 2.0 // Representing a 2% inflation rate.
-        // Again, leave out any fields not applicable for a fixed distribution.
-      };
-    }
     this.inflationAssumption = new ValueDistribution(inflationAssumption);
-
     this.afterTaxContributionLimit = afterTaxContributionLimit;
     this.spendingStrategy = spendingStrategy;
     this.expenseWithdrawalStrategy = expenseWithdrawalStrategy;
@@ -283,12 +254,4 @@ class Scenario {
   }
 }
 
-export { ValueDistribution, 
-  InvestmentType, 
-  Investment, 
-  EventStart, 
-  IncomeEvent, 
-  ExpenseEvent, 
-  InvestEvent, 
-  RebalanceEvent, 
-  Scenario };
+export { ValueDistribution, InvestmentType, Investment, EventStart, IncomeEvent, ExpenseEvent, InvestEvent, RebalanceEvent, Scenario };
