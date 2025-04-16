@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { updateInvestments } from '../simulator/util.js';
-import { InvestmentType, Investment } from '../classes.js';
+import { updateInvestments, runRebalanceEvent } from '../simulator/util.js';
+import { InvestmentType, Investment, RebalanceEvent } from '../classes.js';
 
 test('5% Return on Investment, No Cost Basis', () => {
 
@@ -100,6 +100,55 @@ test('5% Return on Investment, Income of 1%, expense ratio of 1%', () => {
     expect(InvestmentSet[0].value).toBeCloseTo(10501.475, 1)
     expect(dividends).toBeCloseTo(100, 1)
     expect(InvestmentSet[0].costBasis).toBeCloseTo(10100, 1)
+
+})
+
+test('Rebalance 60/40 Split to 50/50', () => {
+    const InvestmentSet = [
+        new Investment({
+            investmentType: new InvestmentType({
+                name: 'Investment1',
+                returnAmtOrPct: "percent",
+                returnDistribution: { type: 'fixed', value: 0.05 },
+                incomeAmtOrPct: "amount",
+                incomeDistribution: { type: 'fixed', value: 0.00 },
+                taxability: 'true'
+            }),
+            value: 6000,
+            costBasis: 2000,
+            taxStatus: 'non-retirement',
+            id: 'investment1',
+        }),
+        new Investment({
+            investmentType: new InvestmentType({
+                name: 'Investment2',
+                returnAmtOrPct: "percent",
+                returnDistribution: { type: 'fixed', value: 0.05 },
+                incomeAmtOrPct: "amount",
+                incomeDistribution: { type: 'fixed', value: 0.00 },
+                taxability: 'true'
+            }),
+            value: 4000,
+            costBasis: 2000,
+            taxStatus: 'non-retirement',
+            id: 'investment2',
+        })
+    ]
+    const rebalanceEvents = [
+        new RebalanceEvent({
+            name: 'rebalance',
+            start: { type: 'fixed', value: 2025 },
+            duration: { type: 'fixed', value: 5 },
+            assetAllocation: { 'investment1': 0.5, 'investment2': 0.5 },
+        }),
+    ]
+
+    let capitalGains = runRebalanceEvent(2025, rebalanceEvents, InvestmentSet)
+    expect(InvestmentSet[0].value).toBeCloseTo(5000, 1)
+    expect(InvestmentSet[0].costBasis).toBeCloseTo(1666.66, 1)
+    expect(InvestmentSet[1].value).toBeCloseTo(5000, 1)
+    expect(InvestmentSet[1].costBasis).toBeCloseTo(3000, 1)
+    expect(capitalGains).toBeCloseTo(666.66, 1)
 
 })
 

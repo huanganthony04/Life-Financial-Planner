@@ -1,8 +1,7 @@
 import scenarioProcessor from "./preprocessor.js"
 import applyInflation from "./inflation.js"
-import { normalSample, calculateIncome, updateInvestments, calculateTaxes, 
-    calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
-    payDiscretionaryExpenses, runInvestEvent, getResults,
+import { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
+    payDiscretionaryExpenses, runInvestEvent, runRebalanceEvent, updateInvestments, calculateTaxes, getResults,
 } from "./util.js"
 
 /**
@@ -66,10 +65,10 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         payDiscretionaryExpenses(currentYear, Scenario.expenseEvents, cash_investment, Scenario.financialGoal)
 
         // Run investment event
-        runInvestEvent(currentYear, Scenario.investEvents, cash_investment, Scenario.investments)
+        runInvestEvent(currentYear, Scenario.investEvents, Scenario.investments, cash_investment)
 
         // Run rebalance event
-        // curYearGains += runRebalanceEvent(events, Scenario.investments)
+        curYearGains += runRebalanceEvent(currentYear, Scenario.rebalanceEvents, Scenario.investments)
         
         prevYearIncome = curYearIncome
         prevYearGains = curYearGains

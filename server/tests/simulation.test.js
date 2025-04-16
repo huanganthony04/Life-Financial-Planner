@@ -240,7 +240,7 @@ test('Advanced Simulation Test', async () => {
                 startDistribution: { distType: 'fixed', value: 2025 }
                 },
                 duration: { distType: 'fixed', value: 10 },
-                assetAllocation: { 'S&P500 non-retirement': 0.7, 'tax-exempt bonds': 0.3 }
+                assetAllocation: { 'S&P 500 non-retirement': 0.7, 'tax-exempt bonds': 0.3 }
             }
         ],
         inflationAssumption: { distType: 'fixed', value: 0.03 },

@@ -345,7 +345,7 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
 
 }
             
-function runInvestEvent(currentYear, investEvents, cash_investment, investments) {
+function runInvestEvent(currentYear, investEvents, investments, cash_investment) {
 
     let activeInvestEvent = null
     let startYear, endYear
@@ -409,53 +409,67 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
     }
 }
 
-/*
-function runRebalanceEvent(rebalanceEvent, investments) {
+function runRebalanceEvent(currentYear, rebalanceEvents, investments) {
 
-    #find active rebalance event
-    rebalanceEvent = None
+    let activeRebalanceEvent = null
+    let startYear, endYear
 
-    currentYear = Date().getFullYear() + yearsElapsed
-
-    for event in events:
-        if event.startYear > currentYear || event.duration + event.startYear < currentYear
+    for (let rebalanceEvent of rebalanceEvents) {
+        startYear = rebalanceEvent.start.startDistribution.value
+        endYear = startYear + rebalanceEvent.duration.value
+        if (currentYear < startYear || currentYear > endYear) {
             continue
-        if event.type is REBALANCE:
-            rebalanceEvent = event
+        }
+        else {
+            activeRebalanceEvent = rebalanceEvent
             break
+        }
+    }
 
-    if rebalanceEvent is None:
-        return
+    if (!activeRebalanceEvent) {
+        return 0
+    }
 
-    target = rebalanceEvent.AssetAlloc.percentage
+    let assetAlloc = activeRebalanceEvent.assetAllocation
 
-    #Find the current total for all the investments included in the rebalance event
-    total = 0
+    // Find current total for all investments included in the assetAllocation
+    let total = 0
 
-    for [investment, percent] in target:
+    for (const [investmentId] of Object.entries(assetAlloc)) {
+        let investmentObj = investments.find(i => i.id === investmentId)
+        if (!investmentObj) {
+            throw new Error(`Investment with ID ${investmentId} not found in ${investments.map(i => i.id)}`)
+        }
+        total += investmentObj.value
+    }
 
-        find i in investments such that i.name == investment.name
+    let capitalGains = 0
 
-            total += i.value
-
-    capitalGains = 0
-
-    for [investment, percent] in target:
-
-        find i in investments such that i.name == investment.name
-            targetValue = total * percent
-            if targetValue < i.value:
-                valueSold = i.value - targetValue
-                capitalGains += i.sell(valueSold)
-            
-            else:
-                valueBought = targetValue - i.value
-                i.invest(valueBought)
+    for (const [investmentId, percent] of Object.entries(assetAlloc)) {
+        
+        let targetValue = total * percent
+        let investmentObj = investments.find(i => i.id === investmentId)
+        if (!investmentObj) {
+            throw new Error(`Investment with ID ${investmentId} not found in ${investments.map(i => i.id)}`)
+        }
+        if (targetValue < investmentObj.value) {
+            // Sell the investment
+            let portion = (investmentObj.value - targetValue) / investmentObj.value
+            capitalGains += investmentObj.value * portion - investmentObj.costBasis * portion
+            investmentObj.value = investmentObj.value * (1 - portion)
+            investmentObj.costBasis = investmentObj.costBasis * (1 - portion)
+        }
+        else {
+            // Buy the investment
+            let amount = targetValue - investmentObj.value
+            investmentObj.value += amount
+            investmentObj.costBasis += amount
+        }
+    }
     
     return capitalGains
 
 }
-*/
 
 /**
  * Get the scenario's current investment values and return as a map of ID : Value
@@ -487,4 +501,4 @@ function getResults(investments, incomeEvents, expenseEvents) {
 }
 
 export { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
-    payDiscretionaryExpenses, runInvestEvent, updateInvestments, calculateTaxes, getResults }
+    payDiscretionaryExpenses, runInvestEvent, runRebalanceEvent, updateInvestments, calculateTaxes, getResults }

@@ -126,7 +126,7 @@ eventSeries:
     start: {type: uniform, lower: 2025, upper: 2030}
     duration: {type: fixed, value: 10}
     type: rebalance
-    assetAllocation: {S&P500 non-retirement: 0.7, tax-exempt bonds: 0.3}
+    assetAllocation: {S&P 500 non-retirement: 0.7, tax-exempt bonds: 0.3}
 
 inflationAssumption: {type: fixed, value: 0.03}
 afterTaxContributionLimit: 7000 # annual limit on contributions to after-tax retirement accounts
