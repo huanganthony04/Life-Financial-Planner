@@ -76,7 +76,7 @@ const valueDistributionSchema = new Schema({
             }
         }
     }
-}, {_id: false})
+})
 
 //Schema for an investmentType
 const investmentTypeSchema = new Schema({
@@ -94,7 +94,7 @@ const investmentTypeSchema = new Schema({
     },
     incomeDistribution: valueDistributionSchema,
     taxability: Boolean
-}, {_id: false})
+})
 
 //Schema for investments
 const investmentSchema = new Schema({
@@ -117,7 +117,7 @@ const investmentSchema = new Schema({
         type: Number,
         default: 0
     }
-}, {_id: false})
+})
 
 //Schema for the start time of an event
 const eventStartSchema = new Schema({
@@ -131,7 +131,7 @@ const eventStartSchema = new Schema({
         type: String,
     },
     duration: valueDistributionSchema,
-}, {_id: false})
+})
 
 //Schema for income events
 const incomeEventSchema = new Schema({
@@ -148,7 +148,7 @@ const incomeEventSchema = new Schema({
     userFraction: {type: Number, default: 1.0},
     socialSecurity: {type: Boolean, required: true}
 
-}, {_id: false})
+})
 
 //Schema for expense events
 const expenseEventSchema = new Schema({
@@ -163,7 +163,7 @@ const expenseEventSchema = new Schema({
     userFraction: {type: Number, default: 1.0},
     discretionary: {type: Boolean, required: true}
 
-}, {_id: false})
+})
 
 const investEventSchema = new Schema({
 
@@ -185,7 +185,7 @@ const investEventSchema = new Schema({
         default: 0
     }
     
-}, {_id: false})
+})
 
 const rebalanceEventSchema = new Schema({
 
@@ -198,6 +198,6 @@ const rebalanceEventSchema = new Schema({
         required: true
     }
 
-}, {_id: false})
+})
 
 export { valueDistributionSchema, investmentTypeSchema, investmentSchema, incomeEventSchema, expenseEventSchema, investEventSchema, rebalanceEventSchema }
