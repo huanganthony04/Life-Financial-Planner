@@ -46,7 +46,7 @@ test('Non-discretionary expenses are paid correctly', () => {
             incomeDistribution: { type: 'fixed', value: 0 },
             taxability: true
         }),
-        value: 0,
+        value: 1000,
         taxStatus: 'non-retirement',
     })
 
@@ -70,7 +70,7 @@ test('Non-discretionary expenses are paid correctly', () => {
         })
     ]
 
-    const withdrawalStrategy = [ 'cash non-retirement', 'asset 1 non-retirement', 'asset 2 non-retirement' ]
+    const withdrawalStrategy = [ 'asset 1 non-retirement', 'asset 2 non-retirement' ]
 
     let capitalGains = payNonDiscretionaryExpenses(2000, investments, cashInvestment, withdrawalStrategy);
 
@@ -148,7 +148,7 @@ test('Discretionary expenses only incurred if there is enough cash', () => {
             changeAmtOrPct: "amount",
             changeDistribution: { type: 'fixed', value: 0 },
             userFraction: 1.0,
-            discretionary: false,
+            discretionary: true,
         }),
         new ExpenseEvent({
             name: 'Vacation',
