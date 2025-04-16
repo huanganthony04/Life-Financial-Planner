@@ -7,21 +7,20 @@ import 'dotenv/config'
 
 const MONGO_URI = process.env.MONGO_URL
 console.log("Connecting to:", MONGO_URI);
+const IRS_TAXRATE_URL = process.env.IRS_TAXRATE_URL
+const IRS_DEDUCTION_URL = process.env.IRS_DEDUCTION_URL
+const IRS_CAPITALGAINS_URL = process.env.IRS_CAPITALGAINS_URL
 
 async function main() {
   try {
     await mongoose.connect(MONGO_URI)
     console.log('Connected to MongoDB.')
 
-    const taxBracketsUrl = 'https://www.irs.gov/filing/federal-income-tax-rates-and-brackets'
+    const taxBracketsUrl = IRS_TAXRATE_URL
     const { data: taxHtml } = await axios.get(taxBracketsUrl)
     const $tax = load(taxHtml)
 
     const taxTables = $tax('table')
-    console.log(`Found ${taxTables.length} tables on the tax brackets page.`)
-    taxTables.each((i, table) => {
-      console.log(`Tax Table ${i} classes: ${$tax(table).attr('class') || 'none'}`)
-    })
 
     const taxTable = $tax('table.complex-table.table-striped.table-bordered.table-responsive').first()
     if (!taxTable || taxTable.length === 0) {
@@ -46,16 +45,12 @@ async function main() {
         taxBrackets.push({ min, max, rate })
       }
     })
-    console.log('Scraped tax brackets:', taxBrackets)
-    const stdDeductionUrl = 'https://www.irs.gov/publications/p17#en_US_2024_publink1000283782'
+    console.log('Scraped tax brackets')
+    const stdDeductionUrl = IRS_DEDUCTION_URL
     const { data: stdDeductionHtml } = await axios.get(stdDeductionUrl)
     const $std = load(stdDeductionHtml)
 
     const stdTables = $std('table')
-    console.log(`Found ${stdTables.length} tables on the standard deduction page.`)
-    stdTables.each((i, table) => {
-      console.log(`Standard Deduction Table ${i} classes: ${$std(table).attr('class') || 'none'}`)
-    })
 
     const stdDeductionTable = $std('table.table-condensed[summary="Table 10-1.Standard Deduction Chart for Most People*"]')
     if (!stdDeductionTable || stdDeductionTable.length === 0) {
@@ -97,7 +92,7 @@ async function main() {
       standardDeductionHeadOfHousehold
     })
 
-    const capitalGainsUrl = 'https://www.irs.gov/taxtopics/tc409'
+    const capitalGainsUrl = IRS_CAPITALGAINS_URL
     const { data: cgHtml } = await axios.get(capitalGainsUrl)
     const $cg = load(cgHtml)
 

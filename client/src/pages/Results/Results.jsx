@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
-import ResultViewer from './components/ResultViewer'
+import SuccessChart from './components/SuccessChart'
+import ShadedAssetChart from './components/ShadedAssetChart'
+import AssetChart from './components/AssetChart'
 import SelectScenarioModal from './components/SelectScenarioModal'
 import './Results.css'
 
@@ -8,8 +10,21 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 const Results = ({user}) => {
 
+  // For scenario selection
   const [selectScenarioOpen, setSelectScenarioOpen] = useState(false)
   const [scenario, setScenario] = useState(null)
+
+  // For setting the option for viewing a result's value in the shaded Asset Value By Year char
+  const [selectedOption, setSelectedOption] = useState('Investments')
+
+  const handleOptionChange = (event) => {
+    setSelectedOption(event.target.value)
+  }
+
+
+  /**
+ * @type {[{scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {String, Number}[][]}, React.Dispatch<React.SetStateAction<string|null>>]}
+ */
   const [results, setResults] = useState(null)
 
   const selectScenario = (useCallback((scenario) => {
@@ -19,7 +34,6 @@ const Results = ({user}) => {
   const runSimulation = async (scenarioId) => {
     await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenarioId}`, {withCredentials: true})
       .then((response) => {
-          console.log(response.data)
           setResults(response.data)
       })
       .catch((error) => {
@@ -65,30 +79,109 @@ const Results = ({user}) => {
     }
   }, [scenario])
 
-  return (
-    <>
-      <div id="results-header">
-        <div id="scenario-selection">
-          <div id="selected-scenario-title">{scenario ? scenario.name : "No Scenario Selected"}</div>
-          <button className="green-button" onClick={() => setSelectScenarioOpen(true)}>
-            <h4>
-                Select Scenario
-            </h4>
-          </button>
+  if (!scenario) {
+    return (
+      <>
+        <div id="results-header">
+          <div id="scenario-selection">
+            <div id="selected-scenario-title">No Scenario Selected</div>
+            <button className="green-button" onClick={() => setSelectScenarioOpen(true)}>
+              <h4>
+                  Select Scenario
+              </h4>
+            </button>
+          </div>
         </div>
-      </div>
-      <div id="results-body">
-        {scenario ? (results ? <ResultViewer resultId={results._id} resultList={results.resultList}/> : noResults()) : noScenario()}
-      </div>
+        <div id="results-body">
+          {noScenario()}
+        </div>
 
-      <SelectScenarioModal
-          open={selectScenarioOpen} 
-          onClose={() => setSelectScenarioOpen(false)} 
-          user={user}
-          selectScenario={selectScenario}
-      />
-    </>
-  )
+        <SelectScenarioModal
+            open={selectScenarioOpen} 
+            onClose={() => setSelectScenarioOpen(false)} 
+            user={user}
+            selectScenario={selectScenario}
+        />
+      </>
+    )
+  }
+  else if (!results) {
+    return (
+      <>
+        <div id="results-header">
+          <div id="scenario-selection">
+            <div id="selected-scenario-title">{scenario.name}</div>
+            <button className="green-button" onClick={() => setSelectScenarioOpen(true)}>
+              <h4>
+                  Select Scenario
+              </h4>
+            </button>
+          </div>
+        </div>
+        <div id="results-body">
+          {noResults()}
+        </div>
+
+        <SelectScenarioModal
+            open={selectScenarioOpen} 
+            onClose={() => setSelectScenarioOpen(false)} 
+            user={user}
+            selectScenario={selectScenario}
+        />
+      </>
+    )
+  }
+  else {
+    return (
+      <>
+        <div id="results-header">
+          <div id="scenario-selection">
+            <div id="selected-scenario-title">{scenario ? scenario.name : "No Scenario Selected"}</div>
+            <button className="green-button" onClick={() => setSelectScenarioOpen(true)}>
+              <h4>
+                  Select Scenario
+              </h4>
+            </button>
+          </div>
+        </div>
+        <div id="results-body">
+          <h4>Probability of Success by Year</h4>
+          <div id="success-chart-container" className="chart-container">
+            <div className="chart-wrapper">
+              <SuccessChart result={results}/>
+            </div>
+          </div>
+          <h4>Asset Value by Year</h4>
+          <div id="shaded-asset-chart-container" className="chart-container">
+            <div className="chart-wrapper">
+              <ShadedAssetChart result={results} selection={selectedOption}/>
+            </div>
+            <fieldset className="chart-selection">
+                <input type="radio" id="investments" name="chart-select" value="Investments" checked={selectedOption === 'Investments'} onChange={handleOptionChange}/>
+                <label htmlFor="investments">Investments</label>
+
+                <input type="radio" id="income" name="chart-select" value="Incomes" checked={selectedOption === 'Incomes'} onChange={handleOptionChange}/>
+                <label htmlFor="income">Income</label>
+
+                <input type="radio" id="expenses" name="chart-select" value="Expenses" checked={selectedOption === 'Expenses'} onChange={handleOptionChange}/>
+                <label htmlFor="expenses">Expenses</label>
+              </fieldset>
+          </div>
+          <h4>Median Asset Values by Year</h4>
+          <div className="chart-wrapper">
+            <AssetChart result={results}/>
+          </div>
+        </div>
+
+        <SelectScenarioModal
+            open={selectScenarioOpen} 
+            onClose={() => setSelectScenarioOpen(false)} 
+            user={user}
+            selectScenario={selectScenario}
+        />
+      </>
+    )
+  }
 }
 
 export default Results

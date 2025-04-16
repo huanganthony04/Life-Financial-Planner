@@ -7,7 +7,7 @@ import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import importScenario from '../components/importer.js'
 import exportScenario from '../components/exporter.js'
-import runSimulation from '../simulator/simulation.js'
+import runSimulations from '../simulator/runSimulations.js'
 import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
 
@@ -115,33 +115,31 @@ router.get('/api/scenario/', getUserAuth, async (req, res) => {
 
 })
 
-//Save an existing scenario
 router.post('/api/scenario/save/', getUserAuth, async (req, res) => {
-    
-    const scenarioId = req.body.scenarioId
-    const userId = req.user._id
-
-    const scenario = await ScenarioModel.findOne({_id: scenarioId})
-    if (!scenario) {
-        return res.status(404).json({error: 'Scenario not found!'})
-    }
-
+    const { scenarioId, ...updates } = req.body;
+    const userId = req.user._id;
+  
+    const scenario = await ScenarioModel.findById(scenarioId);
+    if (!scenario) return res.status(404).json({ error: 'Scenario not found!' });
+  
     if (scenario.owner !== userId && !scenario.editors.includes(userId)) {
-        return res.status(403).json({error: 'You do not have permission to save this scenario!'})
+      return res.status(403).json({ error: 'No permission to save this scenario!' });
     }
-
-    scenario.name = req.body.name
-
+  
+    // Assign all incoming fields onto the mongoose document
+    Object.entries(updates).forEach(([key, val]) => {
+      scenario[key] = val;
+    });
+  
     try {
-        await scenario.save()
-        return res.status(200).json({success: true})
+      await scenario.save();
+      return res.status(200).json({ success: true, scenario });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: error.message });
     }
-    catch(error) {
-        console.log(error)
-        return res.status(500).json({error: error})
-    }
-})
-
+  });
+  
 ///Delete a scenario
 router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
     const scenarioId = req.body.scenarioId;
@@ -164,6 +162,10 @@ router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
             { _id: user._id },
             { $pull: { ownedScenarios: scenarioId } }
         );
+
+        await ResultsModel.deleteOne(
+            { scenarioId: scenarioId }
+        )
 
         return res.status(200).json({success: true});
     }
@@ -542,17 +544,20 @@ router.get('/api/scenario/run', async (req, res) => {
     let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
 
     // Run the simulation
-    let results = runSimulation(scenario, federalTaxRates, stateTaxRates)
+    console.dir(scenario, {depth: null})
+    let results = runSimulations(scenario, 10, federalTaxRates, stateTaxRates)
     
     // Create a new ResultsModel instance
     let resultsModel = new ResultsModel({
-        resultList: results,
-        scenario: scenarioId,
+        scenarioId: scenarioId,
+        financialGoal: scenario.financialGoal,
+        startYear: new Date().getFullYear(),
+        simulationResults: results,
     })
 
     await resultsModel.save()
     .then(() => {
-        res.status(200).json(resultsModel.toObject())
+        res.status(200).json(resultsModel.toObject({flattenMaps: true}))
     })
     .catch((error) => {
         console.log(error)

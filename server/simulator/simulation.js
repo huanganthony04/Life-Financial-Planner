@@ -1,8 +1,7 @@
 import scenarioProcessor from "./preprocessor.js"
 import applyInflation from "./inflation.js"
-import { normalSample, calculateIncome, updateInvestments, calculateTaxes, 
-    calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
-    payDiscretionaryExpenses, runInvestEvent,  
+import { getValueFromDistribution, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
+    payDiscretionaryExpenses, runInvestEvent, runRebalanceEvent, updateInvestments, calculateTaxes, getResults,
 } from "./util.js"
 
 /**
@@ -10,7 +9,7 @@ import { normalSample, calculateIncome, updateInvestments, calculateTaxes,
  * @param {Scenario} Scenario The scenario to simulate
  * @param {Object} federalTaxRates The federal tax rates to use for the simulation
  * @param {Object} stateTaxRates The state tax rates to use for the simulation
- * @returns {Array} An array of results for each year of the simulation
+ * @returns {{investments: Object, incomes: Object, expenses: Object}[]} An array of results for each year of the simulation
  * */
 export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
     
@@ -24,33 +23,23 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
     let prevYearTaxes = 0
     let results = []
 
-    let { cash_investment, presentYear, remainingYears } = scenarioProcessor(Scenario)
+    let { processedScenario, cash_investment, presentYear, userRemainingYears, spouseRemainingYears } = scenarioProcessor(Scenario)
+    Scenario = processedScenario
 
     let currentYear = presentYear
 
-    for (let i = 0; i < remainingYears; i++) {
-        
-        results.push({
-            investments: structuredClone(Scenario.investments), 
-            incomeEvents: structuredClone(Scenario.incomeEvents), 
-            expenseEvents: structuredClone(Scenario.expenseEvents),
-            investEvents: structuredClone(Scenario.investEvents),
-            year: currentYear
-        })
+    for (let i = 0; i < userRemainingYears; i++) {
 
-        if (Scenario.inflationAssumption.distType === "fixed") {
-            inflation_rate = Scenario.inflationAssumption.value
-        }
-        else {
-            let mean = Scenario.inflationAssumption.mean
-            let sigma = Scenario.inflationAssumption.sigma
-            inflation_rate = normalSample(mean, sigma)
-        }
+        let spouseAlive = (i < spouseRemainingYears) ? true : false
+        
+        results.push(getResults(Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
+
+        inflation_rate = getValueFromDistribution(Scenario.inflationAssumption)
 
         applyInflation(Scenario, federalTaxRates, stateTaxRates, inflation_rate)
 
         // Get income from income events
-        let { income, socialSecurity } = calculateIncome(currentYear, Scenario.incomeEvents)
+        let { income, socialSecurity } = calculateIncome(currentYear, Scenario.incomeEvents, spouseAlive)
         curYearIncome = income
         curYearSS = socialSecurity
         cash_investment.value += curYearIncome + curYearSS
@@ -62,19 +51,19 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         // Pay non-discretionary expenses
 
         // Calculate last year's taxes
-        prevYearTaxes = calculateTaxes(prevYearIncome, prevYearSS, prevYearGains, federalTaxRates, stateTaxRates, Scenario.maritalStatus)
+        prevYearTaxes = calculateTaxes(prevYearIncome, prevYearSS, prevYearGains, federalTaxRates, stateTaxRates, spouseAlive)
 
-        let expensesND = calculateNonDiscretionaryExpenses(currentYear, Scenario.expenseEvents)
+        let expensesND = calculateNonDiscretionaryExpenses(currentYear, Scenario.expenseEvents, spouseAlive)
         curYearGains = payNonDiscretionaryExpenses(expensesND + prevYearTaxes, Scenario.investments, cash_investment, Scenario.expenseWithdrawalStrategy)
 
         // Pay discretionary expenses
-        payDiscretionaryExpenses(currentYear, Scenario.expenseEvents, cash_investment, Scenario.financialGoal)
+        payDiscretionaryExpenses(currentYear, Scenario.expenseEvents, cash_investment, Scenario.financialGoal, spouseAlive)
 
         // Run investment event
-        runInvestEvent(i, Scenario.investEvents, cash_investment, Scenario.investments)
+        runInvestEvent(currentYear, Scenario.investEvents, Scenario.investments, cash_investment)
 
         // Run rebalance event
-        // curYearGains += runRebalanceEvent(events, Scenario.investments)
+        curYearGains += runRebalanceEvent(currentYear, Scenario.rebalanceEvents, Scenario.investments)
         
         prevYearIncome = curYearIncome
         prevYearGains = curYearGains
@@ -82,13 +71,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         currentYear++
     }
 
-    results.push({
-        investments: structuredClone(Scenario.investments), 
-        incomeEvents: structuredClone(Scenario.incomeEvents), 
-        expenseEvents: structuredClone(Scenario.expenseEvents),
-        investEvents: structuredClone(Scenario.investEvents),
-        year: currentYear
-    })
+    results.push(getResults(Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
     return results
 
 }

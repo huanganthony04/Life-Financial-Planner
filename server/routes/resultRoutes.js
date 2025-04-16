@@ -19,7 +19,7 @@ router.get('/api/results', async (req, res) => {
     const scenarioId = req.query.id
     console.log(scenarioId)
 
-    const results = await ResultsModel.findOne({scenario: scenarioId})
+    const results = await ResultsModel.findOne({scenarioId: scenarioId}).lean()
     if (!results) {
         return res.status(404).json({error: 'Results not found'})
     }

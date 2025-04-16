@@ -1,31 +1,45 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import dropdownLogo from '/src/assets/icons/chevron_down.svg'
 import DropdownMenu from './DropdownMenu'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+const ScenarioListItem = ({ name, scenarioId, editScenario, deleteScenario, exportScenario }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const navigate = useNavigate()
 
+  // Updated: Navigate to the detail route using a query string.
+  const handleViewScenario = () => {
+    navigate(`/scenario/detail?id=${scenarioId}`, { state: { scenario: { name, scenarioId } } })
+  }
 
-const ScenarioListItem = ({name, scenarioId, editScenario, deleteScenario, exportScenario}) => {
+  return (
+    <div className="scenario-list-item">
+      <h4 className="scenario-title">{name}</h4>
+      
+      {/* View Button: now goes to "/scenario/detail?id=..." */}
+      <button className="scenario-list-view-button" onClick={handleViewScenario}>
+        View
+      </button>
 
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+      {/* Dropdown menu toggle button */}
+      <button
+        className="scenario-list-show-dropdown-button"
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        disabled={isDropdownOpen}
+      >
+        <img src={dropdownLogo} alt="Toggle Dropdown" />
+      </button>
 
-
-    return (
-        <div className="scenario-list-item">
-            <h4 className="scenario-title">{name}</h4>
-            <button className="scenario-list-show-dropdown-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} disabled={isDropdownOpen}>
-                <img src={dropdownLogo}/>
-            </button>
-            <DropdownMenu 
-                open={isDropdownOpen} 
-                setOpen={setIsDropdownOpen} 
-                scenarioId={scenarioId}
-                editScenario={editScenario}
-                deleteScenario={deleteScenario}
-                exportScenario={exportScenario}
-            />
-        </div>
-    )
+      <DropdownMenu
+        open={isDropdownOpen}
+        setOpen={setIsDropdownOpen}
+        scenarioId={scenarioId}
+        editScenario={editScenario}
+        deleteScenario={deleteScenario}
+        exportScenario={exportScenario}
+      />
+    </div>
+  )
 }
 
 export default ScenarioListItem

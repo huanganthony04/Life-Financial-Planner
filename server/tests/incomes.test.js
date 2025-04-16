@@ -62,3 +62,25 @@ test('Inactive events are ignored', () => {
     expect(result.socialSecurity).toBe(0);
 
 });
+
+test('Income amount adjusts for spouse passing', () => {
+
+    const incomeEvents = [
+        new IncomeEvent({
+            name: 'Salary',
+            type: 'income',
+            start: { type: 'fixed', value: 2025 },
+            duration: { type: 'fixed', value: 5 },
+            initialAmount: 120000,
+            changeAmtOrPct: "amount",
+            inflationAdjusted: false,
+            userFraction: 0.5,
+        })
+    ];
+
+    const resultWithSpouse = calculateIncome(2025, incomeEvents, true);
+    const resultWithoutSpouse = calculateIncome(2025, incomeEvents, false);
+    
+    expect(resultWithSpouse.income).toBe(120000);
+    expect(resultWithoutSpouse.income).toBe(60000);
+})

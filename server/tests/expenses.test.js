@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses } from '../simulator/util.js';
+import { calculateNonDiscretionaryExpenses, payDiscretionaryExpenses, payNonDiscretionaryExpenses } from '../simulator/util.js';
 import { Investment, InvestmentType, ExpenseEvent } from '../classes.js';
 
 test('Non-discretionary expenses are calculated correctly', () => {
@@ -46,7 +46,7 @@ test('Non-discretionary expenses are paid correctly', () => {
             incomeDistribution: { type: 'fixed', value: 0 },
             taxability: true
         }),
-        value: 0,
+        value: 1000,
         taxStatus: 'non-retirement',
     })
 
@@ -70,7 +70,7 @@ test('Non-discretionary expenses are paid correctly', () => {
         })
     ]
 
-    const withdrawalStrategy = [ 'cash non-retirement', 'asset 1 non-retirement', 'asset 2 non-retirement' ]
+    const withdrawalStrategy = [ 'asset 1 non-retirement', 'asset 2 non-retirement' ]
 
     let capitalGains = payNonDiscretionaryExpenses(2000, investments, cashInvestment, withdrawalStrategy);
 
@@ -115,5 +115,66 @@ test('Non-discretionary expenses are paid correctly with partial withdrawal', ()
     expect(cashInvestment.value).toBe(0);
     expect(capitalGains).toBeCloseTo(750, 1);
     expect(investments[1].value).toBeCloseTo(1000, 1);
+
+})
+
+test('Discretionary expenses only incurred if there is enough cash', () => {
+
+    const cashInvestment = new Investment({
+        investmentType: new InvestmentType({
+            name: 'cash',
+            description: 'cash',
+            returnAmtOrPct: 'amount',
+            returnDistribution: { type: 'fixed', value: 0 },
+            expenseRatio: 0,
+            incomeAmtOrPct: 'percent',
+            incomeDistribution: { type: 'fixed', value: 0 },
+            taxability: true
+        }),
+        value: 2000,
+        taxStatus: 'non-retirement',
+    })
+
+    const investments = [
+        cashInvestment
+    ]
+
+    const expenseEvents = [
+        new ExpenseEvent({
+            name: 'Food',
+            start: { type: 'fixed', value: 2025 },
+            duration: { type: 'fixed', value: 5 },
+            initialAmount: 600,
+            changeAmtOrPct: "amount",
+            changeDistribution: { type: 'fixed', value: 0 },
+            userFraction: 1.0,
+            discretionary: true,
+        }),
+        new ExpenseEvent({
+            name: 'Vacation',
+            start: { type: 'fixed', value: 2025 },
+            duration: { type: 'fixed', value: 5 },
+            initialAmount: 600,
+            changeAmtOrPct: "amount",
+            changeDistribution: { type: 'fixed', value: 0 },
+            userFraction: 1.0,
+            discretionary: true,
+        }),
+        new ExpenseEvent({
+            name: 'Shopping',
+            start: { type: 'fixed', value: 2025 },
+            duration: { type: 'fixed', value: 5 },
+            initialAmount: 200,
+            changeAmtOrPct: "amount",
+            changeDistribution: { type: 'fixed', value: 0 },
+            userFraction: 1.0,
+            discretionary: true,
+        }),
+
+    ]
+
+    payDiscretionaryExpenses(2025, expenseEvents, cashInvestment, 1000, true);
+
+    expect(cashInvestment.value).toBe(1200)
 
 })

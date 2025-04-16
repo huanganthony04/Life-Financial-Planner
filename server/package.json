@@ -19,6 +19,7 @@
   "main": "server.js",
   "scripts": {
     "test": "vitest",
+    "coverage": "vitest run --coverage",
     "start": "nodemon server.js"
   },
   "dependencies": {
@@ -37,6 +38,7 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.1.1",
     "vitest": "^3.1.1"
   }
 }

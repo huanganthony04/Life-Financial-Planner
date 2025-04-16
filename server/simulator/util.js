@@ -1,4 +1,4 @@
-import { IncomeEvent, ValueDistribution } from "../classes.js"
+import { ExpenseEvent, IncomeEvent, Investment, ValueDistribution } from "../classes.js"
 
 /**
  * Generate a normal distribution using Box-Muller transform
@@ -40,10 +40,11 @@ function getValueFromDistribution(ValueDistribution) {
  * Calculates the income for a given year based on income events.
  * @param {Number} currentYear 
  * @param {Array<IncomeEvent>} incomeEvents 
+ * @param {Boolean} spouseAlive Whether the spouse is alive or not
  * @returns {{income: Number, socialSecurity: Number}} An object containing the total income and social security income for the year
  */
 
-function calculateIncome(currentYear, incomeEvents) {
+function calculateIncome(currentYear, incomeEvents, spouseAlive) {
 
     let income = 0
     let socialSecurity = 0
@@ -60,20 +61,33 @@ function calculateIncome(currentYear, incomeEvents) {
         //Add the income to the total income
 
         if (incomeEvent.socialSecurity) {
-            socialSecurity += incomeEvent.initialAmount
+            // Remove the spouse's contributions if they have passed
+            if(!spouseAlive) {
+                socialSecurity += incomeEvent.initialAmount * incomeEvent.userFraction
+            }
+            else {
+                socialSecurity += incomeEvent.initialAmount
+            }
         }
         else {
-            income += incomeEvent.initialAmount
+            if (!spouseAlive) {
+                income += incomeEvent.initialAmount * incomeEvent.userFraction
+            }
+            else {
+                income += incomeEvent.initialAmount
+            }
         }
 
         //Calculate the expected annual change
 
         if (incomeEvent.changeDistribution.distType == "fixed") {
             if (incomeEvent.changeAmtOrPct == "amount") {
-                incomeEvent.initialAmount += incomeEvent.changeDistribution.value
+                let value = getValueFromDistribution(incomeEvent.changeDistribution)
+                incomeEvent.initialAmount += value
             }
             else {
-                incomeEvent.initialAmount *= 1 + incomeEvent.changeDistribution.value
+                let rate = getValueFromDistribution(incomeEvent.changeDistribution)
+                incomeEvent.initialAmount *= 1 + rate
             }
         }
     }
@@ -139,13 +153,13 @@ function updateInvestments(investments) {
 
 }
 
-function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, stateTaxRates, isMarried) {
+function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, stateTaxRates, spouseAlive) {
 
     let tax = 0
     let previous_limit = 0
 
     let adjustedIncome = income
-    if (isMarried) {
+    if (spouseAlive) {
         adjustedIncome -= federalTaxRates.standardDeductionMarried
     }
     else {
@@ -173,7 +187,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
 
     adjustedIncome = income
 
-    if (isMarried) {
+    if (spouseAlive) {
         for (const bracket of stateTaxRates.marriedBrackets) {
             let limit = bracket.max
             let rate = bracket.rate / 100
@@ -218,7 +232,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
         }
 
         let taxable_gains = Math.min(remaining_gains, Math.max(0, limit - Math.max(previous_limit, income)))
-        tax += taxable_gains * rate
+        tax += taxable_gains * rate / 100
         remaining_gains -= taxable_gains
         previous_limit = limit
 
@@ -231,7 +245,14 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
     return tax
 }
 
-function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
+/**
+ * Calculate the total non-discretionary expenses for a given year based on expense events.
+ * @param {Number} currentYear 
+ * @param {[ExpenseEvent]} expenseEvents 
+ * @param {Boolean} spouseAlive 
+ * @returns {Number} The total non-discretionary expenses for the year
+ */
+function calculateNonDiscretionaryExpenses(currentYear, expenseEvents, spouseAlive) {
 
     let expenses = 0
 
@@ -247,7 +268,12 @@ function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
         if (expenseEvent.discretionary) continue;
 
         //Add the expense to the total expenses
-        expenses += expenseEvent.initialAmount
+        if (!spouseAlive) {
+            expenses += expenseEvent.initialAmount * expenseEvent.userFraction
+        }
+        else {
+            expenses += expenseEvent.initialAmount
+        }
 
         //Calculate the expected annual change
 
@@ -272,8 +298,8 @@ function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
         
 function payNonDiscretionaryExpenses(amount, investments, cash_investment, withdrawalStrategy) {
 
-    if (Number.isNaN(amount) || amount <= 0) {
-        throw new Error("Invalid amount value")
+    if (Number.isNaN(amount) || amount < 0) {
+        throw new Error("Invalid amount value: " + amount)
     }
 
     //Check if there is enough cash to pay the expenses
@@ -308,8 +334,17 @@ function payNonDiscretionaryExpenses(amount, investments, cash_investment, withd
     return capitalGains
 
 }
-    
-function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, financialGoal) {
+
+/**
+ * Calculate and pay for any discretionary expenses for a given year based on expense events.
+ * @param {Number} currentYear 
+ * @param {[ExpenseEvent]} expenseEvents 
+ * @param {Investment} cash_investment 
+ * @param {Number} financialGoal 
+ * @param {Boolean} spouseAlive 
+ * @returns 
+ */
+function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, financialGoal, spouseAlive) {
 
     if (financialGoal == null || Number.isNaN(financialGoal)) {
         throw new Error("Invalid financial goal value")
@@ -317,42 +352,48 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
 
     // Take out all excess cash from the cash investment
     let cashAvailable = cash_investment.value - financialGoal
-    cash_investment.value = financialGoal
-
     if (cashAvailable <= 0) return
+    else cash_investment.value = financialGoal
 
     for (let expenseEvent of expenseEvents) {
-        if (!expenseEvent.isDiscretionary) continue
+        if (!expenseEvent.discretionary) continue
 
         let startYear = expenseEvent.start.startDistribution.value
         let endYear = startYear + expenseEvent.duration.value
 
-        if (currentYear < startYear || currentYear > endYear) {
+        if (currentYear < startYear || currentYear >= endYear) {
             continue
         }
 
-        if (expenseEvent.initialAmount > cashAvailable) {
-            expenseEvent.initialAmount -= cashAvailable
-            break
+        // Find the current amount and pay only if enough excess cash is available
+        let amount = expenseEvent.initialAmount * (spouseAlive ? 1 : expenseEvent.userFraction)
+        if (cashAvailable >= amount) {
+            cashAvailable -= amount
+        }
+
+        // Calculate the expected annual change
+        if (expenseEvent.changeAmtOrPct === "amount") {
+            let value = getValueFromDistribution(expenseEvent.changeDistribution)
+            expenseEvent.initialAmount += value
         }
         else {
-            cashAvailable -= expenseEvent.initialAmount
-            expenseEvent.initialAmount = 0
+            let rate = getValueFromDistribution(expenseEvent.changeDistribution)
+            let value = expenseEvent.initialAmount * rate
+            expenseEvent.initialAmount += value
         }
     }
-
     // If there is still cash available, add it back to the cash investment
     cash_investment.value += cashAvailable
-
 }
             
-function runInvestEvent(currentYear, investEvents, cash_investment, investments) {
+function runInvestEvent(currentYear, investEvents, investments, cash_investment) {
 
     let activeInvestEvent = null
+    let startYear, endYear
 
     for (let investEvent of investEvents) {
-        let startYear = investEvent.start.startDistribution.value
-        let endYear = startYear + investEvent.duration.value
+        startYear = investEvent.start.startDistribution.value
+        endYear = startYear + investEvent.duration.value
         if (currentYear < startYear || currentYear > endYear) {
             continue
         }
@@ -367,6 +408,7 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
     }
 
     let excess_cash = cash_investment.value - activeInvestEvent.maxCash
+    cash_investment.value = activeInvestEvent.maxCash
 
     if (excess_cash <= 0) {
         return
@@ -380,7 +422,7 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
 
         let progress = 0
         if (activeInvestEvent.duration.value !== 0) {
-            progress = (currentYear - activeInvestEvent.start.value) / activeInvestEvent.duration.value
+            progress = (currentYear - startYear) / activeInvestEvent.duration.value
         }
 
         for (const [asset, alloc] of Object.entries(assetAlloc)) {
@@ -408,54 +450,96 @@ function runInvestEvent(currentYear, investEvents, cash_investment, investments)
     }
 }
 
-/*
-function runRebalanceEvent(rebalanceEvent, investments) {
+function runRebalanceEvent(currentYear, rebalanceEvents, investments) {
 
-    #find active rebalance event
-    rebalanceEvent = None
+    let activeRebalanceEvent = null
+    let startYear, endYear
 
-    currentYear = Date().getFullYear() + yearsElapsed
-
-    for event in events:
-        if event.startYear > currentYear || event.duration + event.startYear < currentYear
+    for (let rebalanceEvent of rebalanceEvents) {
+        startYear = rebalanceEvent.start.startDistribution.value
+        endYear = startYear + rebalanceEvent.duration.value
+        if (currentYear < startYear || currentYear > endYear) {
             continue
-        if event.type is REBALANCE:
-            rebalanceEvent = event
+        }
+        else {
+            activeRebalanceEvent = rebalanceEvent
             break
+        }
+    }
 
-    if rebalanceEvent is None:
-        return
+    if (!activeRebalanceEvent) {
+        return 0
+    }
 
-    target = rebalanceEvent.AssetAlloc.percentage
+    let assetAlloc = activeRebalanceEvent.assetAllocation
 
-    #Find the current total for all the investments included in the rebalance event
-    total = 0
+    // Find current total for all investments included in the assetAllocation
+    let total = 0
 
-    for [investment, percent] in target:
+    for (const [investmentId] of Object.entries(assetAlloc)) {
+        let investmentObj = investments.find(i => i.id === investmentId)
+        if (!investmentObj) {
+            throw new Error(`Investment with ID ${investmentId} not found in ${investments.map(i => i.id)}`)
+        }
+        total += investmentObj.value
+    }
 
-        find i in investments such that i.name == investment.name
+    let capitalGains = 0
 
-            total += i.value
-
-    capitalGains = 0
-
-    for [investment, percent] in target:
-
-        find i in investments such that i.name == investment.name
-            targetValue = total * percent
-            if targetValue < i.value:
-                valueSold = i.value - targetValue
-                capitalGains += i.sell(valueSold)
-            
-            else:
-                valueBought = targetValue - i.value
-                i.invest(valueBought)
+    for (const [investmentId, percent] of Object.entries(assetAlloc)) {
+        
+        let targetValue = total * percent
+        let investmentObj = investments.find(i => i.id === investmentId)
+        if (!investmentObj) {
+            throw new Error(`Investment with ID ${investmentId} not found in ${investments.map(i => i.id)}`)
+        }
+        if (targetValue < investmentObj.value) {
+            // Sell the investment
+            let portion = (investmentObj.value - targetValue) / investmentObj.value
+            capitalGains += investmentObj.value * portion - investmentObj.costBasis * portion
+            investmentObj.value = investmentObj.value * (1 - portion)
+            investmentObj.costBasis = investmentObj.costBasis * (1 - portion)
+        }
+        else {
+            // Buy the investment
+            let amount = targetValue - investmentObj.value
+            investmentObj.value += amount
+            investmentObj.costBasis += amount
+        }
+    }
     
     return capitalGains
 
 }
-*/
 
+/**
+ * Get the scenario's current investment values and return as a map of ID : Value
+ * @param {Number} currentYear 
+ * @param {Array<Object>} investments
+ * @param {Array<Object>} incomeEvents
+ * @param {Array<Object>} expenseEvents
+ * @returns {{investments: Object, incomes: Object, expenses: Object}} A an object of investment IDs to their current values
+ */
+function getResults(investments, incomeEvents, expenseEvents) {
+    
+    let investmentResults = {}
+    let incomeResults = {}
+    let expenseResults = {}
 
-export { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
-    payDiscretionaryExpenses, runInvestEvent, updateInvestments, calculateTaxes }
+    investments.forEach((investment) => {
+        investmentResults[investment.id] = investment.value
+    })
+
+    incomeEvents.forEach((incomeEvent) => {
+        incomeResults[incomeEvent.name] = incomeEvent.initialAmount
+    })
+
+    expenseEvents.forEach((expenseEvent) => {
+        expenseResults[expenseEvent.name] = expenseEvent.initialAmount
+    })
+
+    return { investments: investmentResults, incomes: incomeResults, expenses: expenseResults }
+}
+
+export { getValueFromDistribution, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
+    payDiscretionaryExpenses, runInvestEvent, runRebalanceEvent, updateInvestments, calculateTaxes, getResults }

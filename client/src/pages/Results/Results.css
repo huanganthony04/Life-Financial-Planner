@@ -39,11 +39,13 @@ background-color: rgb(43, 196, 94);
 }
 
 #results-body {
-    flex-grow: 1;
+
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
+    padding: 20px 0;
 }
 
 #no-results-container {
@@ -60,4 +62,27 @@ background-color: rgb(43, 196, 94);
 
 #no-results-container > button {
     margin: 5px 0;
+}
+
+.chart-container {
+    max-width:1000px;
+    margin: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+canvas {
+    margin: 20px;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 900px;
+    max-height: 700px;
+}
+
+fieldset {
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0px;
+    border-top: 1px solid #ccc;
 }

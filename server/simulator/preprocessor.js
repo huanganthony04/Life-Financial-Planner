@@ -1,56 +1,51 @@
-import { ValueDistribution, InvestmentType, Investment } from "../classes.js"
-import { normalSample } from "./util.js"
+import { ValueDistribution, InvestmentType, Investment, Scenario } from "../classes.js"
+import { getValueFromDistribution } from "./util.js"
 
 /**
  * Preprocesses a scenario for financialSim, determining values for distributions, creating a cash investment if not defined, and setting undefined values for defaults.
  * @param {Scenario} scenario 
  */
 export default function scenarioProcessor(Scenario) {
-    if (Scenario.investments == null) {
-        Scenario.investments = []
+
+    let newScenario = structuredClone(Scenario)
+
+    if (newScenario.investments == null) {
+        newScenario.investments = []
     }
-    if (Scenario.incomeEvents == null) {
-        Scenario.incomeEvents = []
+    if (newScenario.incomeEvents == null) {
+        newScenario.incomeEvents = []
     }
-    if (Scenario.expenseEvents == null) {
-        Scenario.expenseEvents = []
+    if (newScenario.expenseEvents == null) {
+        newScenario.expenseEvents = []
     }
-    if (Scenario.investEvents == null) {
-        Scenario.investEvents = []
+    if (newScenario.investEvents == null) {
+        newScenario.investEvents = []
     }
-    if (Scenario.rebalanceEvents == null) {
-        Scenario.rebalanceEvents = []
+    if (newScenario.rebalanceEvents == null) {
+        newScenario.rebalanceEvents = []
     }
-    if (Scenario.expenseWithdrawalStrategy == null) {
-        if (Scenario.investments.length > 0) {
-            Scenario.expenseWithdrawalStrategy = Scenario.investments.map(i => i.id)
+    if (newScenario.expenseWithdrawalStrategy == null) {
+        if (newScenario.investments.length > 0) {
+            newScenario.expenseWithdrawalStrategy = newScenario.investments.map(i => i.id)
         }
         else {
-            Scenario.expenseWithdrawalStrategy = []
+            newScenario.expenseWithdrawalStrategy = []
         }
     }
 
     // Event preprocessing
-    let allEvents = Scenario.incomeEvents
-        .concat(Scenario.expenseEvents)
-        .concat(Scenario.investEvents)
-        .concat(Scenario.rebalanceEvents)
+    let allEvents = newScenario.incomeEvents
+        .concat(newScenario.expenseEvents)
+        .concat(newScenario.investEvents)
+        .concat(newScenario.rebalanceEvents)
 
     // Determine the start/end year of events that have a distribution as a start year.
     for (let event of allEvents) {
 
         //Determine the duration of the event
         if (event.duration.distType === "fixed") continue;
-        else if (event.duration.distType === "normal") {
-            let mean = event.duration.mean
-            let sigma = event.duration.sigma
-            let duration = normalSample(mean, sigma)
-            event.duration = new ValueDistribution({ type: "fixed", value: duration })
-        }
         else {
-            let lower = event.duration.lower
-            let upper = event.duration.upper
-            let duration = Math.random() * (upper - lower) + lower
+            let duration = getValueFromDistribution(event.duration)
             event.duration = new ValueDistribution({ type: "fixed", value: duration })
         }
     }
@@ -59,16 +54,8 @@ export default function scenarioProcessor(Scenario) {
         //Determine the start year of the event (if it doesn't have a startWith)
         if (!event.start.startWith) {
             if (event.start.startDistribution.distType === "fixed") continue;
-            else if (event.start.startDistribution.distType === "normal") {
-                let mean = event.start.startDistribution.mean
-                let sigma = event.start.startDistribution.sigma
-                let startYear = normalSample(mean, sigma)
-                event.start.startDistribution = new ValueDistribution({ type: "fixed", value: Math.round(startYear) })
-            }
             else {
-                let lower = event.start.startDistribution.lower
-                let upper = event.start.startDistribution.upper
-                let startYear = Math.random() * (upper - lower) + lower
+                let startYear = getValueFromDistribution(event.start.startDistribution)
                 event.start.startDistribution = new ValueDistribution({ type: "fixed", value: Math.round(startYear) })
             }
         }
@@ -87,16 +74,7 @@ export default function scenarioProcessor(Scenario) {
 
         //We have an event with a start year, and all the events that depend on it.
         let startDist = eventPtr.start.startDistribution
-        let startYear;
-        if (startDist.distType == "fixed") {
-            startYear = startDist.value
-        }
-        else if (startDist.distType == "normal") {
-            startYear = normalSample(startDist.mean, startDist.sigma)
-        }
-        else {
-            startYear = Math.random() * (startDist.upper - startDist.lower) + startDist.lower
-        }
+        let startYear = getValueFromDistribution(startDist)
 
         //Set the start year for all events in the stack
         for (let event of eventStack) {
@@ -108,7 +86,7 @@ export default function scenarioProcessor(Scenario) {
     //Get the cash investment
     let cash_investment;
 
-    for (const investment of Scenario.investments) {
+    for (const investment of newScenario.investments) {
 
         if (investment.id == "cash") {
             cash_investment = investment
@@ -134,29 +112,25 @@ export default function scenarioProcessor(Scenario) {
             taxStatus: "non-retirement",
             id: "cash"
         })
+
+        newScenario.investments.push(cash_investment)
     }
 
-    Scenario.investments.push(cash_investment)
-
-    //Calculate the user's remaining years based on life expectancy and current year
+    //Calculate the user and the spouse's remaining years based on life expectancy and current year
     let presentYear = new Date().getFullYear()
 
-    //Get the life expectancy
-    let lifeExpectancy;
-    if (Scenario.lifeExpectancy[0].distType == "fixed") {
-        lifeExpectancy = Scenario.lifeExpectancy[0].value
+    //Get the user's estimated years left
+    let userLifeExpectancy = getValueFromDistribution(newScenario.lifeExpectancy[0])
+    let birthYear = newScenario.birthYears[0]
+    let userRemainingYears = birthYear + userLifeExpectancy - presentYear
+
+    let spouseRemainingYears = null
+    if (newScenario.maritalStatus) {
+        //Get the spouse's estimated years left
+        let spouseLifeExpectancy = getValueFromDistribution(newScenario.lifeExpectancy[1])
+        let spouseBirthYear = newScenario.birthYears[1]
+        spouseRemainingYears = spouseBirthYear + spouseLifeExpectancy - presentYear
     }
-    else {
-        //Create normal distribution for life expectancy
-        let mean = Scenario.lifeExpectancy[0].mean
-        let sigma = Scenario.lifeExpectancy[0].sigma
-        lifeExpectancy = normalSample(mean, sigma)
-    }
 
-    //Get the birth year of the user
-    let birthYear = Scenario.birthYears[0]
-
-    let remainingYears = birthYear + lifeExpectancy - presentYear
-
-    return { Scenario, cash_investment, presentYear, remainingYears }
+    return { processedScenario: newScenario, cash_investment, presentYear, userRemainingYears, spouseRemainingYears }
 }
