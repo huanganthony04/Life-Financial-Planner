@@ -288,6 +288,54 @@ router.post('/api/postEventUpdate', async (req, res) => {
    
 })
 
+
+router.post('/api/postIncomeUpdate', async (req, res) => {
+
+
+
+    console.log("postIncomeUpdate reached");
+    const scenarioId= req.body.scenarioId;
+    const incomeEventId= req.body.IncomeEventId;
+    console.log(incomeEventId+"incomeEventId");
+
+    const updatedFields = {
+        "incomeEvents.$.name": req.body.title,
+        "incomeEvents.$.start": req.body.start,
+        "incomeEvents.$.description": req.body.summary,
+        "incomeEvents.$.socialSecurity": req.body.socialSecurity,
+        "incomeEvents.$.inflationAdjusted": req.body.inflationStatus,
+        "incomeEvents.$.duration": req.body.duration,
+        "incomeEvents.$.userFraction": req.body.userFrac,
+        "incomeEvents.$.changeAmtOrPct": req.body.amountOrPercent,
+        "incomeEvents.$.initialAmount": req.body.initial,
+        "incomeEvents.$.changeDistribution": req.body.changeDistribution
+      };
+      try {
+        const result = await ScenarioModel.findOneAndUpdate(
+          {
+            _id: scenarioId,
+            "incomeEvents._id": incomeEventId
+          },
+          {
+            $set: updatedFields
+          },
+          { new: true }
+        );
+      
+        if (!result) {
+            console.log("postIncomeUpdate 404 income event or scenario not found");
+          return res.status(404).json({ error: "Income Event or Scenario not found" });
+        }
+      
+        return res.status(200).json({ message: "Income event updated", scenario: result });
+      } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+   
+})
+
+
 router.post('/api/postIncomenew', async (req, res) => {
 
 
@@ -324,16 +372,150 @@ catch(error) {
     console.log(error)
     return res.status(500).json({error: error})
 }
+
+
    
    
 
    //find out which index or where his expense event is and replace it 
    //after modifying save the scenario wih scenario.save() or something
 
+})
 
+router.post('/api/postInvestmentEventnew', async (req, res) => {
+
+
+
+    console.log("postInvestmentEventnew reached");
+    const scenarioId= req.body.scenarioId;
+    const scenario = await ScenarioModel.findOne({_id: scenarioId })
+    
+    //need to fix format for start, duraion, as valdist 
+    //assemble it as a dict before you send to end point 
+    const investmentEventList= scenario.investEvents;
+        console.log(req.body.assetAllocation)
+        console.log(req.body.glideStatus)
+        console.log(req.body.start)
+    if(req.body.glideStatus==false){
+    var map1= {
+        name:req.body.title,  
+        start:req.body.start,
+        description: req.body.summary, 
+        glidePath:req.body.glideStatus,  
+        duration: req.body.duration, 
+        assetAllocation:req.body.assetAllocation
+        
+
+    }
+}
+    if(req.body.glideStatus==true){
+
+    var map1= {
+        name:req.body.title,  
+        start:req.body.start,
+        description: req.body.summary, 
+        glidePath:req.body.glideStatus,  
+        duration: req.body.duration, 
+        assetAllocation:req.body.assetAllocation,
+        assetAllocation2:req.body.assetAllocation2
+        
+
+    }
+}
+   investmentEventList.push(map1);
+console.log("map made");
+   try {
+    await scenario.save()
+    console.log("saved");
+    return res.status(200).json({scenarioId: scenario._id})
+}
+catch(error) {
+    console.log(error)
+    return res.status(500).json({error: error})
+}
+
+
+   
 
 
 })
+
+
+
+
+
+router.post('/api/postInvestmentEventUpdate', async (req, res) => {
+
+
+
+    console.log("postInvestmentEventUpdate reached");
+    const scenarioId= req.body.scenarioId;
+    const investmentEventId= req.body.InvestEventId;
+    console.log(investmentEventId+"investmentEventId");
+ let updatedFields;
+ let unsetfields={};
+        if(req.body.glideStatus==false){
+     updatedFields = {
+        "investEvents.$.name": req.body.title,
+        "investEvents.$.start": req.body.start,
+        "investEvents.$.description": req.body.summary,
+        "investEvents.$.glidePath": req.body.glideStatus,
+        "investEvents.$.assetAllocation":req.body.assetAllocation,
+        "investEvents.$.duration": req.body.duration,
+
+        
+
+      };
+
+      unsetfields={
+        "investEvents.$.assetAllocation2": ""
+      }
+
+    }
+    if(req.body.glideStatus==true){
+         updatedFields = {
+            "investEvents.$.name": req.body.title,
+            "investEvents.$.start": req.body.start,
+            "investEvents.$.description": req.body.summary,
+            "investEvents.$.glidePath": req.body.glideStatus,
+            "investEvents.$.assetAllocation":req.body.assetAllocation,
+            "investEvents.$.duration": req.body.duration,
+            "investEvents.$.assetAllocation2":req.body.assetAllocation2,
+    
+          };
+
+
+
+        }
+
+      try {
+        const result = await ScenarioModel.findOneAndUpdate(
+          {
+            _id: scenarioId,
+            "investEvents._id": investmentEventId
+          },
+          {
+            $set: updatedFields,
+          
+          $unset :unsetfields},
+          { new: true }
+        );
+      
+        if (!result) {
+            console.log("postIncomeUpdate 404 income event or scenario not found");
+          return res.status(404).json({ error: "Income Event or Scenario not found" });
+        }
+      
+        return res.status(200).json({ message: "Income event updated", scenario: result });
+      } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+   
+})
+
+
+
 
 router.get('/api/scenario/run', async (req, res) => {
 

@@ -2,16 +2,21 @@ import { useState } from 'react';
 import axios from 'axios';
 import React from 'react';
 import ValueDist from './valueDistribution';
-import InvestmentEventList from './investmentEventList';
 import InvestmentList from './investmentList';
 
-function InvestmentEvent({ scenarioId}) {
-    const [title, setTitle] = useState('name');
-   
-   
-    const [glideStatus, setGlide] = useState(true);
+function EditInvestmentEvent({ scenarioId, InvestEventId,singleInvestMap}) {
 
-    const [summary, setSummary] = useState('description');
+//grab scenarios and grab its investment event 
+
+
+
+    console.log(singleInvestMap,"singleInvestmap")
+    const [title, setTitle] = useState(singleInvestMap.name);
+   
+    
+    const [glideStatus, setGlide] = useState(singleInvestMap.glidePath);
+
+    const [summary, setSummary] = useState(singleInvestMap.description);
     //const [start, setStart] = useState('');
     var start='';
     //const [duration, setDuration] = useState('');
@@ -20,10 +25,10 @@ const[startsWith1,setStartWith]=useState('');
 
 
 
-
-
-       const[aAFinal,changeaAFinal]=useState(new Map());
-    const[aAInitial,changeaAInitial]=useState(new Map());
+let assetAllocation2mapI = new Map(Object.entries(singleInvestMap.assetAllocation));
+let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocation2));
+       const[aAFinal,changeaAFinal]=useState(assetAllocation2mapF);
+    const[aAInitial,changeaAInitial]=useState(assetAllocation2mapI);
 
     const [distMode1,setdistMode1]=useState('normal');
     const [fixedValue1, setFixedValue1] = useState('');
@@ -118,7 +123,7 @@ const[startsWith1,setStartWith]=useState('');
     async function post(){
 
        console.log(assetAllocationI,"assetAllocation final verify")
-        let response = await axios.post("http://localhost:8080/api/postInvestmentEventnew", {scenarioId:scenarioId,title:title, summary: summary, glideStatus:glideStatus, start: start, duration: duration, assetAllocation2:assetAllocationF, assetAllocation:assetAllocationI });
+        let response = await axios.post("http://localhost:8080/api/postInvestmentEventUpdate", {InvestEventId:InvestEventId, scenarioId:scenarioId,title:title, summary: summary, glideStatus:glideStatus, start: start, duration: duration, assetAllocation2:assetAllocationF, assetAllocation:assetAllocationI });
             console.log("post sending");
 
         
@@ -294,7 +299,7 @@ const[startsWith1,setStartWith]=useState('');
           
             
             
-            <InvestmentList changeaAFinal={changeaAFinal} changeaAInitial={changeaAInitial} aAFinal={aAFinal} aAInitial={aAInitial} glideStatus ={glideStatus} scenarioId={scenarioId} defaultValOfReveal={false}></InvestmentList>             
+            <InvestmentList defaultValOfReveal={true} changeaAFinal={changeaAFinal} changeaAInitial={changeaAInitial} aAFinal={aAFinal} aAInitial={aAInitial} glideStatus ={glideStatus} scenarioId={scenarioId} defaultReveal></InvestmentList>             
             
             
 
@@ -334,16 +339,8 @@ const[startsWith1,setStartWith]=useState('');
             *indicates mandatory fields
           </p>
         </div>
-
-        
-
-
-
-
-
-      <InvestmentEventList   scenarioId={scenarioId}     ></InvestmentEventList>
       </div>
     );
 
   }
-  export default InvestmentEvent;
+  export default EditInvestmentEvent;

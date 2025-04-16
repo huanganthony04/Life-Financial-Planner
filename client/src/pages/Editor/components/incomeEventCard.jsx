@@ -5,22 +5,22 @@ import React from 'react';
 
 
 
-function ExpenseEventCard({ singleExpenseItem , editState,tog,togFunc}) {
+function IncomeEventCard({ singleIncomeItem , editState,tog,togFunc}) {
 
 
 
 const editToggle=()=>{
     togFunc(!tog);
     editState(
-        singleExpenseItem
+        singleIncomeItem
     );
-    console.log("singleExpenseItem:\n")
-    console.log(singleExpenseItem);
+    console.log("singleIncomeItem:\n")
+    console.log(singleIncomeItem);
 }
 return(
 
            <div className="scenario-modal-list-item">
-            <h4 className="scenario-title">{singleExpenseItem.name}</h4>
+            <h4 className="scenario-title">{singleIncomeItem.name}</h4>
             <button className="scenario-modal-button" onClick={editToggle}>
                 Edit
             </button>
@@ -29,4 +29,4 @@ return(
 
 }
 
-export default ExpenseEventCard;
+export default IncomeEventCard;

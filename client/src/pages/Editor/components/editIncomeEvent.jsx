@@ -3,14 +3,13 @@ import axios from 'axios';
 import React from 'react';
 import ValueDist from './valueDistribution';
 import IncomeEventList from './incomeEventList';
-
-function IncomeEvent({ scenarioId}) {
-    const [title, setTitle] = useState('name');
+function EditIncomeEvent({ scenarioId, IncomeEventId,singleIncomeMap}) {
+    const [title, setTitle] = useState(singleIncomeMap.name);
    
-    const [socialSecurityStatus, setSSN] = useState(true);
-    const [inflationStatus, setInflation] = useState(true);
+    const [socialSecurityStatus, setSSN] = useState(singleIncomeMap.socialSecurityStatus);
+    const [inflationStatus, setInflation] = useState(singleIncomeMap.inflationAdjusted);
 
-    const [summary, setSummary] = useState('description');
+    const [summary, setSummary] = useState(singleIncomeMap.description);
     //const [start, setStart] = useState('');
     var start='';
     //const [duration, setDuration] = useState('');
@@ -18,8 +17,8 @@ function IncomeEvent({ scenarioId}) {
 const[startsWith1,setStartWith]=useState('');
 
     const [userFrac, setUserFrac] = useState(1.0);
-    const [amountOrPercent, setAP] = useState("amount");
-    const [initial, setInitial] = useState('');
+    const [amountOrPercent, setAP] = useState(singleIncomeMap.changeAmtOrPct);
+    const [initial, setInitial] = useState(singleIncomeMap.initialAmount);
 
     const handleCheckbox=()=>{
         setInflation(!inflationStatus)
@@ -146,13 +145,14 @@ const[startsWith1,setStartWith]=useState('');
     async function post(){
 
        
-        let response = await axios.post("http://localhost:8080/api/postIncomenew", {scenarioId:scenarioId,title:title,changeDistribution:changeDistribution, summary: summary, socialSecurityStatus:socialSecurityStatus,inflationStatus:inflationStatus, start: start, duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
+        let response = await axios.post("http://localhost:8080/api/postIncomeUpdate", {IncomeEventId:IncomeEventId, scenarioId:scenarioId,title:title,changeDistribution:changeDistribution, summary: summary, socialSecurityStatus:socialSecurityStatus,inflationStatus:inflationStatus, start: start, duration: duration, userFrac: userFrac,amountOrPercent:amountOrPercent, initial:initial});
             console.log("post sending");
       }
 
       const handlePostQuestion = () => {
 
         let errors = false;
+
 
         if(distMode1=="fixed"&&fixedValue1==''){
             errors=true;
@@ -187,6 +187,7 @@ const[startsWith1,setStartWith]=useState('');
         if(!errors){
           post();
         }
+        if(errors==true){console.log("field is blank")}
       }
 
  
@@ -334,13 +335,8 @@ const[startsWith1,setStartWith]=useState('');
             *indicates mandatory fields
           </p>
         </div>
-
-
-        
-        <IncomeEventList scenarioId={scenarioId}></IncomeEventList>
- 
       </div>
     );
 
   }
-  export default IncomeEvent;
+  export default EditIncomeEvent;

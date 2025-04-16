@@ -3,8 +3,10 @@ import axios from 'axios';
 import React from 'react';
 import ValueDist from './valueDistribution';
 import ExpenseEventList from './expenseEventList';
+import ValueDistEdit from './valDistEdit';
 
 function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
+    //console.log(singleExpenseMap.start.startDistribution.distType,"aaaaa")
     const [title, setTitle] = useState(singleExpenseMap.name);
    
     const [discretionaryStatus, setDiscretionary] = useState(singleExpenseMap.discretionary);
@@ -19,7 +21,7 @@ function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
     const [amountOrPercent, setAP] = useState(singleExpenseMap.changeAmtOrPct);
     const [initial, setInitial] = useState(singleExpenseMap.initialAmount);
 
-    const[startsWith1,setStartWith]=useState('');
+    const[startsWith1,setStartWith]=useState(singleExpenseMap.start.startWith);
 
     const handleCheckbox=()=>{
         setInflation(!inflationStatus)
@@ -28,29 +30,29 @@ function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
         setDiscretionary(!discretionaryStatus)
     }
 //distMode is for changeDist
-    const [distMode,setdistMode]=useState(singleExpenseMap.changeDistribution.distType);
-    const [fixedValue, setFixedValue] = useState('');
+    const [distMode,setdistMode]=useState("uniform"/*singleExpenseMap.changeDistribution.distType*/);
+    const [fixedValue, setFixedValue] = useState(singleExpenseMap.changeDistribution.value);
     if(singleExpenseMap.changeDistribution.distType=='fixed'){
         //setFixedValue(singleExpenseMap.changeDistribution.value);
     }
 
-    const [mu,setMu]=useState('');
+    const [mu,setMu]=useState(singleExpenseMap.changeDistribution.mean);
     if(singleExpenseMap.changeDistribution.distType=='normal'){
         //setMu(singleExpenseMap.changeDistribution.mean);
     }
-    const [sigma,setSigma]=useState('');
+    const [sigma,setSigma]=useState(singleExpenseMap.changeDistribution.sigma);
 
-    const [upper,setUpper]=useState('');
-    const [lower,setLower]=useState('');
-
-    const [distMode1,setdistMode1]=useState('normal');
+    const [upper,setUpper]=useState(singleExpenseMap.changeDistribution.upper);
+    const [lower,setLower]=useState(singleExpenseMap.changeDistribution.lower);
+    //console.log(singleExpenseMap.start.startDistribution.distType,"aaaaa1111")
+    const [distMode1,setdistMode1]=useState("normal");
     const [fixedValue1, setFixedValue1] = useState('');
     const [mu1,setMu1]=useState('');
     const [sigma1,setSigma1]=useState('');
     const [upper1,setUpper1]=useState('');
     const [lower1,setLower1]=useState('');
 
-    const [distMode2,setdistMode2]=useState('normal');
+    const [distMode2,setdistMode2]=useState("normal"/*singleExpenseMap.duration.distType*/);
     const [fixedValue2, setFixedValue2] = useState('');
     const [mu2,setMu2]=useState('');
     const [sigma2,setSigma2]=useState('');
@@ -283,7 +285,7 @@ function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
                 <h2>Specification Parameters*</h2>
             <form id = "start_year">
                 <h3>Start</h3>
-            <ValueDist setdistMode={setdistMode1} setUpper={setUpper1} setLower= {setLower1} setFixedValue={setFixedValue1} setMu={setMu1} setSigma={setSigma1}></ValueDist>
+            {singleExpenseMap&&<ValueDistEdit  mean={mu1} sigma={sigma1} isEdit={singleExpenseMap} type={"start"} setdistMode={setdistMode1} setUpper={setUpper1} setLower= {setLower1} setFixedValue={setFixedValue1} setMu={setMu1} setSigma={setSigma1}></ValueDistEdit>}
             <input type="text"
             name="startWith"
             value={startsWith1}
@@ -297,7 +299,7 @@ function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
 
             <form id = "duration">
                 <h3>Duration</h3>
-            <ValueDist setdistMode={setdistMode2} setUpper={setUpper2} setLower= {setLower2} setFixedValue={setFixedValue2} setMu={setMu2} setSigma={setSigma2}></ValueDist>
+           {singleExpenseMap.duration!=undefined&& <ValueDistEdit valType= {singleExpenseMap.duration.distType} mean={mu2} sigma={sigma2} isEdit={singleExpenseMap} type={"duration"}setdistMode={setdistMode2} setUpper={setUpper2} setLower= {setLower2} setFixedValue={setFixedValue2} setMu={setMu2} setSigma={setSigma2}></ValueDistEdit>}
 
               
             </form>
@@ -305,7 +307,7 @@ function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
             
 
         <h3>Change Distribution</h3>
-            <ValueDist setdistMode={setdistMode} setUpper={setUpper} setLower= {setLower} setFixedValue={setFixedValue} setMu={setMu} setSigma={setSigma}></ValueDist>
+           {singleExpenseMap.changeDistribution!=undefined&& <ValueDistEdit valType= {singleExpenseMap.changeDistribution.distType} mean={mu} sigma={sigma} lower={lower}upper={upper} isEdit={singleExpenseMap} type={"changeDist"} setdistMode={setdistMode} setUpper={setUpper} setLower= {setLower} setFixedValue={setFixedValue} setMu={setMu} setSigma={setSigma}></ValueDistEdit>}
             {//distMode=="fixed"&&(<div>Broooo</div>)
            // <p>{distMode}</p>
             }
