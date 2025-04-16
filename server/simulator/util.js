@@ -1,4 +1,4 @@
-import { IncomeEvent, ValueDistribution } from "../classes.js"
+import { ExpenseEvent, IncomeEvent, Investment, ValueDistribution } from "../classes.js"
 
 /**
  * Generate a normal distribution using Box-Muller transform
@@ -40,10 +40,11 @@ function getValueFromDistribution(ValueDistribution) {
  * Calculates the income for a given year based on income events.
  * @param {Number} currentYear 
  * @param {Array<IncomeEvent>} incomeEvents 
+ * @param {Boolean} spouseAlive Whether the spouse is alive or not
  * @returns {{income: Number, socialSecurity: Number}} An object containing the total income and social security income for the year
  */
 
-function calculateIncome(currentYear, incomeEvents) {
+function calculateIncome(currentYear, incomeEvents, spouseAlive) {
 
     let income = 0
     let socialSecurity = 0
@@ -60,20 +61,33 @@ function calculateIncome(currentYear, incomeEvents) {
         //Add the income to the total income
 
         if (incomeEvent.socialSecurity) {
-            socialSecurity += incomeEvent.initialAmount
+            // Remove the spouse's contributions if they have passed
+            if(!spouseAlive) {
+                socialSecurity += incomeEvent.initialAmount * incomeEvent.userFraction
+            }
+            else {
+                socialSecurity += incomeEvent.initialAmount
+            }
         }
         else {
-            income += incomeEvent.initialAmount
+            if (!spouseAlive) {
+                income += incomeEvent.initialAmount * incomeEvent.userFraction
+            }
+            else {
+                income += incomeEvent.initialAmount
+            }
         }
 
         //Calculate the expected annual change
 
         if (incomeEvent.changeDistribution.distType == "fixed") {
             if (incomeEvent.changeAmtOrPct == "amount") {
-                incomeEvent.initialAmount += incomeEvent.changeDistribution.value
+                let value = getValueFromDistribution(incomeEvent.changeDistribution)
+                incomeEvent.initialAmount += value
             }
             else {
-                incomeEvent.initialAmount *= 1 + incomeEvent.changeDistribution.value
+                let rate = getValueFromDistribution(incomeEvent.changeDistribution)
+                incomeEvent.initialAmount *= 1 + rate
             }
         }
     }
@@ -139,13 +153,13 @@ function updateInvestments(investments) {
 
 }
 
-function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, stateTaxRates, isMarried) {
+function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, stateTaxRates, spouseAlive) {
 
     let tax = 0
     let previous_limit = 0
 
     let adjustedIncome = income
-    if (isMarried) {
+    if (spouseAlive) {
         adjustedIncome -= federalTaxRates.standardDeductionMarried
     }
     else {
@@ -173,7 +187,7 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
 
     adjustedIncome = income
 
-    if (isMarried) {
+    if (spouseAlive) {
         for (const bracket of stateTaxRates.marriedBrackets) {
             let limit = bracket.max
             let rate = bracket.rate / 100
@@ -231,7 +245,14 @@ function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, s
     return tax
 }
 
-function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
+/**
+ * Calculate the total non-discretionary expenses for a given year based on expense events.
+ * @param {Number} currentYear 
+ * @param {[ExpenseEvent]} expenseEvents 
+ * @param {Boolean} spouseAlive 
+ * @returns {Number} The total non-discretionary expenses for the year
+ */
+function calculateNonDiscretionaryExpenses(currentYear, expenseEvents, spouseAlive) {
 
     let expenses = 0
 
@@ -247,7 +268,12 @@ function calculateNonDiscretionaryExpenses(currentYear, expenseEvents) {
         if (expenseEvent.discretionary) continue;
 
         //Add the expense to the total expenses
-        expenses += expenseEvent.initialAmount
+        if (!spouseAlive) {
+            expenses += expenseEvent.initialAmount * expenseEvent.userFraction
+        }
+        else {
+            expenses += expenseEvent.initialAmount
+        }
 
         //Calculate the expected annual change
 
@@ -308,8 +334,17 @@ function payNonDiscretionaryExpenses(amount, investments, cash_investment, withd
     return capitalGains
 
 }
-    
-function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, financialGoal) {
+
+/**
+ * Calculate and pay for any discretionary expenses for a given year based on expense events.
+ * @param {Number} currentYear 
+ * @param {[ExpenseEvent]} expenseEvents 
+ * @param {Investment} cash_investment 
+ * @param {Number} financialGoal 
+ * @param {Boolean} spouseAlive 
+ * @returns 
+ */
+function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, financialGoal, spouseAlive) {
 
     if (financialGoal == null || Number.isNaN(financialGoal)) {
         throw new Error("Invalid financial goal value")
@@ -321,7 +356,7 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
     else cash_investment.value = financialGoal
 
     for (let expenseEvent of expenseEvents) {
-        if (!expenseEvent.isDiscretionary) continue
+        if (!expenseEvent.discretionary) continue
 
         let startYear = expenseEvent.start.startDistribution.value
         let endYear = startYear + expenseEvent.duration.value
@@ -330,19 +365,25 @@ function payDiscretionaryExpenses(currentYear, expenseEvents, cash_investment, f
             continue
         }
 
-        if (expenseEvent.initialAmount > cashAvailable) {
-            expenseEvent.initialAmount -= cashAvailable
-            break
+        // Find the current amount and pay only if enough excess cash is available
+        let amount = expenseEvent.initialAmount * (spouseAlive ? 1 : expenseEvent.userFraction)
+        if (cashAvailable >= amount) {
+            cashAvailable -= amount
+        }
+
+        // Calculate the expected annual change
+        if (expenseEvent.changeAmtOrPct === "amount") {
+            let value = getValueFromDistribution(expenseEvent.changeDistribution)
+            expenseEvent.initialAmount += value
         }
         else {
-            cashAvailable -= expenseEvent.initialAmount
-            expenseEvent.initialAmount = 0
+            let rate = getValueFromDistribution(expenseEvent.changeDistribution)
+            let value = expenseEvent.initialAmount * rate
+            expenseEvent.initialAmount += value
         }
     }
-
     // If there is still cash available, add it back to the cash investment
     cash_investment.value += cashAvailable
-
 }
             
 function runInvestEvent(currentYear, investEvents, investments, cash_investment) {
@@ -500,5 +541,5 @@ function getResults(investments, incomeEvents, expenseEvents) {
     return { investments: investmentResults, incomes: incomeResults, expenses: expenseResults }
 }
 
-export { normalSample, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
+export { getValueFromDistribution, calculateIncome, calculateNonDiscretionaryExpenses, payNonDiscretionaryExpenses,
     payDiscretionaryExpenses, runInvestEvent, runRebalanceEvent, updateInvestments, calculateTaxes, getResults }
