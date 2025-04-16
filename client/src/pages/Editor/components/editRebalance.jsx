@@ -2,19 +2,15 @@ import { useState } from 'react';
 import axios from 'axios';
 import React from 'react';
 import ValueDist from './valueDistribution';
+import InvestmentEventList from './investmentEventList';
 import InvestmentList from './investmentList';
+import RebalanceEventList from './rebalanceEventList';
 
-function EditInvestmentEvent({ scenarioId, InvestEventId,singleInvestMap}) {
-
-//grab scenarios and grab its investment event 
-
-
-
-    console.log(singleInvestMap,"singleInvestmap")
+function EditRebalanceEvent({ RebalanceEventId,singleInvestMap,scenarioId}) {
     const [title, setTitle] = useState(singleInvestMap.name);
    
-    
-    const [glideStatus, setGlide] = useState(singleInvestMap.glidePath);
+   
+    const [glideStatus, setGlide] = useState(true);
 
     const [summary, setSummary] = useState(singleInvestMap.description);
     //const [start, setStart] = useState('');
@@ -25,9 +21,10 @@ const[startsWith1,setStartWith]=useState('');
 
 
 
+
 let assetAllocation2mapI = new Map(Object.entries(singleInvestMap.assetAllocation));
-let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocation2));
-       const[aAFinal,changeaAFinal]=useState(assetAllocation2mapF);
+
+       const[aAFinal,changeaAFinal]=useState(new Map());
     const[aAInitial,changeaAInitial]=useState(assetAllocation2mapI);
 
     const [distMode1,setdistMode1]=useState('normal');
@@ -44,12 +41,7 @@ let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocatio
     const [upper2,setUpper2]=useState('');
     const [lower2,setLower2]=useState('');
 
-    const handleCheckbox=()=>{
-      setGlide(!glideStatus);
-      changeaAInitial(new Map());
-      changeaAFinal(new Map());
-  
-  }
+
  
      //dist1 is distType for value valDist of eventstart
      if(distMode1=="fixed"){
@@ -116,14 +108,14 @@ let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocatio
     
 
                 let assetAllocationI={};
-          let assetAllocationF={};
+          
           //let assetAllocationF= new Map();
           //let assetAllocationI= new Map();
 
     async function post(){
 
        console.log(assetAllocationI,"assetAllocation final verify")
-        let response = await axios.post("http://localhost:8080/api/postInvestmentEventUpdate", {InvestEventId:InvestEventId, scenarioId:scenarioId,title:title, summary: summary, glideStatus:glideStatus, start: start, duration: duration, assetAllocation2:assetAllocationF, assetAllocation:assetAllocationI });
+        let response = await axios.post("http://localhost:8080/api/postRebalanceEventUpdate", {RebalanceEventId:RebalanceEventId, scenarioId:scenarioId,title:title, summary: summary, start: start, duration: duration, assetAllocation:assetAllocationI });
             console.log("post sending");
 
         
@@ -172,36 +164,7 @@ let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocatio
             
             }
 
-          for(const [key, value] of aAFinal){
-            console.log(key,"key in final iter")
-            if(/*!assetAllocationI.hasOwnProperty(key)*/aAInitial.has(key)==false&&glideStatus==true&&value!=""&&value!=null){//ifi Initial doesnt have this key and final has it it can indicate initial field is empty, but edgecase is final does have it but final's value is "" so it basically doesnt have it 
-              errors=true;
-              console.log("ERROR: key is in final but not in initial",key)
-            }
-
-            else if(aAInitial.has(key)!=false&&glideStatus==true&&value!=""){//this condition says if InitialMap has the same key as FinalMap and finalMap key isnt "" check if initial Map is empty to make sure its not empty. e.g for this investment Final is filled in but initial is "" which is basically empty
-              if(aAInitial.get(key)==""){errors=true; console.log("ERROR: initial field is blank for ",key)}
-            }
-
-
-            if(value!=""&&glideStatus==true){
-              
-              Object.assign(assetAllocationF,{[key]:Number(value)})
-              //assetAllocationF.set(key,Number(value));
-            }
-          }
-
-          for (const [key, value] of aAInitial) {
-
-            if(/*!assetAllocationF.hasOwnProperty(key)*/aAFinal.has(key)==false&&glideStatus==true&&value!=""){
-              errors=true;
-              console.log("ERROR:key is in initial but not in final",key)
-            }
-            else if(aAFinal.has(key)!=false&&glideStatus==true&&value!=""){
-              if(aAFinal.get(key)==""){errors=true; console.log("ERROR:final field is blank for ",key)}
-            }
-           }
-
+          
 
 
 
@@ -209,7 +172,7 @@ let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocatio
           //assetAllocationF = new Map(Object.entries(assetAllocationF));
           //assetAllocationI = new Map(Object.entries(assetAllocationI));
           console.log(assetAllocationI)
-          console.log(assetAllocationF)
+
           post();
           console.log("sucess posting");
         }
@@ -221,7 +184,7 @@ let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocatio
     return (
       <div id = "question_form_container" className = "container">
         <div id = "question_form" className = "form">
-          <h2> Investment Event Name </h2>
+          <h2> Rebalance Event Name </h2>
           <p> Limit Name to 50 characters or less.</p>
           <form id = "q_title_form">
             <input 
@@ -281,25 +244,12 @@ let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocatio
                 <h3>Add Asset Allocations (change here to assetAllocation inputs)</h3>
 
           </form>
-                <form id = "glidePath">
-                <>glidepath:</>
-                <> {glideStatus==true? "true":"false"}</>
-            <input 
-
-              type="checkbox" 
-              name = "glidepath" 
-              id ="glidepath"    
-              
-              //defaultChecked
-              checked={glideStatus}//checked is vlaue of a checkbox
-              onChange = {handleCheckbox}
-              /> 
-           </form> 
+             
 
           
             
             
-            <InvestmentList defaultValOfReveal={true} changeaAFinal={changeaAFinal} changeaAInitial={changeaAInitial} aAFinal={aAFinal} aAInitial={aAInitial} glideStatus ={glideStatus} scenarioId={scenarioId} defaultReveal></InvestmentList>             
+            <InvestmentList isRebalance={true} changeaAFinal={changeaAFinal} changeaAInitial={changeaAInitial} aAFinal={aAFinal} aAInitial={aAInitial} glideStatus ={false} scenarioId={scenarioId} defaultValOfReveal={true}></InvestmentList>             
             
             
 
@@ -334,13 +284,21 @@ let assetAllocation2mapF = new Map(Object.entries(singleInvestMap.assetAllocatio
             className = "ask-post_button" 
             onClick={handlePostQuestion}
             
-            >Post</button>
+            >Post Question</button>
           <p className = "mandatory">
             *indicates mandatory fields
           </p>
         </div>
+
+        
+
+
+
+
+
+      
       </div>
     );
 
   }
-  export default EditInvestmentEvent;
+  export default EditRebalanceEvent;

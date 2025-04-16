@@ -30,7 +30,7 @@ function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
         setDiscretionary(!discretionaryStatus)
     }
 //distMode is for changeDist
-    const [distMode,setdistMode]=useState("uniform"/*singleExpenseMap.changeDistribution.distType*/);
+    const [distMode,setdistMode]=useState("normal"/*singleExpenseMap.changeDistribution.distType*/);
     const [fixedValue, setFixedValue] = useState(singleExpenseMap.changeDistribution.value);
     if(singleExpenseMap.changeDistribution.distType=='fixed'){
         //setFixedValue(singleExpenseMap.changeDistribution.value);
@@ -391,7 +391,7 @@ function EditExpenseEvent({ scenarioId, expenseEventId,singleExpenseMap}) {
             className = "ask-post_button" 
             onClick={handlePostQuestion}
             
-            >Post Question</button>
+            >Post </button>
           <p className = "mandatory">
             *indicates mandatory fields
           </p>

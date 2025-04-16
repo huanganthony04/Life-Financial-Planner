@@ -4,6 +4,7 @@ import React from 'react';
 import ValueDist from './valueDistribution';
 import IncomeEventList from './incomeEventList';
 function EditIncomeEvent({ scenarioId, IncomeEventId,singleIncomeMap}) {
+    console.log(IncomeEventId,"income id")
     const [title, setTitle] = useState(singleIncomeMap.name);
    
     const [socialSecurityStatus, setSSN] = useState(singleIncomeMap.socialSecurityStatus);
@@ -330,7 +331,7 @@ const[startsWith1,setStartWith]=useState('');
             className = "ask-post_button" 
             onClick={handlePostQuestion}
             
-            >Post Question</button>
+            >Post </button>
           <p className = "mandatory">
             *indicates mandatory fields
           </p>

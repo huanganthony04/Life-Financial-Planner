@@ -513,7 +513,104 @@ router.post('/api/postInvestmentEventUpdate', async (req, res) => {
       }
    
 })
+router.post('/api/postRebalanceEventnew', async (req, res) => {
 
+
+
+    console.log("postREventnew reached");
+    const scenarioId= req.body.scenarioId;
+    const scenario = await ScenarioModel.findOne({_id: scenarioId })
+    
+    //need to fix format for start, duraion, as valdist 
+    //assemble it as a dict before you send to end point 
+    const rebalanceEventList= scenario.rebalanceEvents;
+
+   
+    var map1= {
+        name:req.body.title,  
+        start:req.body.start,
+        description: req.body.summary,  
+        duration: req.body.duration, 
+        assetAllocation:req.body.assetAllocation
+        
+
+    }
+
+  
+
+   rebalanceEventList.push(map1);
+console.log("map made");
+   try {
+    await scenario.save()
+    console.log("saved");
+    return res.status(200).json({scenarioId: scenario._id})
+}
+catch(error) {
+    console.log(error)
+    return res.status(500).json({error: error})
+}
+
+
+   
+
+
+})
+
+router.post('/api/postRebalanceEventUpdate', async (req, res) => {
+
+
+
+    console.log("postREventUpdate reached");
+    const scenarioId= req.body.scenarioId;
+    console.log(scenarioId,"scenarioId");               
+    const RebalanceEventId= req.body.RebalanceEventId;
+    console.log(RebalanceEventId,"hi");
+    console.log(req.body.assetAllocation)
+    
+ let updatedFields;
+
+      
+     updatedFields = {
+        "rebalanceEvents.$.name": req.body.title,
+        "rebalanceEvents.$.start": req.body.start,
+        "rebalanceEvents.$.description": req.body.summary,
+        "rebalanceEvents.$.assetAllocation":req.body.assetAllocation,
+        "rebalanceEvents.$.duration": req.body.duration,
+
+        
+
+      };
+
+
+
+    
+    
+
+      try {
+        const result = await ScenarioModel.findOneAndUpdate(
+          {
+            _id: scenarioId,
+            "rebalanceEvents._id": RebalanceEventId
+          },
+          {
+            $set: updatedFields,
+          
+          },
+          { new: true }
+        );
+      
+        if (!result) {
+            console.log("postRebalanceUpdate 404 income event or scenario not found");
+          return res.status(404).json({ error: "Income Event or Scenario not found" });
+        }
+      
+        return res.status(200).json({ message: "Income event updated", scenario: result });
+      } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server error" });
+      }
+   
+})
 
 
 

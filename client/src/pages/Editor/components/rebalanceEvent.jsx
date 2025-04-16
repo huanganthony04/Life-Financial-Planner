@@ -2,6 +2,9 @@ import { useState } from 'react';
 import axios from 'axios';
 import React from 'react';
 import ValueDist from './valueDistribution';
+import InvestmentEventList from './investmentEventList';
+import InvestmentList from './investmentList';
+import RebalanceEventList from './rebalanceEventList';
 
 function RebalanceEvent({ scenarioId}) {
     const [title, setTitle] = useState('name');
@@ -18,12 +21,10 @@ const[startsWith1,setStartWith]=useState('');
 
 
 
-    const handleCheckbox=()=>{
-        setGlide(!glideStatus)
-    }
 
 
-  
+       const[aAFinal,changeaAFinal]=useState(new Map());
+    const[aAInitial,changeaAInitial]=useState(new Map());
 
     const [distMode1,setdistMode1]=useState('normal');
     const [fixedValue1, setFixedValue1] = useState('');
@@ -39,7 +40,13 @@ const[startsWith1,setStartWith]=useState('');
     const [upper2,setUpper2]=useState('');
     const [lower2,setLower2]=useState('');
 
-
+    const handleCheckbox=()=>{
+      setGlide(!glideStatus);
+      changeaAInitial(new Map());
+      changeaAFinal(new Map());
+  
+  }
+ 
      //dist1 is distType for value valDist of eventstart
      if(distMode1=="fixed"){
         start={
@@ -104,18 +111,36 @@ const[startsWith1,setStartWith]=useState('');
         
     
 
-      
+                let assetAllocationI={};
+          
+          //let assetAllocationF= new Map();
+          //let assetAllocationI= new Map();
 
     async function post(){
 
-       
-        let response = await axios.post("http://localhost:8080/api/postRebalancenew", {scenarioId:scenarioId,title:title, summary: summary, glideStatus:glideStatus, start: start, duration: duration});
+       console.log(assetAllocationI,"assetAllocation final verify")
+        let response = await axios.post("http://localhost:8080/api/postRebalanceEventnew", {scenarioId:scenarioId,title:title, summary: summary, start: start, duration: duration, assetAllocation:assetAllocationI });
             console.log("post sending");
+
+        
+      
       }
 
       const handlePostQuestion = () => {
 
         let errors = false;
+
+        if(distMode1=="fixed"&&fixedValue1==''){
+          errors=true;
+      }
+  if(distMode1=="uniform"&&(upper1==''||lower1=='')){errors=true}
+  if(distMode1=="normal"&&(mu1==''||sigma1=='')){errors=true}
+
+  if(distMode2=="fixed"&&fixedValue2==''){errors=true}
+  if(distMode2=="uniform"&&(upper2==''||lower=='')){errors=true}
+  if(distMode2=="normal"&&(mu2==''||sigma2=='')){errors=true}
+
+
         if(start==''||duration==''){
             errors=true;
             if(start==''){console.log("start is blank")}
@@ -125,12 +150,40 @@ const[startsWith1,setStartWith]=useState('');
         }
 
 
+
+
+        for (const [key, value] of aAInitial) {
+          console.log(typeof value, "value is what type?")
+          console.log(key,"key in init iter")
+             if(value==''){
+              //error=true
+              console.log("empty field value is \"\"");//ok instead of checking for empty fields only send the ones that have value that also isnt==""??? alot more simple
+             }
+
+            if(value!=""){
+              
+              Object.assign(assetAllocationI,{[key]:Number(value)})
+              //assetAllocationI.set(key,Number(value));
+            }
+            
+            }
+
+          
+
+
+
         if(!errors){
+          //assetAllocationF = new Map(Object.entries(assetAllocationF));
+          //assetAllocationI = new Map(Object.entries(assetAllocationI));
+          console.log(assetAllocationI)
+
           post();
+          console.log("sucess posting");
         }
       }
 
- 
+      console.log(aAInitial,'aAinitialMap')
+      console.log(aAFinal,'finalMap')
   
     return (
       <div id = "question_form_container" className = "container">
@@ -148,7 +201,7 @@ const[startsWith1,setStartWith]=useState('');
             />
           </form>
           <h2> Description </h2>
-          <p> Limit Summary to 300 characters or less.</p>
+          <p> Limit Summary to 300 characters or less</p>
           <form id = "summary_form">
             <input 
               type="text" 
@@ -190,10 +243,19 @@ const[startsWith1,setStartWith]=useState('');
 
 
             <form id = "duration">
-                <h3>Add Asset Allocations (change here to assetAllocation inputs)</h3>
-            <ValueDist setdistMode={setdistMode2} setUpper={setUpper2} setLower= {setLower2} setFixedValue={setFixedValue2} setMu={setMu2} setSigma={setSigma2}></ValueDist>
 
-            </form>
+              
+                <h3>Add Asset Allocations (change here to assetAllocation inputs)</h3>
+
+          </form>
+             
+
+          
+            
+            
+            <InvestmentList isRebalance={true} changeaAFinal={changeaAFinal} changeaAInitial={changeaAInitial} aAFinal={aAFinal} aAInitial={aAInitial} glideStatus ={false} scenarioId={scenarioId} defaultValOfReveal={false}></InvestmentList>             
+            
+            
 
             
 
@@ -209,20 +271,7 @@ const[startsWith1,setStartWith]=useState('');
 
             
 
-            <form id = "glidePath">
-                <>glidepath:</>
-                <> {glideStatus==true? "true":"false"}</>
-            <input 
 
-              type="checkbox" 
-              name = "glidepath" 
-              id ="glidepath"    
-              
-              //defaultChecked
-              checked={glideStatus}//checked is vlaue of a checkbox
-              onChange = {handleCheckbox}
-              /> 
-            </form>
           
             
     
@@ -244,6 +293,14 @@ const[startsWith1,setStartWith]=useState('');
             *indicates mandatory fields
           </p>
         </div>
+
+        
+
+
+
+
+
+      <RebalanceEventList   scenarioId={scenarioId}     ></RebalanceEventList>
       </div>
     );
 

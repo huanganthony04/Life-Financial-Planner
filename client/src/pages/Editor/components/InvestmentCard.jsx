@@ -5,7 +5,8 @@ import React from 'react';
 
 
 
-function InvestmentCard({ singleInvestmentItem , editState,tog,togFunc,changeaAInitial,changeaAFinal,glideStatus,aAInitial, aAFinal, defaultValOfReveal}) {
+function InvestmentCard({ singleInvestmentItem , isRebalance ,editState,tog,togFunc,changeaAInitial,changeaAFinal,glideStatus,aAInitial, aAFinal, defaultValOfReveal}) {
+    const[rebalanceStatus,changeRebalanceStatus]=useState(isRebalance);
 
         const[reveal, setReveal]=useState(defaultValOfReveal);
         const[revealFixed,setRevealFixed]=useState(defaultValOfReveal);
