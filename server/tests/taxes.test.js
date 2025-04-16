@@ -17,7 +17,6 @@ mongoose.connect(MONGO_URL)
   }
 )
 
-
 test('Federal tax on income below standard deduction', async () => {
 
     let federalTaxRates = await FederalTaxModel.findOne().lean()
@@ -41,7 +40,6 @@ test('Federal tax on income below standard deduction', async () => {
     let taxes = calculateTaxes(10000, 0, 0, federalTaxRates, stateTaxRates, false)
 
     expect(taxes).toEqual(0)
-
 })
 
 test('Federal tax of $100000 Annual Income and $50000 Capital Gains', async () => {
@@ -99,5 +97,60 @@ test('Federal tax of $100000 Annual Income and $50000 Capital Gains', async () =
     let taxes = calculateTaxes(100000, 0, 50000, federalTaxRates, stateTaxRates, false)
     expect(taxes).toBeCloseTo(22088, 1)
 
+
+})
+
+test('Taxes adjusts for spouse passing', async () => {
+
+    const federalTaxRates = {
+        standardDeductionSingle: 14600,
+        standardDeductionMarried: 29200,
+        capitalGainsBrackets: [
+            {
+                min: 0,
+                max: 40000,
+                rate: 10,
+            },
+            {
+                min: 40000,
+                max: Infinity,
+                rate: 15
+            }
+        ],
+        taxBrackets: [
+            {
+                min: 0,
+                max: 10000,
+                rate: 10
+            },
+            {
+                min: 10000,
+                max: 40000,
+                rate: 12
+            },
+            {
+                min: 40000,
+                max: Infinity,
+                rate: 22
+            }
+        ]
+    }
+    const stateTaxRates= {
+        marriedBrackets: [{
+            min: 0,
+            max: Infinity,
+            rate: 4
+        }],
+        singleBrackets: [{
+            min: 0,
+            max: Infinity,
+            rate: 5
+        }]
+    }
+
+    let taxesMarried = calculateTaxes(100000, 0, 0, federalTaxRates, stateTaxRates, true)
+    expect(taxesMarried).toBeCloseTo(15376, 1)
+    let taxesSingle = calculateTaxes(100000, 0, 0, federalTaxRates, stateTaxRates, false)
+    expect(taxesSingle).toBeCloseTo(19588, 1)
 
 })
