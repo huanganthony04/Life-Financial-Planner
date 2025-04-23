@@ -14,7 +14,7 @@
   background-color: #e5e7eb;
 }
 
-.page {
+#editor-page {
   font-size: large;
   background-color: #f9fafb;
   min-height: 100vh;
