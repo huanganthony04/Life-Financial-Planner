@@ -14,11 +14,26 @@ const Results = ({user}) => {
   const [selectScenarioOpen, setSelectScenarioOpen] = useState(false)
   const [scenario, setScenario] = useState(null)
 
+  // For the run simulation button
+  const [numberOfSimulations, setNumberOfSimulations] = useState(10)
+
   // For setting the option for viewing a result's value in the shaded Asset Value By Year char
   const [selectedOption, setSelectedOption] = useState('Investments')
 
-  const handleOptionChange = (event) => {
+  const handleChartOptionChange = (event) => {
     setSelectedOption(event.target.value)
+  }
+
+  const handleNumSimulationsChange = (event) => {
+    const value = event.target.value
+    if (value < 10) {
+      setNumberOfSimulations(10)
+    }
+    else if (value > 1000) {
+      setNumberOfSimulations(1000)
+    } else {
+      setNumberOfSimulations(value)
+    }
   }
 
 
@@ -31,8 +46,8 @@ const Results = ({user}) => {
       setScenario(scenario)
   }, []))
 
-  const runSimulation = async (scenarioId) => {
-    await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenarioId}`, {withCredentials: true})
+  const runSimulation = async (scenarioId, num = 10) => {
+    await axios.get(`${BACKEND_URL}/api/scenario/run?id=${scenarioId}&num=${num}`, {withCredentials: true})
       .then((response) => {
           setResults(response.data)
       })
@@ -66,9 +81,13 @@ const Results = ({user}) => {
       <div id="no-results-container">
         <h3>No results were found for this scenario.</h3>
         <h3>Click the button below to run a new simulation!</h3>
-        <button className="green-button" onClick={() => runSimulation(scenario._id)}>
-          Run Simulation
-        </button>
+        <div id="run-simulation-container">
+          <h4>Number of Simulations:</h4>
+          <input id="num-simulations-input" type="text" onChange={(e) => handleNumSimulationsChange(e)} value={numberOfSimulations}/>
+          <button className="green-button" onClick={() => runSimulation(scenario._id, numberOfSimulations)}>
+            Run Simulation
+          </button>
+        </div>
       </div>
     )
   }
@@ -157,13 +176,13 @@ const Results = ({user}) => {
               <ShadedAssetChart result={results} selection={selectedOption}/>
             </div>
             <fieldset className="chart-selection">
-                <input type="radio" id="investments" name="chart-select" value="Investments" checked={selectedOption === 'Investments'} onChange={handleOptionChange}/>
+                <input type="radio" id="investments" name="chart-select" value="Investments" checked={selectedOption === 'Investments'} onChange={handleChartOptionChange}/>
                 <label htmlFor="investments">Investments</label>
 
-                <input type="radio" id="income" name="chart-select" value="Incomes" checked={selectedOption === 'Incomes'} onChange={handleOptionChange}/>
+                <input type="radio" id="income" name="chart-select" value="Incomes" checked={selectedOption === 'Incomes'} onChange={handleChartOptionChange}/>
                 <label htmlFor="income">Income</label>
 
-                <input type="radio" id="expenses" name="chart-select" value="Expenses" checked={selectedOption === 'Expenses'} onChange={handleOptionChange}/>
+                <input type="radio" id="expenses" name="chart-select" value="Expenses" checked={selectedOption === 'Expenses'} onChange={handleChartOptionChange}/>
                 <label htmlFor="expenses">Expenses</label>
               </fieldset>
           </div>

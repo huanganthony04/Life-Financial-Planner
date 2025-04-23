@@ -122,8 +122,6 @@ const ShadedAssetChart = ({result, selection}) => {
         beforeDatasetsDraw(chart, args, pluginOptions) {
             const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: {x, y} } = chart
 
-            console.log(chart)
-
             const tickHeight = y.height / y.max
 
             drawShadedArea(ctx, chart, x, y, left, right, tickHeight, chart.data.datasets[0].tenQuantileShadeRange, 0.2)
@@ -147,7 +145,6 @@ const ShadedAssetChart = ({result, selection}) => {
     }
 
     else {
-        console.log(datasets)
         return (
             <Line
             datasetIdKey={result? result._id : null}

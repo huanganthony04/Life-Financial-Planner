@@ -640,9 +640,20 @@ router.get('/api/scenario/run', async (req, res) => {
     let federalTaxRates = await FederalTaxModel.findOne().lean()
     let stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
 
+    const num = req.query.num ? parseInt(req.query.num) : 10
+    if (isNaN(num)) {
+      return res.status(400).json({error: 'Invalid number of simulations!'})
+    }
+    else if (num < 10) {
+        return res.status(400).json({error: 'Number of simulations must be at least 10!'})
+    }
+    else if (num > 1000) {
+        return res.status(400).json({error: 'Number of simulations must be at most 1000!'})
+    }
+
     // Run the simulation
     console.dir(scenario, {depth: null})
-    let results = runSimulations(scenario, 10, federalTaxRates, stateTaxRates)
+    let results = runSimulations(scenario, num, federalTaxRates, stateTaxRates)
     
     // Create a new ResultsModel instance
     let resultsModel = new ResultsModel({

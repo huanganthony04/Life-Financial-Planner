@@ -64,6 +64,17 @@ background-color: rgb(43, 196, 94);
     margin: 5px 0;
 }
 
+#run-simulation-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#num-simulations-input {
+    width: 100px;
+    margin: 1rem;
+}
+
 .chart-container {
     max-width:1000px;
     margin: 20px;
