@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario, exportScenario}) => {
+const DropdownMenu = ({open, setOpen, accessStatus, scenarioId, editScenario, deleteScenario, exportScenario,changeSharedId, shareScenario}) => {
 
     const dropdownRef = useRef(null)
 
@@ -9,12 +9,30 @@ const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario, 
             setOpen(false)
         }
     }
+    const handleShare=()=>{
+        if(accessStatus=="viewer"){
+            return
+        }
+        console.log("handling sharing click test"+scenarioId);
+        shareScenario(scenarioId);
+        changeSharedId(scenarioId);
+
+    }
 
     const handleEdit = () => {
+        if(accessStatus=="viewer"){
+            return
+        }
+        
         editScenario(scenarioId)
+    
     }
 
     const handleDelete = () => {
+        console.log("handleDeleye here")
+        if(accessStatus=="viewer"){
+            return
+        }
         deleteScenario(scenarioId)
     }  
 
@@ -48,7 +66,7 @@ const DropdownMenu = ({open, setOpen, scenarioId, editScenario, deleteScenario, 
                 <h4 className="dropdown-menu-item-text">Delete</h4>
             </button>
             <button className="dropdown-menu-button">
-                <h4 className="dropdown-menu-item-text">Share</h4>
+                <h4 className="dropdown-menu-item-text" onClick={handleShare}>Share</h4>
             </button>
             <button className="dropdown-menu-button" onClick={handleExport}>
                 <h4 className="dropdown-menu-item-text">Export as YAML</h4>

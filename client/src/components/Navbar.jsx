@@ -36,6 +36,14 @@ const Navbar = () => {
                 Results
             </NavLink>
 
+            <NavLink 
+                to="/sharedscenario" 
+                className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
+            >
+                <img className="nav-button-icon" src={listLogo}/>
+                Shared Scenarios
+            </NavLink>
+
             {/* Uncomment this when the UserProfile page is ready
             <NavLink 
                 to="/userprofile" 

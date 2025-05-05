@@ -15,7 +15,12 @@ const UserSchema = new Schema({
     ownedScenarios: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: "Scenario",
+    },
+    sharedScenarios:{
+        type:[String]
     }
+    
+
 })
 
 const UserModel = mongoose.model('User', UserSchema)

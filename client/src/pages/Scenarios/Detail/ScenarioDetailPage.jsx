@@ -44,7 +44,7 @@ const ScenarioDetailPage = () => {
   // Always fetch the full scenario data from the backend.
   useEffect(() => {
     axios
-      .get(`${BACKEND_URL}/api/scenario/?id=${scenarioId}`, { withCredentials: true })
+      .get(`${BACKEND_URL}/api/scenario2/?id=${scenarioId}`, { withCredentials: true })
       .then((response) => {
         if (response.data.scenario) {
           setScenario(response.data.scenario);

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import dropdownLogo from '/src/assets/icons/chevron_down.svg'
 import DropdownMenu from './DropdownMenu'
 
-const ScenarioListItem = ({ name, scenarioId, editScenario, deleteScenario, exportScenario, shareScenario,changeSharedId }) => {
+const SharedScenarioListItem = ({ name, owner, accessStatus, scenarioId, editScenario, deleteScenario, exportScenario, shareScenario,changeSharedId }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -15,6 +15,11 @@ const ScenarioListItem = ({ name, scenarioId, editScenario, deleteScenario, expo
   return (
     <div className="scenario-list-item">
       <h4 className="scenario-title">{name}</h4>
+
+    <div>
+      <h5>{accessStatus=="viewer"?accessStatus+"(can't edit, share, delete)":accessStatus}</h5>
+      <h5>{"OwnerID:"+owner}</h5>
+      </div>
       
       {/* View Button: now goes to "/scenario/detail?id=..." */}
       <button className="scenario-list-view-button" onClick={handleViewScenario}>
@@ -39,9 +44,10 @@ const ScenarioListItem = ({ name, scenarioId, editScenario, deleteScenario, expo
         exportScenario={exportScenario}
         shareScenario={shareScenario}
         changeSharedId={changeSharedId}
+        accessStatus={accessStatus}
       />
     </div>
   )
 }
 
-export default ScenarioListItem
+export default SharedScenarioListItem
