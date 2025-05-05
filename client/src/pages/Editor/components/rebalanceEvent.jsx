@@ -1,308 +1,199 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import React from 'react';
 import ValueDist from './valueDistribution';
-import InvestmentEventList from './investmentEventList';
 import InvestmentList from './investmentList';
 import RebalanceEventList from './rebalanceEventList';
 
-function RebalanceEvent({ scenarioId}) {
-    const [title, setTitle] = useState('name');
-   
-   
-    const [glideStatus, setGlide] = useState(true);
-
-    const [summary, setSummary] = useState('description');
-    //const [start, setStart] = useState('');
-    var start='';
-    //const [duration, setDuration] = useState('');
-    var duration='';
-const[startsWith1,setStartWith]=useState('');
-
-
-
-
-
-       const[aAFinal,changeaAFinal]=useState(new Map());
-    const[aAInitial,changeaAInitial]=useState(new Map());
-
-    const [distMode1,setdistMode1]=useState('normal');
-    const [fixedValue1, setFixedValue1] = useState('');
-    const [mu1,setMu1]=useState('');
-    const [sigma1,setSigma1]=useState('');
-    const [upper1,setUpper1]=useState('');
-    const [lower1,setLower1]=useState('');
-
-    const [distMode2,setdistMode2]=useState('normal');
-    const [fixedValue2, setFixedValue2] = useState('');
-    const [mu2,setMu2]=useState('');
-    const [sigma2,setSigma2]=useState('');
-    const [upper2,setUpper2]=useState('');
-    const [lower2,setLower2]=useState('');
-
-    const handleCheckbox=()=>{
-      setGlide(!glideStatus);
-      changeaAInitial(new Map());
-      changeaAFinal(new Map());
-  
+// Styles for form spacing
+const styles = {
+  formSection: {
+    marginBottom: '2rem',
+    border: '1px solid #e0e0e0',
+    padding: '1rem',
+    borderRadius: '0.5rem'
+  },
+  formGroup: {
+    marginBottom: '1rem',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  submitButton: {
+    padding: '0.75rem 1.5rem',
+    fontSize: '1rem',
+    borderRadius: '0.5rem',
+    cursor: 'pointer'
   }
- 
-     //dist1 is distType for value valDist of eventstart
-     if(distMode1=="fixed"){
-        start={
-          startDistribution:{
-            distType: distMode1,
-            value:fixedValue1,
-          },
-          startWith:startsWith1
+};
 
-        }
+const RebalanceEvent = ({ scenarioId, scenarioName }) => {
+  const navigate = useNavigate();
+
+  // Event details
+  const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
+
+  // Start distribution
+  const [distMode1, setDistMode1] = useState('normal');
+  const [fixedValue1, setFixedValue1] = useState('');
+  const [mu1, setMu1] = useState('');
+  const [sigma1, setSigma1] = useState('');
+  const [upper1, setUpper1] = useState('');
+  const [lower1, setLower1] = useState('');
+  const [startsWith1, setStartsWith1] = useState('');
+
+  // Duration distribution
+  const [distMode2, setDistMode2] = useState('normal');
+  const [fixedValue2, setFixedValue2] = useState('');
+  const [mu2, setMu2] = useState('');
+  const [sigma2, setSigma2] = useState('');
+  const [upper2, setUpper2] = useState('');
+  const [lower2, setLower2] = useState('');
+
+  // Asset allocation inputs
+  const [aAInitial, changeaAInitial] = useState(new Map());
+  const [aAFinal, changeaAFinal]     = useState(new Map());
+
+  // Build start object
+  const start =
+    distMode1 === 'fixed'
+      ? { startDistribution: { distType: 'fixed', value: fixedValue1 }, startWith: startsWith1 }
+      : distMode1 === 'uniform'
+      ? { startDistribution: { distType: 'uniform', lower: lower1, upper: upper1 }, startWith: startsWith1 }
+      : { startDistribution: { distType: 'normal', mean: mu1, sigma: sigma1 }, startWith: startsWith1 };
+
+  // Build duration object
+  const duration =
+    distMode2 === 'fixed'
+      ? { distType: 'fixed', value: fixedValue2 }
+      : distMode2 === 'uniform'
+      ? { distType: 'uniform', lower: lower2, upper: upper2 }
+      : { distType: 'normal', mean: mu2, sigma: sigma2 };
+
+  // Validation flags
+  const isNameValid = title.trim().length > 0;
+  const isStartValid =
+    (distMode1 === 'fixed' && fixedValue1) ||
+    (distMode1 === 'uniform' && lower1 && upper1) ||
+    (distMode1 === 'normal' && mu1 && sigma1);
+  const isDurationValid =
+    (distMode2 === 'fixed' && fixedValue2) ||
+    (distMode2 === 'uniform' && lower2 && upper2) ||
+    (distMode2 === 'normal' && mu2 && sigma2);
+  const isFormValid = isNameValid && isStartValid && isDurationValid;
+
+  // Submit handler
+  const handleSubmit = async () => {
+    if (!isFormValid) return;
+
+    // Build allocation object
+    const assetAllocation = {};
+    for (const [key, value] of aAInitial) {
+      if (value !== '') assetAllocation[key] = Number(value);
     }
-        
-        if(distMode1=="uniform"){
-          start={
-            startDistribution:{
-              distType: distMode1,
-              upper:upper1,
-               lower:lower1,
-            },
-            startWith:startsWith1
-  
-          }
 
-        }
-        if(distMode1=="normal"){
-            start={
-              startDistribution:{
-                distType: distMode1,
-                mean:mu1,
-                sigma:sigma1,
-              },
-              startsWith:startsWith1
-            
+    try {
+      await axios.post('http://localhost:8080/api/postRebalanceEventnew', {
+        scenarioId,
+        title,
+        summary,
+        start,
+        duration,
+        assetAllocation
+      });
+      navigate(
+        '/scenario/detail?id=' + scenarioId,
+        { state: { scenario: { name: scenarioName, scenarioId } } }
+      );
+    } catch (error) {
+      console.error('Error posting rebalance event:', error);
+      alert('There was an error submitting the form. Please try again.');
+    }
+  };
 
-            }
-        }
+  return (
+    <div className="rebalance-event-container">
+      <h1>Create Rebalance Event</h1>
 
-
-        if(distMode2=="fixed"){
-            duration={
-                distType: distMode2,
-                value:fixedValue2,
-    
-            }
-        }
-            if(distMode2=="uniform"){
-                duration={
-                    distType: distMode2,
-                   upper:upper2,
-                    lower:lower2,
-    
-                }
-            }
-            if(distMode2=="normal"){
-                duration={
-                    distType: distMode2,
-                    mean:mu2,
-                    sigma:sigma2,
-    
-                }
-            }
-        
-    
-
-                let assetAllocationI={};
-          
-          //let assetAllocationF= new Map();
-          //let assetAllocationI= new Map();
-
-    async function post(){
-
-       console.log(assetAllocationI,"assetAllocation final verify")
-        let response = await axios.post("http://localhost:8080/api/postRebalanceEventnew", {scenarioId:scenarioId,title:title, summary: summary, start: start, duration: duration, assetAllocation:assetAllocationI });
-            console.log("post sending");
-
-        
-      
-      }
-
-      const handlePostQuestion = () => {
-
-        let errors = false;
-
-        if(distMode1=="fixed"&&fixedValue1==''){
-          errors=true;
-      }
-  if(distMode1=="uniform"&&(upper1==''||lower1=='')){errors=true}
-  if(distMode1=="normal"&&(mu1==''||sigma1=='')){errors=true}
-
-  if(distMode2=="fixed"&&fixedValue2==''){errors=true}
-  if(distMode2=="uniform"&&(upper2==''||lower=='')){errors=true}
-  if(distMode2=="normal"&&(mu2==''||sigma2=='')){errors=true}
-
-
-        if(start==''||duration==''){
-            errors=true;
-            if(start==''){console.log("start is blank")}
-            if(duration==''){console.log("duration is blank")}
-            
-            console.log("a field is blank");
-        }
-
-
-
-
-        for (const [key, value] of aAInitial) {
-          console.log(typeof value, "value is what type?")
-          console.log(key,"key in init iter")
-             if(value==''){
-              //error=true
-              console.log("empty field value is \"\"");//ok instead of checking for empty fields only send the ones that have value that also isnt==""??? alot more simple
-             }
-
-            if(value!=""){
-              
-              Object.assign(assetAllocationI,{[key]:Number(value)})
-              //assetAllocationI.set(key,Number(value));
-            }
-            
-            }
-
-          
-
-
-
-        if(!errors){
-          //assetAllocationF = new Map(Object.entries(assetAllocationF));
-          //assetAllocationI = new Map(Object.entries(assetAllocationI));
-          console.log(assetAllocationI)
-
-          post();
-          console.log("sucess posting");
-        }
-      }
-
-      console.log(aAInitial,'aAinitialMap')
-      console.log(aAFinal,'finalMap')
-  
-    return (
-      <div id = "question_form_container" className = "container">
-        <div id = "question_form" className = "form">
-          <h2> Rebalance Event Name </h2>
-          <p> Limit Name to 50 characters or less.</p>
-          <form id = "q_title_form">
-            <input 
-              type="text" 
-              name = "q_title_input" 
-              id ="q_title_input" 
-              required
-              value = {title}
-              onChange = {(e) => setTitle(e.target.value)}
-            />
-          </form>
-          <h2> Description </h2>
-          <p> Limit Summary to 300 characters or less</p>
-          <form id = "summary_form">
-            <input 
-              type="text" 
-              name = "summary_inputs" 
-              id ="summary_input" 
-              value = {summary}
-              onChange = {(e) => setSummary(e.target.value)}
-              
-              />
-            </form>
-            <p>{summary}</p>
-
-            <div> 
-                <h2>Specification Parameters*</h2>
-            <form id = "start_year">
-                <h3>Start</h3>
-            <ValueDist setdistMode={setdistMode1} setUpper={setUpper1} setLower= {setLower1} setFixedValue={setFixedValue1} setMu={setMu1} setSigma={setSigma1}></ValueDist>
-            <input type="text"
-            name="startWith"
-            value={startsWith1}
-            onChange = {(e) => setStartWith(e.target.value)}
-            placeholder="startsWith eventSeries name"
-            ></input>
-
-            </form>
-            
-            
-
-            <form id = "duration">
-                <h3>Duration</h3>
-            <ValueDist setdistMode={setdistMode2} setUpper={setUpper2} setLower= {setLower2} setFixedValue={setFixedValue2} setMu={setMu2} setSigma={setSigma2}></ValueDist>
-
-              
-            </form>
-
-
-
-
-
-
-            <form id = "duration">
-
-              
-                <h3>Add Asset Allocations (change here to assetAllocation inputs)</h3>
-
-          </form>
-             
-
-          
-            
-            
-            <InvestmentList isRebalance={true} changeaAFinal={changeaAFinal} changeaAInitial={changeaAInitial} aAFinal={aAFinal} aAInitial={aAInitial} glideStatus ={false} scenarioId={scenarioId} defaultValOfReveal={false}></InvestmentList>             
-            
-            
-
-            
-
-            </div>
-
-           
-
-
-
-
-
-
-
-            
-
-
-          
-            
-    
-
-
-
-
-
-
-            
-          <p id = "q_tags_error" className = "error"></p>
-          <button 
-            id = "post_question_button" 
-            className = "ask-post_button" 
-            onClick={handlePostQuestion}
-            
-            >Post Question</button>
-          <p className = "mandatory">
-            *indicates mandatory fields
-          </p>
+      <fieldset style={styles.formSection}>
+        <legend>Event Details</legend>
+        <div style={styles.formGroup}>
+          <label>Name <span>*</span></label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Event name"
+          />
         </div>
+        <div style={styles.formGroup}>
+          <label>Description <span>(optional)</span></label>
+          <input
+            type="text"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            placeholder="Brief summary"
+          />
+        </div>
+      </fieldset>
 
-        
+      <fieldset style={styles.formSection}>
+        <legend>Timing</legend>
+        <div style={styles.formGroup}>
+          <label>Start <span>*</span></label>
+          <ValueDist
+            setdistMode={setDistMode1}
+            setUpper={setUpper1}
+            setLower={setLower1}
+            setFixedValue={setFixedValue1}
+            setMu={setMu1}
+            setSigma={setSigma1}
+          />
+          <input
+            type="text"
+            value={startsWith1}
+            onChange={(e) => setStartsWith1(e.target.value)}
+            placeholder="Starts with event series name"
+          />
+        </div>
+        <div style={styles.formGroup}>
+          <label>Duration <span>*</span></label>
+          <ValueDist
+            setdistMode={setDistMode2}
+            setUpper={setUpper2}
+            setLower={setLower2}
+            setFixedValue={setFixedValue2}
+            setMu={setMu2}
+            setSigma={setSigma2}
+          />
+        </div>
+      </fieldset>
 
+      <fieldset style={styles.formSection}>
+        <legend>Asset Allocation <span>*</span></legend>
+        <InvestmentList
+          isRebalance={true}
+          changeaAInitial={changeaAInitial}
+          aAInitial={aAInitial}
+          changeaAFinal={changeaAFinal}
+          aAFinal={aAFinal}
+          glideStatus={false}
+          scenarioId={scenarioId}
+          defaultValOfReveal={false}
+        />
+      </fieldset>
 
+      <button
+        style={styles.submitButton}
+        onClick={handleSubmit}
+        disabled={!isFormValid}
+      >
+        Create Event
+      </button>
 
+      <RebalanceEventList scenarioId={scenarioId} />
+    </div>
+  );
+};
 
-
-      <RebalanceEventList   scenarioId={scenarioId}     ></RebalanceEventList>
-      </div>
-    );
-
-  }
-  export default RebalanceEvent;
+export default RebalanceEvent;

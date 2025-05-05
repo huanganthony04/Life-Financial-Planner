@@ -17,15 +17,6 @@ const editToggle=()=>{
     console.log("singleIncomeItem:\n")
     console.log(singleIncomeItem);
 }
-return(
-
-           <div className="scenario-modal-list-item">
-            <h4 className="scenario-title">{singleIncomeItem.name}</h4>
-            <button className="scenario-modal-button" onClick={editToggle}>
-                Edit
-            </button>
-        </div>
-)
 
 }
 

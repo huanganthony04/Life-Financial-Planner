@@ -19,18 +19,6 @@ const editToggle=()=>{
     console.log(singleInvestmentItem);
 }
 
-return(
-        
-           <div className="scenario-modal-list-item" onClick={editToggle}>
-            <h4 className="scenario-title">{singleInvestmentItem.name}</h4>
-            <button className="scenario-modal-button" >
-                Edit
-            </button>
-
-        </div>
-
-)
-
 }
 
 export default InvestmentEventCard;

@@ -51,17 +51,7 @@ console.log("expenseList reached2");
     console.log("state of estate");
     console.log(eState);
 
-return (
-    <>
-    <div>
-    {expenseList.map((expenseItem)=>(<ExpenseEventCard key={expenseItem._id} singleExpenseItem={expenseItem} editState={editState} tog={toggle} togFunc={edittog}/>))}
-    {toggle&&<EditExpenseEvent scenarioId={scenarioId} expenseEventId={eState._id} singleExpenseMap={eState} tog={toggle} togFunc={edittog}></EditExpenseEvent>}
-    {/*not sure why without toggle turning true/false in expenseeventcard it wont rerender and put new eState in editExpensEvent form's autofill old data
-    since eState should change state too */}
-</div>
-</>
 
-);
 
 
 }
