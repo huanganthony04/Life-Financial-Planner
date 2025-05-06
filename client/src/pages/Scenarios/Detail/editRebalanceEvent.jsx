@@ -17,13 +17,14 @@ const inputStyle = { padding: '8px', borderRadius: '4px', border: '1px solid #cc
 const buttonGroup = { display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' };
 
 export default function EditRebalanceEvent({ open, rebalanceEvent, onClose, onSubmit }) {
-  const [name, setName]             = useState('');
+  const [name, setName]               = useState('');
   const [description, setDescription] = useState('');
-  const [startDist, setStartDist]   = useState(null);
+  const [startDist, setStartDist]     = useState(null);
   const [durationDist, setDurationDist] = useState(null);
 
-  // Single allocation map
-  const [allocation, setAllocation] = useState(new Map());
+  const [glidePath, setGlidePath]     = useState(false);
+  const [initialAlloc, setInitialAlloc] = useState(new Map());
+  const [finalAlloc, setFinalAlloc]     = useState(new Map());
 
   useEffect(() => {
     if (!open || !rebalanceEvent) return;
@@ -32,7 +33,18 @@ export default function EditRebalanceEvent({ open, rebalanceEvent, onClose, onSu
     setDescription(rebalanceEvent.description || '');
     setStartDist(rebalanceEvent.start?.startDistribution || null);
     setDurationDist(rebalanceEvent.duration || null);
-    setAllocation(new Map(Object.entries(rebalanceEvent.assetAllocation || {})));
+
+    const isGlide = !!rebalanceEvent.glidePath;
+    setGlidePath(isGlide);
+
+    if (isGlide) {
+      setInitialAlloc(new Map(Object.entries(rebalanceEvent.assetAllocation || {})));
+      setFinalAlloc(new Map(Object.entries(rebalanceEvent.assetAllocation2 || {})));
+    } else {
+      const staticAlloc = rebalanceEvent.assetAllocation2 || rebalanceEvent.assetAllocation || {};
+      setInitialAlloc(new Map(Object.entries(staticAlloc)));
+      setFinalAlloc(new Map());
+    }
   }, [open, rebalanceEvent]);
 
   if (!open) return null;
@@ -40,9 +52,13 @@ export default function EditRebalanceEvent({ open, rebalanceEvent, onClose, onSu
   const handleSave = e => {
     e.preventDefault();
 
-    const alloc = {};
-    for (let [k, v] of allocation) {
-      if (v !== '') alloc[k] = Number(v);
+    const allocI = {};
+    for (let [k, v] of initialAlloc) {
+      if (v !== '') allocI[k] = Number(v);
+    }
+    const allocF = {};
+    for (let [k, v] of finalAlloc) {
+      if (v !== '') allocF[k] = Number(v);
     }
 
     onSubmit({
@@ -51,7 +67,9 @@ export default function EditRebalanceEvent({ open, rebalanceEvent, onClose, onSu
       description:     description.trim(),
       start:           { startDistribution: startDist },
       duration:        durationDist,
-      assetAllocation: alloc
+      glidePath,
+      assetAllocation: allocI,
+      assetAllocation2: glidePath ? allocF : {}
     });
   };
 
@@ -79,22 +97,48 @@ export default function EditRebalanceEvent({ open, rebalanceEvent, onClose, onSu
           <label>Duration Distribution:</label>
           <ValueDistEdit distribution={durationDist} onChange={setDurationDist} />
 
+          <label>
+            <input
+              type="checkbox"
+              checked={glidePath}
+              onChange={e => setGlidePath(e.target.checked)}
+            /> Glide Path
+          </label>
+
           <fieldset style={{ border: '1px solid #ccc', padding: '12px', borderRadius: '4px' }}>
-            <legend>Asset Allocation</legend>
-            {Array.from(allocation.entries()).map(([key, val]) => (
-              <div key={key} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+            <legend>
+              Asset Allocation{glidePath ? ' (Initial & Final)' : ''}
+            </legend>
+            {Array.from(initialAlloc.entries()).map(([key, val]) => (
+              <div
+                key={key}
+                style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}
+              >
                 <label style={{ width: '120px' }}>{key}</label>
                 <input
                   type="number"
-                  placeholder="Allocation %"
+                  placeholder={glidePath ? 'Initial %' : 'Allocation %'}
                   value={val}
                   onChange={e => {
-                    const m = new Map(allocation);
+                    const m = new Map(initialAlloc);
                     m.set(key, e.target.value);
-                    setAllocation(m);
+                    setInitialAlloc(m);
                   }}
                   style={inputStyle}
                 />
+                {glidePath && (
+                  <input
+                    type="number"
+                    placeholder="Final %"
+                    value={finalAlloc.get(key) ?? ''}
+                    onChange={e => {
+                      const m2 = new Map(finalAlloc);
+                      m2.set(key, e.target.value);
+                      setFinalAlloc(m2);
+                    }}
+                    style={inputStyle}
+                  />
+                )}
               </div>
             ))}
           </fieldset>
