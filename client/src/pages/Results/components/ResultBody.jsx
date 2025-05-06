@@ -18,11 +18,18 @@ const ResultBody = ({scenario}) => {
     const [numberOfSimulations, setNumberOfSimulations] = useState(10)
 
     // For setting the option for viewing a result's value in the shaded Asset Value By Year char
-    const [selectedOption, setSelectedOption] = useState('Investments')
+    const [selectedShadedChartOption, setSelectedShadedChartOption] = useState('Investments')
+    // For setting the option for viewing a result's value in the median asset value By Year char
+    const [selectedMedianChartOption, setSelectedMedianChartOption] = useState('Investments')
 
-    const handleChartOptionChange = (event) => {
-    setSelectedOption(event.target.value)
+    const handleShadedChartOptionChange = (event) => {
+        setSelectedShadedChartOption(event.target.value)
     }
+
+    const handleMedianChartOptionChange = (event) => {
+        setSelectedMedianChartOption(event.target.value)
+    }
+
 
     const handleNumSimulationsChange = (event) => {
     setNumberOfSimulations(event.target.value)
@@ -122,22 +129,34 @@ const ResultBody = ({scenario}) => {
                     <h4>Asset Value by Year</h4>
                     <div id="shaded-asset-chart-container" className="chart-container">
                         <div className="chart-wrapper">
-                        <ShadedAssetChart result={results} selection={selectedOption}/>
+                        <ShadedAssetChart result={results} selection={selectedShadedChartOption}/>
                         </div>
                         <fieldset className="chart-selection">
-                            <input type="radio" id="investments" name="chart-select" value="Investments" checked={selectedOption === 'Investments'} onChange={handleChartOptionChange}/>
-                            <label htmlFor="investments">Investments</label>
+                            <input type="radio" id="investments-sac" name="shaded-chart-select" value="Investments" checked={selectedShadedChartOption === 'Investments'} onChange={handleShadedChartOptionChange}/>
+                            <label htmlFor="investments-sac">Investments</label>
 
-                            <input type="radio" id="income" name="chart-select" value="Incomes" checked={selectedOption === 'Incomes'} onChange={handleChartOptionChange}/>
-                            <label htmlFor="income">Income</label>
+                            <input type="radio" id="income-sac" name="shaded-chart-select" value="Incomes" checked={selectedShadedChartOption === 'Incomes'} onChange={handleShadedChartOptionChange}/>
+                            <label htmlFor="income-sac">Income</label>
 
-                            <input type="radio" id="expenses" name="chart-select" value="Expenses" checked={selectedOption === 'Expenses'} onChange={handleChartOptionChange}/>
-                            <label htmlFor="expenses">Expenses</label>
+                            <input type="radio" id="expenses-sac" name="shaded-chart-select" value="Expenses" checked={selectedShadedChartOption === 'Expenses'} onChange={handleShadedChartOptionChange}/>
+                            <label htmlFor="expenses-sac">Expenses</label>
                         </fieldset>
                     </div>
                     <h4>Median Asset Values by Year</h4>
-                    <div className="chart-wrapper">
-                        <AssetChart result={results}/>
+                    <div id="median-asset-chart-container" className="chart-container">
+                        <div className="chart-wrapper">
+                            <AssetChart result={results} selection={selectedMedianChartOption}/>
+                        </div>
+                        <fieldset className="chart-selection">
+                            <input type="radio" id="investments-mac" name="median-chart-select" value="Investments" checked={selectedMedianChartOption === 'Investments'} onChange={handleMedianChartOptionChange}/>
+                            <label htmlFor="investments-mac">Investments</label>
+
+                            <input type="radio" id="income-mac" name="median-chart-select" value="Incomes" checked={selectedMedianChartOption === 'Incomes'} onChange={handleMedianChartOptionChange}/>
+                            <label htmlFor="income-mac">Income</label>
+
+                            <input type="radio" id="expenses-mac" name="median-chart-select" value="Expenses" checked={selectedMedianChartOption === 'Expenses'} onChange={handleMedianChartOptionChange}/>
+                            <label htmlFor="expenses-mac">Expenses</label>
+                        </fieldset>
                     </div>
                 </div>
             </>
