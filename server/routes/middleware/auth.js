@@ -19,6 +19,7 @@ const getUserAuth = async (req, res, next) => {
     }
 
     req.user = user
+    req.email = user.email
     next()
 
 }

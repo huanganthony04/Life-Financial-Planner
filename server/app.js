@@ -1,3 +1,6 @@
+/**
+ * app.js defines the express application instance to start the backend with, including sessions, CORS, and routes.
+ */
 import express from 'express'
 import session from 'express-session'
 import connectMongoDBSession from 'connect-mongodb-session'
@@ -13,6 +16,9 @@ import 'dotenv/config'
 const FRONTEND_URL = process.env.FRONTEND_URL
 const MONGO_URL = process.env.MONGO_URL
 const SESSION_SECRET = process.env.SESSION_SECRET
+
+import amqp from 'amqplib'
+const RABBITMQ_URL = process.env.RABBITMQ_URL
 
 const MongoDBStore = connectMongoDBSession(session)
 
@@ -50,11 +56,15 @@ app.use(session({
     }
 }))
 
+// Connect to AMQP (RabbitMQ) to be notified when a simulation has been completed
+const connection = await amqp.connect(process.env.RABBITMQ_URL)
+const channel = await connection.createChannel()
+
 // Import routes from ./routes
 app.use('', userRoutes)
-app.use('', scenarioRoutes)
+app.use('', scenarioRoutes(channel))
 app.use('', taxRoutes)
 app.use('', stateTaxRoutes)
-app.use('', resultRoutes)
+app.use('', resultRoutes())
 
 export default app

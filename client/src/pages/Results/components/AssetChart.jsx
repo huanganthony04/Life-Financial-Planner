@@ -7,12 +7,13 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2'
  * Create a bar chart showing the values of all investments over time.
  * @param {{result: {scenarioId: String, financialGoal: number, startYear: Number, simulationResults: {results: {investments, incomes, expenses}[]}[]}}} props
  */
-const AssetChart = ({result}) => {
+const AssetChart = ({result, selection}) => {
 
     const [labels, setLabels] = useState([])
     const [datasets, setDatasets] = useState([])
 
-    const createAssetData = (result) => {
+    const createAssetData = (result, selection) => {
+        
         const colors = ["#bcff85", "#81b4ff", "#ff6b5f", "#ffd000", "#d531d5"]
         let colorIndex = 0
 
@@ -24,14 +25,14 @@ const AssetChart = ({result}) => {
             labels.push(startYear + i)
         }
 
-        let assets = Object.keys(result.simulationResults[0].results[0].investments)
+        let assets = Object.keys(result.simulationResults[0].results[0][selection])
 
         let datasets = []
         for(let asset of assets) {
             let data = []
             for (let year = 0; year < numYears; year++) {
                 let values = result.simulationResults.map((sim) => {
-                    return sim.results[year].investments[asset]
+                    return sim.results[year][selection][asset]
                 })
                 data.push(median(values))
             }
@@ -47,14 +48,26 @@ const AssetChart = ({result}) => {
     }
 
     useEffect(() => {
-        
+
         if (result) {
-            const data = createAssetData(result)
-            setLabels(data.labels)
-            setDatasets(data.datasets)
+            if (selection === 'Investments') {
+                const data = createAssetData(result, 'investments')
+                setLabels(data.labels)
+                setDatasets(data.datasets)
+            }
+            else if (selection === 'Incomes') {
+                const data = createAssetData(result, 'incomes')
+                setLabels(data.labels)
+                setDatasets(data.datasets)
+            }
+            else if (selection === 'Expenses') {
+                const data = createAssetData(result, 'expenses')
+                setLabels(data.labels)
+                setDatasets(data.datasets)
+            }
         }
 
-    }, [result])
+    }, [result, selection])
     return (
         <Bar
         datasetIdKey={result? result._id : null}
