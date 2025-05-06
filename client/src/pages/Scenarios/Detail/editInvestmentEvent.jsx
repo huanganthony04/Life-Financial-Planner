@@ -10,83 +10,128 @@ const overlayStyle = {
 };
 const modalStyle = {
   background: '#fff', padding: '20px', borderRadius: '6px',
-  width: '520px', maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto'
+  width: '520px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto'
 };
 const formStyle = { display: 'flex', flexDirection: 'column', gap: '12px' };
-const inputStyle = { padding: '8px', borderRadius: '4px', border: '1px solid #ccc' };
-const textAreaStyle = { ...inputStyle, height: '80px', fontFamily: 'monospace' };
+const inputStyle = { padding: '8px', borderRadius: '4px', border: '1px solid #ccc', flex: 1 };
 const buttonGroup = { display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' };
 
 export default function EditInvestmentEvent({ open, investEvent, onClose, onSubmit }) {
-  const [name, setName] = useState('');
+  const [name, setName]               = useState('');
   const [description, setDescription] = useState('');
-  const [startDist, setStartDist] = useState(null);
+  const [startDist, setStartDist]     = useState(null);
   const [durationDist, setDurationDist] = useState(null);
-  const [assetAllocJson, setAssetAllocJson] = useState('{}');
-  const [glidePath, setGlidePath] = useState(false);
-  const [assetAlloc2Json, setAssetAlloc2Json] = useState('{}');
-  const [error, setError] = useState('');
+  const [glidePath, setGlidePath]     = useState(false);
+
+  // Two maps for initial/final allocations
+  const [initialAlloc, setInitialAlloc] = useState(new Map());
+  const [finalAlloc, setFinalAlloc]     = useState(new Map());
 
   useEffect(() => {
     if (!open || !investEvent) return;
+
     setName(investEvent.name || '');
     setDescription(investEvent.description || '');
     setStartDist(investEvent.start?.startDistribution || null);
     setDurationDist(investEvent.duration || null);
-    setAssetAllocJson(JSON.stringify(investEvent.assetAllocation || {}, null, 2));
     setGlidePath(!!investEvent.glidePath);
-    setAssetAlloc2Json(JSON.stringify(investEvent.assetAllocation2 || {}, null, 2));
-    setError('');
+
+    setInitialAlloc(new Map(Object.entries(investEvent.assetAllocation || {})));
+    setFinalAlloc(new Map(Object.entries(investEvent.assetAllocation2 || {})));
   }, [open, investEvent]);
 
   if (!open) return null;
-  const validate = () => {
-    if (!name.trim()) return 'Name is required';
-    if (!startDist) return 'Start distribution required';
-    if (!durationDist) return 'Duration distribution required';
-    try { JSON.parse(assetAllocJson); } catch { return 'Asset allocation JSON invalid'; }
-    try { JSON.parse(assetAlloc2Json); } catch { return 'Asset allocation 2 JSON invalid'; }
-    return '';
-  };
 
-  const handleSubmit = e => {
+  const handleSave = e => {
     e.preventDefault();
-    const err = validate();
-    if (err) return setError(err);
-    const updated = {
+
+    // Build plain objects from maps
+    const allocI = {};
+    for (let [k, v] of initialAlloc) {
+      if (v !== '') allocI[k] = Number(v);
+    }
+    const allocF = {};
+    for (let [k, v] of finalAlloc) {
+      if (v !== '') allocF[k] = Number(v);
+    }
+
+    onSubmit({
       ...investEvent,
-      name: name.trim(),
-      description: description.trim(),
-      start: { startDistribution: startDist },
-      duration: durationDist,
-      assetAllocation: JSON.parse(assetAllocJson),
+      name:             name.trim(),
+      description:      description.trim(),
+      start:            { startDistribution: startDist },
+      duration:         durationDist,
       glidePath,
-      assetAllocation2: JSON.parse(assetAlloc2Json)
-    };
-    onSubmit(updated);
+      assetAllocation:  allocI,
+      assetAllocation2: allocF
+    });
   };
 
   return ReactDOM.createPortal(
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={e => e.stopPropagation()}>
-        <h2>Edit Invest Event</h2>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <form style={formStyle} onSubmit={handleSubmit}>
-          <input style={inputStyle} placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
-          <input style={inputStyle} placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} />
-          <div>
-            <label>Start Distribution:</label>
-            <ValueDistEdit distribution={startDist} onChange={setStartDist} />
-          </div>
-          <div>
-            <label>Duration Distribution:</label>
-            <ValueDistEdit distribution={durationDist} onChange={setDurationDist} />
-          </div>
-          <label>Asset Allocation (JSON):</label>
-          <textarea style={textAreaStyle} value={assetAllocJson} onChange={e => setAssetAllocJson(e.target.value)} />
-          <label><input type="checkbox" checked={glidePath} onChange={e => setGlidePath(e.target.checked)} /> Glide Path</label>
-          <label>Asset Allocation 2 (JSON):</label>
-          <textarea style={textAreaStyle} value={assetAlloc2Json} onChange={e => setAssetAlloc2Json(e.target.value)} />
+        <h2>Edit Investment Event</h2>
+        <form style={formStyle} onSubmit={handleSave}>
+          <input
+            style={inputStyle}
+            placeholder="Name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+          <input
+            style={inputStyle}
+            placeholder="Description"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+          />
+
+          <label>Start Distribution:</label>
+          <ValueDistEdit distribution={startDist} onChange={setStartDist} />
+
+          <label>Duration Distribution:</label>
+          <ValueDistEdit distribution={durationDist} onChange={setDurationDist} />
+
+          <label>
+            <input
+              type="checkbox"
+              checked={glidePath}
+              onChange={e => setGlidePath(e.target.checked)}
+            /> Glide Path
+          </label>
+
+          <fieldset style={{ border: '1px solid #ccc', padding: '12px', borderRadius: '4px' }}>
+            <legend>Asset Allocation</legend>
+            {Array.from(initialAlloc.entries()).map(([key, val]) => (
+              <div key={key} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ width: '100px' }}>{key}</label>
+                <input
+                  type="number"
+                  placeholder="Initial %"
+                  value={val}
+                  onChange={e => {
+                    const m = new Map(initialAlloc);
+                    m.set(key, e.target.value);
+                    setInitialAlloc(m);
+                  }}
+                  style={inputStyle}
+                />
+                {glidePath && (
+                  <input
+                    type="number"
+                    placeholder="Final %"
+                    value={finalAlloc.get(key) ?? ''}
+                    onChange={e => {
+                      const m2 = new Map(finalAlloc);
+                      m2.set(key, e.target.value);
+                      setFinalAlloc(m2);
+                    }}
+                    style={inputStyle}
+                  />
+                )}
+              </div>
+            ))}
+          </fieldset>
+
           <div style={buttonGroup}>
             <button type="button" onClick={onClose}>Cancel</button>
             <button type="submit">Save</button>

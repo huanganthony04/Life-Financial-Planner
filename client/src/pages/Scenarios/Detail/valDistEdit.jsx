@@ -1,197 +1,165 @@
-import { useState } from 'react';
-import axios from 'axios';
-import React from 'react';
+// ValueDistEdit.jsx
+import React, { useState, useEffect } from 'react';
 
-function ValueDistEdit({ setdistMode,setMu,setSigma,setUpper,setLower,setFixedValue,isEdit,type,valType,distType,upper,lower,mean,sigma,value}) {
-console.log(isEdit,"isEdit object")
-console.log(valType,"valType is blank?")
- //let valType;
-  if(isEdit!=undefined&&type=='duration'){
-    
-    //valType=isEdit.duration;
-    console.log("hi",valType,"valType exists")
-/*
-    if(valType.distType=='fixed'){
-        
-        setFixedValue(valType.value);
-        //setdistMode("fixed");
-    }
-    if(valType.distType=='normal'){
-        //setdistMode("normal");
-        setMu(valType.mean);
-        setMu(valType.sigma);
-    }
-    if(valType.distType=='uniform'){
-        //setdistMode("uniform");
-        setLower(valType.lower);
-        setUpper(valType.upper);
-    }
-        */
-    console.log(valType,"duration valType map");
-  }
+const formStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  marginTop: '8px'
+};
+const inputStyle = {
+  padding: '8px',
+  borderRadius: '4px',
+  border: '1px solid #ccc',
+  width: '100%'
+};
+const errorStyle = {
+  color: 'red',
+  fontSize: '0.875rem'
+};
 
+export default function ValueDistEdit({ distribution, onChange }) {
+  const [mode, setMode]           = useState('normal');
+  const [fixedValue, setFixedValue] = useState('');
+  const [mu, setMu]               = useState('');
+  const [sigma, setSigma]         = useState('');
+  const [lower, setLower]         = useState('');
+  const [upper, setUpper]         = useState('');
+  const [error, setError]         = useState('');
 
-  if(isEdit!=undefined&&type=='changeDistribution'){
-    //valType=isEdit.changeDistribution;
-    console.log(valType,"valTYpe")
-    
-    if(valType.distType=='fixed'){
-        //setFixedValue(valType.value);
-        //setdistMode("fixed");
-    }
-    if(valType.distType=='normal'){
-        //setdistMode("normal");
-        //setMu(valType.mean);
-        //setMu(valType.sigma);
-    }
-    if(valType.distType=='uniform'){
-        //setdistMode("uniform");
-        //setLower(valType.lower);
-        //setUpper(valType.upper);
-    }
-        
-    
-    console.log(valType,"changeDist valType map");
-  }
-  if(isEdit!=undefined&&type=='start'){
-    
-    //valType=isEdit.start.startDistribution;
-    /*
-    console.log("hi",valType,"valType exists")
-    if(valType.distType=='fixed'){
-        setFixedValue(valType.value);
-        //setdistMode("fixed");
-    }
-    if(valType.distType=='normal'){
-        //setdistMode("normal");
-        setMu(valType.mean);
-        setMu(valType.sigma);
-    }
-    if(valType.distType=='uniform'){
+  // 1) Seed local state when parent distribution changes
+  useEffect(() => {
+    if (!distribution) return;
+    setMode(distribution.distType);
+    setFixedValue(distribution.value?.toString() ?? '');
+    setMu((distribution.mean ?? '').toString());
+    setSigma((distribution.sigma ?? '').toString());
+    setLower((distribution.lower ?? '').toString());
+    setUpper((distribution.upper ?? '').toString());
+    setError('');
+  }, [distribution]);
 
-
-        //setdistMode("uniform");
-        setLower(valType.lower);
-        setUpper(valType.upper);
+  // 2) Validate fields whenever relevant inputs change
+  useEffect(() => {
+    let err = '';
+    if ((mode === 'normal' || mode === 'GBM') && sigma !== '' && Number(sigma) < 0) {
+      err = 'Sigma must be ≥ 0';
     }
-        */
-    //console.log(valType,"start valType map");
-  }
-
-
-    const title="Title";
-    const summary= "description";
-    if(valType!=undefined){
-console.log(valType.distType,'distTye tets');}
-if(valType==undefined){
-    console.log("how is distType undefined")
-}
-    const [visibleDiv,setVisibleDiv]=useState( 'normal');
-
-    const handleValDist=(event)=> {
-        
-        const selectedValue= event.target.value;
-        setdistMode(selectedValue);
-        console.log("selected value is ",selectedValue);
-        setVisibleDiv((prev)=>(prev===selectedValue?null :selectedValue));//is prevValue==selected if it is set val to null which hides? if its not then sets visibleDiv to selectedValue to show div corresponding to new selection option
+    if (mode === 'uniform' && lower !== '' && upper !== '' && Number(lower) >= Number(upper)) {
+      err = 'Lower must be less than Upper';
     }
-    
-    /*
-    if(visibleDiv=='fixed'){
-        setdistMode("fixed");
-    }
-    if(visibleDiv=='normal'){
-        setdistMode("normal");
-    }
-    if(visibleDiv=='uniform'){
-        setdistMode("uniform");
-    }
-        
-    */
+    setError(err);
+  }, [mode, sigma, lower, upper]);
 
-  
-    return (
-  
-        <div id = "valDist_form" className = "form">
-          
-          
-          <div>
-            Select distribution
-          <select name="valDist" id="valDist" onChange={handleValDist}>
-            <option value="normal">normal</option>
-            <option value="fixed">fixed</option>
-            <option value="gbm">GBM</option>
-            <option value="uniform">uniform</option>
+  // 3) Emit only valid distribution objects
+  const emit = dist => {
+    if (error) return;
+    onChange(dist);
+  };
+
+  const handleModeChange = e => {
+    const m = e.target.value;
+    setMode(m);
+    // clear all other fields when switching mode
+    setFixedValue('');
+    setMu('');
+    setSigma('');
+    setLower('');
+    setUpper('');
+    emit({ distType: m });
+  };
+
+  const handleFixedChange = e => {
+    const v = e.target.value;
+    setFixedValue(v);
+    emit({ distType: 'fixed', value: Number(v) });
+  };
+
+  const handleMuChange = e => {
+    const v = e.target.value;
+    setMu(v);
+    emit({ distType: mode, mean: Number(v), sigma: Number(sigma) });
+  };
+
+  const handleSigmaChange = e => {
+    const v = e.target.value;
+    setSigma(v);
+    emit({ distType: mode, mean: Number(mu), sigma: Number(v) });
+  };
+
+  const handleLowerChange = e => {
+    const v = e.target.value;
+    setLower(v);
+    emit({ distType: 'uniform', lower: Number(v), upper: Number(upper) });
+  };
+
+  const handleUpperChange = e => {
+    const v = e.target.value;
+    setUpper(v);
+    emit({ distType: 'uniform', lower: Number(lower), upper: Number(v) });
+  };
+
+  return (
+    <div style={formStyle}>
+      <label>
+        Distribution
+        <select value={mode} onChange={handleModeChange} style={inputStyle}>
+          <option value="normal">normal</option>
+          <option value="fixed">fixed</option>
+          <option value="GBM">GBM</option>
+          <option value="uniform">uniform</option>
         </select>
-        {visibleDiv==="fixed"&& (
-            <div>
-            <input
-              type="number"
-              name="fixed_value"
-              id="fixed_value"
-              placeholder="value"
-              //value={value}
-              //value={valType!=undefined&&valType.distType=="fixed" ?valType.value : ""}
-              onChange = {(e) => setFixedValue(e.target.value)}
-            ></input>
-            
-            </div>
-           
+      </label>
 
-        )}
-        {visibleDiv==="normal"&& (
-            <div>
-            <input
-              type="number"
-              name="mu"
-              id="mu"
-              value={mean}
-             // value={valType!=undefined&&valType.distType=="normal" ?valType.mean : ""}
-              placeholder="mean (enter decimal)"
-              onChange = {(e) => setMu(e.target.value)}
-            
-            ></input>
-            <input
-              type="number"
-              name="sigma"
-              id="sigma"
-              value={sigma}
-              //value={valType!=undefined&&valType.distType=="normal" ?valType.sigma : ""}
-              placeholder="sigma (decimal)"
-              onChange = {(e) => setSigma(e.target.value)}
-            ></input>
-            </div>
+      {mode === 'fixed' && (
+        <input
+          type="number"
+          placeholder="Value"
+          value={fixedValue}
+          onChange={handleFixedChange}
+          style={inputStyle}
+        />
+      )}
 
-        )}
+      {(mode === 'normal' || mode === 'GBM') && (
+        <>
+          <input
+            type="number"
+            placeholder="Mean"
+            value={mu}
+            onChange={handleMuChange}
+            style={inputStyle}
+          />
+          <input
+            type="number"
+            placeholder="Sigma"
+            value={sigma}
+            onChange={handleSigmaChange}
+            style={inputStyle}
+          />
+        </>
+      )}
 
-{visibleDiv==="uniform"&& (
-            <div>
-            <input
-              type="number"
-              name="lower"
-              id="lower"
-              placeholder="lower"
-              //value={lower}
-              //value={valType!=undefined&&valType.distType=="uniform" ?valType.lower : ""}
-              onChange = {(e) => setLower(e.target.value)}
-            
-            ></input>
-            <input
-              type="number"
-              name="upper"
-              id="upper"
-              //value={upper}
-              //value={valType!=undefined&&valType.distType=="uniform" ?valType.upper : ""}
-              placeholder="upper"
-              onChange = {(e) => setUpper(e.target.value)}
-            
-            ></input>
-            </div>
+      {mode === 'uniform' && (
+        <>
+          <input
+            type="number"
+            placeholder="Lower"
+            value={lower}
+            onChange={handleLowerChange}
+            style={inputStyle}
+          />
+          <input
+            type="number"
+            placeholder="Upper"
+            value={upper}
+            onChange={handleUpperChange}
+            style={inputStyle}
+          />
+        </>
+      )}
 
-        )}
-          </div>
-        </div>
-     
-    );
-  }
-  export default ValueDistEdit;
+      {error && <div style={errorStyle}>{error}</div>}
+    </div>
+  );
+}
