@@ -60,7 +60,7 @@ const DropdownMenu = ({open, setOpen, accessStatus, scenarioId, editScenario, de
     return (
         <div className="scenario-list-item-dropdown-menu" ref={dropdownRef}>
             <button className="dropdown-menu-button" onClick={handleEdit}>
-                <h4 className="dropdown-menu-item-text">Edit</h4>
+                <h4 className="dropdown-menu-item-text">Add/Edit Event</h4>
             </button>
             <button className="dropdown-menu-button" onClick={handleDelete}>
                 <h4 className="dropdown-menu-item-text">Delete</h4>
