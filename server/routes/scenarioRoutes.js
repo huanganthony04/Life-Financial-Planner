@@ -607,6 +607,7 @@ export default function createScenarioRouter(channel, jobStore) {
   router.post('/api/scenario/run', getUserAuth, async (req, res) => {
 
       const userId = req.user._id
+      const email = req.email
 
       if (!userId) {
           return res.status(401).json({error: 'You are not logged in!'})
@@ -649,7 +650,7 @@ export default function createScenarioRouter(channel, jobStore) {
       })
       await resultsModel.save()
 
-      let payload = {userId: userId, scenarioId: scenarioId, resultsId: resultsModel._id, num: req.body.num}
+      let payload = {userId: userId, email: email, scenarioId: scenarioId, resultsId: resultsModel._id, num: req.body.num}
 
       await channel.assertQueue('simulation_queue', { durable: true })
       channel.sendToQueue('simulation_queue', Buffer.from(JSON.stringify(payload)), { persistent: true })

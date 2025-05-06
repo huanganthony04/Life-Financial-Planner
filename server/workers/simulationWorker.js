@@ -5,8 +5,7 @@ import ResultsModel from '../models/ResultsModel.js'
 import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import runSimulations from '../simulator/runSimulations.js'
-import {BSON} from 'bson'
-
+import createCSV from '../components/csv.js';
 
 import path from 'path'
 import dotenv from 'dotenv'
@@ -36,7 +35,7 @@ async function init() {
         if (msg !== null) {
 
             console.log(`Worker ${process.pid} received message:`, msg.content.toString())
-            const { userId, scenarioId, resultsId, num } = JSON.parse(msg.content.toString())
+            const { userId, email, scenarioId, resultsId, num } = JSON.parse(msg.content.toString())
 
             const resultsModel = await ResultsModel.findById(resultsId)
             const scenario = await ScenarioModel.findOne().lean()
@@ -51,6 +50,7 @@ async function init() {
                 resultsModel.simulationResults = results
                 resultsModel.status = 'Complete'
                 await resultsModel.save()
+                await createCSV(email.split("@")[0], resultsModel)
 
                 console.log(`Worker ${process.pid} completed simulation and stored in ${resultsId}`)
 
