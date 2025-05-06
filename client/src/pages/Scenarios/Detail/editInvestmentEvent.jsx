@@ -23,7 +23,7 @@ export default function EditInvestmentEvent({ open, investEvent, onClose, onSubm
   const [durationDist, setDurationDist] = useState(null);
   const [glidePath, setGlidePath]     = useState(false);
 
-  // Two maps for initial/final allocations
+  // Two maps for allocation
   const [initialAlloc, setInitialAlloc] = useState(new Map());
   const [finalAlloc, setFinalAlloc]     = useState(new Map());
 
@@ -34,10 +34,20 @@ export default function EditInvestmentEvent({ open, investEvent, onClose, onSubm
     setDescription(investEvent.description || '');
     setStartDist(investEvent.start?.startDistribution || null);
     setDurationDist(investEvent.duration || null);
-    setGlidePath(!!investEvent.glidePath);
 
-    setInitialAlloc(new Map(Object.entries(investEvent.assetAllocation || {})));
-    setFinalAlloc(new Map(Object.entries(investEvent.assetAllocation2 || {})));
+    const isGlide = !!investEvent.glidePath;
+    setGlidePath(isGlide);
+
+    // If glidePath is on, use assetAllocation for 'initial' and assetAllocation2 for 'final'.
+    // Otherwise treat assetAllocation (or assetAllocation2 if you store statics there) as the single allocation.
+    if (isGlide) {
+      setInitialAlloc(new Map(Object.entries(investEvent.assetAllocation || {})));
+      setFinalAlloc(new Map(Object.entries(investEvent.assetAllocation2 || {})));
+    } else {
+      const staticAlloc = investEvent.assetAllocation2 || investEvent.assetAllocation || {};
+      setInitialAlloc(new Map(Object.entries(staticAlloc)));
+      setFinalAlloc(new Map()); // no final map when off
+    }
   }, [open, investEvent]);
 
   if (!open) return null;
@@ -45,7 +55,7 @@ export default function EditInvestmentEvent({ open, investEvent, onClose, onSubm
   const handleSave = e => {
     e.preventDefault();
 
-    // Build plain objects from maps
+    // turn your maps back into plain objects
     const allocI = {};
     for (let [k, v] of initialAlloc) {
       if (v !== '') allocI[k] = Number(v);
@@ -63,7 +73,7 @@ export default function EditInvestmentEvent({ open, investEvent, onClose, onSubm
       duration:         durationDist,
       glidePath,
       assetAllocation:  allocI,
-      assetAllocation2: allocF
+      assetAllocation2: glidePath ? allocF : {}   // clear out when off, if you like
     });
   };
 
@@ -100,13 +110,18 @@ export default function EditInvestmentEvent({ open, investEvent, onClose, onSubm
           </label>
 
           <fieldset style={{ border: '1px solid #ccc', padding: '12px', borderRadius: '4px' }}>
-            <legend>Asset Allocation</legend>
+            <legend>
+              Asset Allocation{glidePath ? ' (Initial & Final)' : ''}
+            </legend>
             {Array.from(initialAlloc.entries()).map(([key, val]) => (
-              <div key={key} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+              <div
+                key={key}
+                style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}
+              >
                 <label style={{ width: '100px' }}>{key}</label>
                 <input
                   type="number"
-                  placeholder="Initial %"
+                  placeholder={glidePath ? 'Initial %' : 'Allocation %'}
                   value={val}
                   onChange={e => {
                     const m = new Map(initialAlloc);
