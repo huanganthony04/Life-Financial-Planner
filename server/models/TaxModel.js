@@ -33,4 +33,5 @@ const FederalTaxSchema = new Schema({
   socialSecurityBaseMarried: { type: Number, default: 0 },
 })
 
-export default mongoose.model('FederalTax', FederalTaxSchema)
+const FederalTaxModel = mongoose.model('FederalTax', FederalTaxSchema)
+export default FederalTaxModel

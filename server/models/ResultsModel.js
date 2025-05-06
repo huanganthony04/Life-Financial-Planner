@@ -24,6 +24,8 @@ const individualSimulationResultSchema = new Schema({
 }, { _id: false })
 
 const resultSchema = new Schema({
+    owner: { type: String, required: true },
+    status: { type: String, enum: ['Processing', 'Complete'], required: true },
     scenarioId: { type: String, unique: true },
     financialGoal: { type: Number, required: true },
     startYear: { type: Number, required: true, default: new Date().getFullYear() },

@@ -30,4 +30,5 @@ const StateTaxSchema = new Schema({
 
 StateTaxSchema.index({ state: 1, year: 1 }, { unique: true })
 
-export default mongoose.model('StateTax', StateTaxSchema)
+const StateTaxModel = mongoose.model('StateTax', StateTaxSchema)
+export default StateTaxModel
