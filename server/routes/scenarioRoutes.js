@@ -143,6 +143,10 @@ router.get('/api/sharedscenario/byuser', getUserAuth, async (req, res) => {
 
     try {
       await scenario.save();
+
+      //Delete the stale result of the scenario
+      await ResultsModel.deleteOne({scenarioId: scenarioId})
+
       return res.status(200).json({ success: true, scenario });
     } catch (error) {
       console.error(error);
@@ -286,77 +290,14 @@ router.get('/api/scenario2/', getUserAuth, async (req, res) => {
 
     try {
       await scenario.save()
+
+      //Delete the stale result of the scenario
+      await ResultsModel.deleteOne({scenarioId: scenarioId})
+      
       return res.status(200).json({msg: 'OK'})
     }
     catch (error) {
       return res.status(500).json({error: error})
-    }
-  })
-
-  router.post('/api/events/update/:type', getUserAuth, async(req, res) => {
-
-    const scenarioId = req.body.scenarioId
-    const eventId = req.body.eventId
-    const newEvent = req.body.event
-    const user = req.user
-    const eventType = req.params.type;
-
-    if (!eventType) {
-      return res.status(404).json({error: "Missing event type!"})
-    }
-    if (!eventId) {
-      return res.status(400).json({error: "Missing eventId!"})
-    }
-    if (!newEvent) {
-      return res.status(404).json({error: "Event object missing!"})
-    }
-
-    const scenario = await ScenarioModel.findOne({_id: scenarioId})
-
-    if (!scenario) {
-      return res.status(404).json({error: "Scenario not found!"})
-    }
-
-    if (scenario.owner !== user._id && !scenario.editors.contains(user._id)) {
-      return res.status(401).json({error: "You do not have permission to edit this scenario!"})
-    }
-
-    let result
-
-    if (eventType === 'income') {
-      result = await scenario.findOneAndUpdate(
-        {_id: scenarioId, 'incomeEvents._id': eventId},
-        { $set: { 'incomeEvents.$': newEvent } },
-        { new: true, runValidators: true }
-      )
-    }
-    else if (eventType === 'expense') {
-      result = await scenario.findOneAndUpdate(
-        {_id: scenarioId, 'expenseEvents._id': eventId},
-        { $set: { 'expenseEvents.$': newEvent } },
-        { new: true, runValidators: true }
-      )
-    }
-    else if (eventType === 'rebalance') {
-      result = await scenario.findOneAndUpdate(
-        {_id: scenarioId, 'investEvents._id': eventId},
-        { $set: { 'investEvents.$': newEvent } },
-        { new: true, runValidators: true }
-      )
-    }
-    else {
-      result = await scenario.findOneAndUpdate(
-        {_id: scenarioId, 'rebalanceEvents._id': eventId},
-        { $set: { 'rebalanceEvents.$': newEvent } },
-        { new: true, runValidators: true }
-      )
-    }
-
-    if (!result) {
-      return res.status(500).json({error: "Failed to update the scenario"})
-    }
-    else {
-      return res.status(200).json({msg: 'OK'})
     }
   })
 
