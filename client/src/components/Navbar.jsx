@@ -14,13 +14,6 @@ const Navbar = () => {
         </div>
         <div id="nav-buttons">
             <NavLink 
-                to="/dashboard" 
-                className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
-            >
-                <img className="nav-button-icon" src={homeLogo}/>
-                Dashboard
-            </NavLink>
-            <NavLink 
                 to="/scenario" 
                 className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
             >

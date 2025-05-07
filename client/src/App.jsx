@@ -43,10 +43,6 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/dashboard" element={<Layout page="Dashboard" user={user}/>}>
-          <Route index element={<Dashboard user={user}/>} />
-        </Route>
-
         <Route path="/scenario" element={<Layout page="Scenario" user={user}/>}>
           <Route path="/scenario" element={<Scenario user={user}/>}/>
         </Route>
