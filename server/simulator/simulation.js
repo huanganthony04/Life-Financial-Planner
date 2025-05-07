@@ -32,7 +32,7 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
 
         let spouseAlive = (i < spouseRemainingYears) ? true : false
         
-        results.push(getResults(Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
+        results.push(getResults(currentYear, Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
 
         inflation_rate = getValueFromDistribution(Scenario.inflationAssumption)
 
@@ -66,12 +66,13 @@ export default function simulation(Scenario, federalTaxRates, stateTaxRates) {
         curYearGains += runRebalanceEvent(currentYear, Scenario.rebalanceEvents, Scenario.investments)
         
         prevYearIncome = curYearIncome
+        prevYearSS = curYearSS
         prevYearGains = curYearGains
 
         currentYear++
     }
 
-    results.push(getResults(Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
+    results.push(getResults(currentYear, Scenario.investments, Scenario.incomeEvents, Scenario.expenseEvents))
     return results
 
 }

@@ -76,6 +76,93 @@ test('$10000 Annual Income has $80000 after the 8th year', () => {
     expect(results[8].investments['cash']).toBe(80000)
 })
 
+test('Years with no income should show no income in results', async () => {
+  const ScenarioObj = {
+    "_id": {
+      "$oid": "681bb93d0a1f71859221a69d"
+    },
+    "name": "Test 1",
+    "owner": "108704024217815646343",
+    "editors": [
+      "108704024217815646343"
+    ],
+    "maritalStatus": false,
+    "birthYears": [
+      2004
+    ],
+    "lifeExpectancy": [
+      {
+        "distType": "fixed",
+        "value": 85,
+        "_id": {
+          "$oid": "681bb93d0a1f71859221a69e"
+        }
+      }
+    ],
+    "investments": [],
+    "incomeEvents": [
+      {
+        "name": "Income",
+        "start": {
+          "startDistribution": {
+            "distType": "fixed",
+            "value": 2040,
+            "_id": {
+              "$oid": "681bb9a80a1f71859221a75c"
+            }
+          },
+          "startWith": "",
+          "_id": {
+            "$oid": "681bb9a80a1f71859221a75b"
+          }
+        },
+        "duration": {
+          "distType": "fixed",
+          "value": 10,
+          "_id": {
+            "$oid": "681bb9a80a1f71859221a75d"
+          }
+        },
+        "initialAmount": 10000,
+        "changeAmtOrPct": "amount",
+        "changeDistribution": {
+          "distType": "fixed",
+          "value": 500,
+          "_id": {
+            "$oid": "681bb9a80a1f71859221a75e"
+          }
+        },
+        "inflationAdjusted": false,
+        "userFraction": 1,
+        "socialSecurity": false,
+        "_id": {
+          "$oid": "681bb9a80a1f71859221a75a"
+        }
+      }
+    ],
+    "expenseEvents": [],
+    "investEvents": [],
+    "rebalanceEvents": [],
+    "inflationAssumption": {
+      "distType": "fixed",
+      "value": 0,
+      "_id": {
+        "$oid": "681bb93d0a1f71859221a6ac"
+      }
+    },
+    "afterTaxContributionLimit": 6000,
+    "spendingStrategy": [],
+    "expenseWithdrawalStrategy": [],
+    "financialGoal": 100000,
+    "residenceState": "NY",
+    "__v": 8
+  }
+
+    let results = runSimulation(ScenarioObj, taxRateNone, taxRateNone)
+    expect(results[0].incomes).toStrictEqual(new Object())
+    expect(results[results.length - 1].incomes).toStrictEqual(new Object())
+})
+
 test('Advanced Simulation Test', async () => {
 
     const ScenarioObj = {

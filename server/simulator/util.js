@@ -537,7 +537,7 @@ function runRebalanceEvent(currentYear, rebalanceEvents, investments) {
  * @param {Array<Object>} expenseEvents
  * @returns {{investments: Object, incomes: Object, expenses: Object}} A an object of investment IDs to their current values
  */
-function getResults(investments, incomeEvents, expenseEvents) {
+function getResults(currentYear, investments, incomeEvents, expenseEvents) {
     
     let investmentResults = {}
     let incomeResults = {}
@@ -548,11 +548,21 @@ function getResults(investments, incomeEvents, expenseEvents) {
     })
 
     incomeEvents.forEach((incomeEvent) => {
-        incomeResults[incomeEvent.name] = incomeEvent.initialAmount
+        let startYear = incomeEvent.start.startDistribution.value
+        let endYear = startYear + incomeEvent.duration.value
+
+        if (currentYear >= startYear && currentYear < endYear) {
+            incomeResults[incomeEvent.name] = incomeEvent.initialAmount
+        }
     })
 
     expenseEvents.forEach((expenseEvent) => {
-        expenseResults[expenseEvent.name] = expenseEvent.initialAmount
+        let startYear = expenseEvent.start.startDistribution.value
+        let endYear = startYear + expenseEvent.duration.value
+
+        if (currentYear >= startYear && currentYear < endYear) {
+            expenseResults[expenseEvent.name] = expenseEvent.initialAmount
+        }
     })
 
     return { investments: investmentResults, incomes: incomeResults, expenses: expenseResults }
