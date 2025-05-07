@@ -128,7 +128,12 @@ const ScenarioDetailPage = () => {
   // Handlers
   const handleInvestmentSubmit = async newInv => {
     const invs = scenario.investments ? [...scenario.investments, newInv] : [newInv];
-    await updateScenario({ investments: invs });
+    console.log(newInv)
+    let ews = scenario.expenseWithdrawalStrategy;
+    if (newInv.name.toLowerCase() !== 'cash') {
+      ews = [ ...ews, newInv.investmentType.name + " " + newInv.taxStatus ]
+    }
+    await updateScenario({ investments: invs, expenseWithdrawalStrategy: ews });
     setIsInvestmentWizardOpen(false);
   };
   const handleInvestUpdate = async inv => {
@@ -226,7 +231,7 @@ const ScenarioDetailPage = () => {
             <button onClick={() => {
               if (!window.confirm('Delete this investment?')) return;
               const invs = scenario.investments.filter((_, i) => i !== idx);
-              const ews = scenario.expenseWithdrawalStrategy.filter((_, i) => i !== idx)
+              const ews = scenario.expenseWithdrawalStrategy.filter((id) => id.split(" ").slice(0, -1).join(" ") !== inv.investmentType.name)
               updateScenario({ investments: invs, expenseWithdrawalStrategy: ews });
             }} style={buttonStyle}>Delete</button>
           </div>

@@ -155,6 +155,10 @@ function updateInvestments(investments) {
 
 function calculateTaxes(income, socialSecurity, capitalGains, federalTaxRates, stateTaxRates, spouseAlive) {
 
+    if (isNaN(capitalGains)) {
+        throw new Error(`capitalGains is invalid! ${capitalGains}`)
+    }
+
     let tax = 0
     let previous_limit = 0
 
@@ -315,6 +319,14 @@ function payNonDiscretionaryExpenses(amount, investments, cash_investment, withd
 
     for (const assetId of withdrawalStrategy) {
         let investment = investments.find(i => i.id === assetId)
+
+        if (investment.value < 1) {
+            continue;
+        }
+        if (amount < 1) {
+            break;
+        }
+        
         if (investment.value < amount) {
             //Sell the entire investment to pay the expenses
             amount -= investment.value
@@ -329,6 +341,10 @@ function payNonDiscretionaryExpenses(amount, investments, cash_investment, withd
             investment.value -= amount
             investment.costBasis -= investment.costBasis * portion
         }
+    }
+
+    if (isNaN(capitalGains)) {
+        throw new Error(`Capital Gains is invalid in non-discretionary expense calculation! ${capitalGains} ${amount}`)
     }
 
     return capitalGains
