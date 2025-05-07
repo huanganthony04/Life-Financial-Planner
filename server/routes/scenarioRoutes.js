@@ -125,7 +125,7 @@ router.get('/api/sharedscenario/byuser', getUserAuth, async (req, res) => {
 
   })
 
-  router.post('/api/scenario/save/', getUserAuth, async (req, res) => {
+  router.post('/api/scenario/update/', getUserAuth, async (req, res) => {
     const { scenarioId, ...updates } = req.body;
     const userId = req.user._id;
 

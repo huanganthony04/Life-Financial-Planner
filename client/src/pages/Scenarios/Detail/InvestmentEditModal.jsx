@@ -36,6 +36,7 @@ export default function InvestmentEditModal({ open, investment, onClose, onSubmi
   const [value, setValue] = useState('');
   const [expenseRatio, setExpenseRatio] = useState('');
 
+  const [returnAmtOrPct, setReturnAmtOrPct] = useState('amount')
   const [returnType, setReturnType] = useState('fixed');
   const [returnValue, setReturnValue] = useState('');
   const [returnMean, setReturnMean] = useState('');
@@ -43,6 +44,7 @@ export default function InvestmentEditModal({ open, investment, onClose, onSubmi
   const [returnLower, setReturnLower] = useState('');
   const [returnUpper, setReturnUpper] = useState('');
 
+  const [incomeAmtOrPct, setIncomeAmtOrPct] = useState('amount')
   const [incomeType, setIncomeType] = useState('fixed');
   const [incomeValue, setIncomeValue] = useState('');
   const [incomeMean, setIncomeMean] = useState('');
@@ -59,7 +61,10 @@ export default function InvestmentEditModal({ open, investment, onClose, onSubmi
       setDescription(investment.investmentType?.description || investment.description || '');
       setTaxStatus(investment.taxStatus || '');
       setValue(investment.value?.toString() || '');
-      setExpenseRatio(investment.expenseRatio?.toString() || '');
+      setExpenseRatio(investment.investmentType.expenseRatio?.toString() || '');
+
+      setReturnAmtOrPct(investment.investmentType.returnAmtOrPct || 'amount')
+      setIncomeAmtOrPct(investment.investmentType.incomeAmtOrPct || 'amount')
 
       const ret = investment.investmentType?.returnDistribution || {};
       setReturnType(ret.distType || 'fixed');
@@ -87,7 +92,7 @@ export default function InvestmentEditModal({ open, investment, onClose, onSubmi
     if (!name.trim()) return 'Name is required';
     if (!taxStatus) return 'Tax status is required';
     if (toNum(value) == null) return 'Value must be numeric';
-    if (toNum(expenseRatio) == null) return 'Expense ratio must be numeric';
+    if (toNum(expenseRatio) == null || expenseRatio.length < 1) return 'Expense ratio must be numeric';
 
     if (returnType === 'fixed' && toNum(returnValue) == null) return 'Return value is required';
     if (['normal','GBM'].includes(returnType) && (toNum(returnMean) == null || toNum(returnSigma) == null)) {
@@ -119,7 +124,9 @@ export default function InvestmentEditModal({ open, investment, onClose, onSubmi
         name: name.trim(),
         description: description.trim(),
         expenseRatio: toNum(expenseRatio),
+        returnAmtOrPct: returnAmtOrPct,
         returnDistribution: buildDist(returnType, returnValue, returnMean, returnSigma, returnLower, returnUpper),
+        incomeAmtOrPct: incomeAmtOrPct,
         incomeDistribution: buildDist(incomeType, incomeValue, incomeMean, incomeSigma, incomeLower, incomeUpper)
       },
       taxStatus,
@@ -136,71 +143,95 @@ export default function InvestmentEditModal({ open, investment, onClose, onSubmi
         <h2>Edit Investment</h2>
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <form style={formStyle} onSubmit={handleSubmit}>
-          <label>Name:</label>
-          <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} />
+          <label htmlFor='name'>Name:</label>
+          <input id='name' style={inputStyle} value={name} onChange={e => setName(e.target.value)} />
 
-          <label>Description:</label>
-          <input style={inputStyle} value={description} onChange={e => setDescription(e.target.value)} />
+          <label htmlFor='description'>Description:</label>
+          <input id='description' style={inputStyle} value={description} onChange={e => setDescription(e.target.value)} />
 
-          <label>Tax Status:</label>
-          <select style={selectStyle} value={taxStatus} onChange={e => setTaxStatus(e.target.value)}>
+          <label htmlFor='tax-status'>Tax Status:</label>
+          <select id='tax-status' style={selectStyle} value={taxStatus} onChange={e => setTaxStatus(e.target.value)}>
             <option value="">— select —</option>
             <option value="non-retirement">non-retirement</option>
             <option value="pre-tax">pre-tax</option>
             <option value="after-tax">after-tax</option>
           </select>
 
-          <label>Value:</label>
-          <input type="number" style={inputStyle} value={value} onChange={e => setValue(e.target.value)} />
+          <label htmlFor='value'>Value:</label>
+          <input id='value' type="number" style={inputStyle} value={value} onChange={e => setValue(e.target.value)} />
 
-          <label>Expense Ratio:</label>
-          <input type="number" style={inputStyle} value={expenseRatio} onChange={e => setExpenseRatio(e.target.value)} />
+          <label htmlFor='expense-ratio'>Expense Ratio:</label>
+          <input id='expense-ratio' type="number" style={inputStyle} value={expenseRatio} onChange={e => setExpenseRatio(e.target.value)} />
 
-          <h3>Return Distribution</h3>
-          <select style={selectStyle} value={returnType} onChange={e => setReturnType(e.target.value)}>
-            <option value="fixed">Fixed</option>
-            <option value="normal">Normal</option>
-            <option value="GBM">GBM</option>
-            <option value="uniform">Uniform</option>
-          </select>
-          {returnType === 'fixed' && (
+          <fieldset id='return'>
+            <legend>Returns</legend>
+
+            <label htmlFor="return-amount-or-percent">Return Amount/Percent</label>
+            <select id="return-amount-or-percent" style={selectStyle} value={returnAmtOrPct} onChange={e => setReturnAmtOrPct(e.target.value)}>
+              <option value="amount">Amount</option>
+              <option value="percent">Percent</option>
+            </select>
+
+            <label htmlFor="return-type">Distribution Type</label>
+            <select id='return-type' style={selectStyle} value={returnType} onChange={e => setReturnType(e.target.value)}>
+              <option value="fixed">Fixed</option>
+              <option value="normal">Normal</option>
+              <option value="GBM">GBM</option>
+              <option value="uniform">Uniform</option>
+            </select>
+
+            {returnType === 'fixed' && (
             <input type="number" placeholder="Value" style={inputStyle} value={returnValue} onChange={e => setReturnValue(e.target.value)} />
-          )}
-          {['normal','GBM'].includes(returnType) && (
-            <>             
-              <input type="number" placeholder="Mean" style={inputStyle} value={returnMean} onChange={e => setReturnMean(e.target.value)} />
-              <input type="number" placeholder="Sigma" style={inputStyle} value={returnSigma} onChange={e => setReturnSigma(e.target.value)} />
-            </>
-          )}
-          {returnType === 'uniform' && (
-            <>             
-              <input type="number" placeholder="Lower" style={inputStyle} value={returnLower} onChange={e => setReturnLower(e.target.value)} />
-              <input type="number" placeholder="Upper" style={inputStyle} value={returnUpper} onChange={e => setReturnUpper(e.target.value)} />
-            </>
-          )}
+            )}
+            {['normal','GBM'].includes(returnType) && (
+              <>             
+                <input type="number" placeholder="Mean" style={inputStyle} value={returnMean} onChange={e => setReturnMean(e.target.value)} />
+                <input type="number" placeholder="Sigma" style={inputStyle} value={returnSigma} onChange={e => setReturnSigma(e.target.value)} />
+              </>
+            )}
+            {returnType === 'uniform' && (
+              <>             
+                <input type="number" placeholder="Lower" style={inputStyle} value={returnLower} onChange={e => setReturnLower(e.target.value)} />
+                <input type="number" placeholder="Upper" style={inputStyle} value={returnUpper} onChange={e => setReturnUpper(e.target.value)} />
+              </>
+            )}
+          </fieldset>
 
-          <h3>Income Distribution</h3>
-          <select style={selectStyle} value={incomeType} onChange={e => setIncomeType(e.target.value)}>
-            <option value="fixed">Fixed</option>
-            <option value="normal">Normal</option>
-            <option value="GBM">GBM</option>
-            <option value="uniform">Uniform</option>
-          </select>
-          {incomeType === 'fixed' && (
-            <input type="number" placeholder="Value" style={inputStyle} value={incomeValue} onChange={e => setIncomeValue(e.target.value)} />
-          )}
-          {['normal','GBM'].includes(incomeType) && (
-            <>             
-              <input type="number" placeholder="Mean" style={inputStyle} value={incomeMean} onChange={e => setIncomeMean(e.target.value)} />
-              <input type="number" placeholder="Sigma" style={inputStyle} value={incomeSigma} onChange={e => setIncomeSigma(e.target.value)} />
-            </>
-          )}
-          {incomeType === 'uniform' && (
-            <>             
-              <input type="number" placeholder="Lower" style={inputStyle} value={incomeLower} onChange={e => setIncomeLower(e.target.value)} />
-              <input type="number" placeholder="Upper" style={inputStyle} value={incomeUpper} onChange={e => setIncomeUpper(e.target.value)} />
-            </>
-          )}
+          <fieldset id='income'>
+            <legend>Income</legend>
+
+            <label htmlFor="income-amount-or-percent">Income Amount/Percent</label>
+            <select id="income-amount-or-percent" style={selectStyle} value={incomeAmtOrPct} onChange={e => setIncomeAmtOrPct(e.target.value)}>
+              <option value="amount">Amount</option>
+              <option value="percent">Percent</option>
+            </select>
+
+            <label htmlFor="income-type">Distribution Type</label>
+
+            <select id="income-type" style={selectStyle} value={incomeType} onChange={e => setIncomeType(e.target.value)}>
+              <option value="fixed">Fixed</option>
+              <option value="normal">Normal</option>
+              <option value="GBM">GBM</option>
+              <option value="uniform">Uniform</option>
+            </select>
+
+            {incomeType === 'fixed' && (
+              <input type="number" placeholder="Value" style={inputStyle} value={incomeValue} onChange={e => setIncomeValue(e.target.value)} />
+            )}
+            {['normal','GBM'].includes(incomeType) && (
+              <>             
+                <input type="number" placeholder="Mean" style={inputStyle} value={incomeMean} onChange={e => setIncomeMean(e.target.value)} />
+                <input type="number" placeholder="Sigma" style={inputStyle} value={incomeSigma} onChange={e => setIncomeSigma(e.target.value)} />
+              </>
+            )}
+            {incomeType === 'uniform' && (
+              <>             
+                <input type="number" placeholder="Lower" style={inputStyle} value={incomeLower} onChange={e => setIncomeLower(e.target.value)} />
+                <input type="number" placeholder="Upper" style={inputStyle} value={incomeUpper} onChange={e => setIncomeUpper(e.target.value)} />
+              </>
+            )}
+      
+          </fieldset>
 
           <div style={{ textAlign: 'right', marginTop: '1rem' }}>
             <button type="button" onClick={onClose} style={buttonStyle}>Cancel</button>

@@ -272,3 +272,9 @@
 .scenario-detail-page {
   overflow-y: auto;
 }
+
+input, select {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}

@@ -135,7 +135,7 @@ const ScenarioDetailPage = () => {
 
   const updateScenario = async updates => {
     const payload = { scenarioId: scenario._id, ...updates };
-    const res = await axios.post(`${BACKEND_URL}/api/scenario/save/`, payload, { withCredentials: true });
+    const res = await axios.post(`${BACKEND_URL}/api/scenario/update/`, payload, { withCredentials: true });
     if (res.data.success) {
       const sc = res.data.scenario || { ...scenario, ...updates };
       setScenario(sc);
@@ -144,12 +144,50 @@ const ScenarioDetailPage = () => {
   };
 
   // Modal submit handlers (stubs; reuse existing logic)
-  const handleInvestmentSubmit = async newInv => { /* ... */ };
-  const handleInvestUpdate      = async inv    => { /* ... */ };
-  const handleIncomeUpdate      = async inc    => { /* ... */ };
-  const handleExpenseUpdate     = async exp    => { /* ... */ };
-  const handleInvestEventUpdate = async evt    => { /* ... */ };
-  const handleRebalanceUpdate   = async rb     => { /* ... */ };
+  const handleInvestmentSubmit = async (newInv) => { 
+    const invs = scenario.investments ? [ ...scenario.investments, newInv ] : [newInv]
+    let ews = scenario.expenseWithdrawalStrategy
+    if (newInv.name.toLowerCase() !== 'cash') {
+      ews = [ ...ews, newInv.investmentType.name + " " + newInv.taxStatus ]
+    }
+    await updateScenario({ investments: invs, expenseWithdrawalStrategy: ews });
+    setIsInvestmentWizardOpen(false);
+  };
+  const handleInvestUpdate = async (inv) => { 
+    const invs = [...scenario.investments];
+    invs[selectedInvestIdx] = inv;
+    await updateScenario({ investments: invs });
+    setIsInvestEditOpen(false);
+    setSelectedInvestIdx(null);
+  };
+  const handleIncomeUpdate = async (inc) => { 
+    const incs = [...scenario.incomeEvents];
+    incs[selectedIncomeIdx] = inc;
+    await updateScenario({ incomeEvents: incs });
+    setIsIncomeEditOpen(false);
+    setSelectedIncomeIdx(null); 
+  };
+  const handleExpenseUpdate = async (exp) => { 
+    const exps = [...scenario.expenseEvents];
+    exps[selectedExpenseIdx] = exp;
+    await updateScenario({ expenseEvents: exps });
+    setIsExpenseEditOpen(false);
+    setSelectedExpenseIdx(null);
+  };
+  const handleInvestEventUpdate = async (evt) => { 
+    const evts = [...scenario.investEvents];
+    evts[selectedInvestEventIdx] = evt;
+    await updateScenario({ investEvents: evts });
+    setIsInvestEventEditOpen(false);
+    setSelectedInvestEventIdx(null);
+  };
+  const handleRebalanceUpdate = async (rb) => { 
+    const rbs = [...scenario.rebalanceEvents];
+    rbs[selectedRebalanceIdx] = rb;
+    await updateScenario({ rebalanceEvents: rbs });
+    setIsRebalanceEditOpen(false);
+    setSelectedRebalanceIdx(null);
+  };
 
   // Drag-and-drop
   const handleDragStart = (_e, list, idx) => setDragging({ list, idx });
