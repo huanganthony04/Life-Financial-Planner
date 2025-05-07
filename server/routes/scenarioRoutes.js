@@ -4,10 +4,8 @@ import { ScenarioModel } from '../models/ScenarioModel.js'
 import ResultsModel from '../models/ResultsModel.js'
 import importScenario from '../components/importer.js'
 import exportScenario from '../components/exporter.js'
-import { v4 as uuidv4 } from 'uuid'
 import getUserAuth from './middleware/auth.js'
 import 'dotenv/config'
-import { UserRefreshClient } from 'google-auth-library'
 
 const FRONTEND_URL = process.env.FRONTEND_URL
 
@@ -16,9 +14,9 @@ export default function createScenarioRouter(channel, jobStore) {
   const router = express.Router()
 
   //Get scenarios by user
-  router.get('/api/scenario/byuser', async (req, res) => {
+  router.get('/api/scenario/byuser', getUserAuth, async (req, res) => {
 
-      const userId = req.query.userId
+      const userId = req.user._id
       try {
         const user = await UserModel.findOne({_id: userId})
         await user.populate({
@@ -32,9 +30,9 @@ export default function createScenarioRouter(channel, jobStore) {
     }
 })
 
-router.get('/api/sharedscenario/byuser', async (req, res) => {
+router.get('/api/sharedscenario/byuser', getUserAuth, async (req, res) => {
     console.log("Share reached scenario by user")
-    const userId = req.query.userId
+    const userId = req.user._id
 
     try {
         const user = await UserModel.findOne({_id: userId})
@@ -45,9 +43,6 @@ router.get('/api/sharedscenario/byuser', async (req, res) => {
         return res.status(500).json({error: error})
     }
 })
-
-
-
 
   router.get('/api/scenarioByID/', async (req,res)=>{
       //console.log()
@@ -191,13 +186,9 @@ router.get('/api/scenario2/', getUserAuth, async (req, res) => {
         return res.status(404).json({error: 'Scenario not found!'})
     }
 
-
-
     return res.status(200).json({scenario: scenario})
 
 })
-
-
     
   ///Delete a scenario
   router.post('/api/scenario/delete/', getUserAuth, async (req, res) => {
@@ -255,8 +246,6 @@ router.get('/api/scenario2/', getUserAuth, async (req, res) => {
 
   router.post('/api/postEventnew', async (req, res) => {
 
-
-
       console.log("postEventnew reached");
       const scenarioId= req.body.scenarioId;
       const scenario = await ScenarioModel.findOne({_id: scenarioId })
@@ -296,14 +285,9 @@ router.get('/api/scenario2/', getUserAuth, async (req, res) => {
     //find out which index or where his expense event is and replace it 
     //after modifying save the scenario wih scenario.save() or something
 
-
-
-
   })
 
   router.post('/api/postEventUpdate', async (req, res) => {
-
-
 
       console.log("postEventUpdate reached");
       const scenarioId= req.body.scenarioId;
@@ -493,19 +477,13 @@ router.get('/api/scenario/export', getUserAuth, async (req, res) => {
         return res.status(404).json({error: 'Scenario not found!'})
     }
 
-
     res.setHeader('Conent-Disposition', 'attachment; filename=scenario.yaml')
     res.setHeader('Content-Type', 'application/x-yaml')
     res.status(200).send(exportScenario(scenario))
 
 })
 
-
-
-
 router.post('/api/scenario/share', async (req, res) => {
-
-
 
     console.log("pshare reached");
     const scenarioId= req.body.scenarioId;
@@ -542,9 +520,6 @@ router.post('/api/scenario/share', async (req, res) => {
             user.sharedScenarios.push(scenarioId);
         }
 
- 
-
-
     }
     if(permission=="Editor"){
         if(!editors.includes(targetUser)){
@@ -564,7 +539,6 @@ router.post('/api/scenario/share', async (req, res) => {
         user.sharedScenarios=filteredUserSharedList;
     }
 
-
     try {
         await scenario.save()
         await user.save()
@@ -576,7 +550,6 @@ router.post('/api/scenario/share', async (req, res) => {
         return res.status(500).json({error: error})
     }
 
-    
     }
     catch(error){
         console.log(error)
@@ -585,27 +558,12 @@ router.post('/api/scenario/share', async (req, res) => {
         //console.log("hisdsdsii")
     }
 
-
-   
-
-  
-
-
-   
-   
-
    //find out which index or where his expense event is and replace it 
    //after modifying save the scenario wih scenario.save() or something
 
 })
 
-
-
-
-
 router.post('/api/postInvestmentEventnew', async (req, res) => {
-
-
 
       console.log("postInvestmentEventnew reached");
       const scenarioId= req.body.scenarioId;
@@ -655,15 +613,9 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
       return res.status(500).json({error: error})
   }
 
-
-    
-
-
   })
 
   router.post('/api/postInvestmentEventUpdate', async (req, res) => {
-
-
 
       console.log("postInvestmentEventUpdate reached");
       const scenarioId= req.body.scenarioId;
@@ -679,9 +631,6 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
           "investEvents.$.glidePath": req.body.glideStatus,
           "investEvents.$.assetAllocation":req.body.assetAllocation,
           "investEvents.$.duration": req.body.duration,
-
-          
-
         };
 
         unsetfields={
@@ -700,9 +649,6 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
               "investEvents.$.assetAllocation2":req.body.assetAllocation2,
       
             };
-
-
-
           }
 
         try {
@@ -728,11 +674,9 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
           console.error(err);
           return res.status(500).json({ error: "Server error" });
         }
-    
   })
+
   router.post('/api/postRebalanceEventnew', async (req, res) => {
-
-
 
       console.log("postREventnew reached");
       const scenarioId= req.body.scenarioId;
@@ -741,7 +685,6 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
       //need to fix format for start, duraion, as valdist 
       //assemble it as a dict before you send to end point 
       const rebalanceEventList= scenario.rebalanceEvents;
-
     
       var map1= {
           name:req.body.title,  
@@ -749,11 +692,7 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
           description: req.body.summary,  
           duration: req.body.duration, 
           assetAllocation:req.body.assetAllocation
-          
-
       }
-
-    
 
     rebalanceEventList.push(map1);
   console.log("map made");
@@ -767,15 +706,9 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
       return res.status(500).json({error: error})
   }
 
-
-    
-
-
   })
 
   router.post('/api/postRebalanceEventUpdate', async (req, res) => {
-
-
 
       console.log("postREventUpdate reached");
       const scenarioId= req.body.scenarioId;
@@ -786,22 +719,13 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
       
   let updatedFields;
 
-        
       updatedFields = {
           "rebalanceEvents.$.name": req.body.title,
           "rebalanceEvents.$.start": req.body.start,
           "rebalanceEvents.$.description": req.body.summary,
           "rebalanceEvents.$.assetAllocation":req.body.assetAllocation,
           "rebalanceEvents.$.duration": req.body.duration,
-
-          
-
         };
-
-
-
-      
-      
 
         try {
           const result = await ScenarioModel.findOneAndUpdate(
