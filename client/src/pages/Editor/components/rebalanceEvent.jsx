@@ -5,6 +5,8 @@ import ValueDist from './valueDistribution';
 import InvestmentList from './investmentList';
 import RebalanceEventList from './rebalanceEventList';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
 // Styles for form spacing
 const styles = {
   formSection: {
@@ -92,15 +94,15 @@ const RebalanceEvent = ({ scenarioId, scenarioName }) => {
       if (value !== '') assetAllocation[key] = Number(value);
     }
 
+    const newRebalanceEvent = {
+      name: title,
+      start: start,
+      duration: duration,
+      assetAllocation: assetAllocation
+    }
+
     try {
-      await axios.post('http://localhost:8080/api/postRebalanceEventnew', {
-        scenarioId,
-        title,
-        summary,
-        start,
-        duration,
-        assetAllocation
-      });
+      await axios.post(`${BACKEND_URL}/api/events/create/rebalance`, { scenarioId: scenarioId, event: newRebalanceEvent }, { withCredentials: true })
       navigate(
         '/scenario/detail?id=' + scenarioId,
         { state: { scenario: { name: scenarioName, scenarioId } } }

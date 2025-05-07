@@ -244,47 +244,120 @@ router.get('/api/scenario2/', getUserAuth, async (req, res) => {
 
   })
 
-  router.post('/api/postEventnew', async (req, res) => {
+  router.post('/api/events/create/:type', getUserAuth, async(req, res) => {
 
-      console.log("postEventnew reached");
-      const scenarioId= req.body.scenarioId;
-      const scenario = await ScenarioModel.findOne({_id: scenarioId })
-      
-      //need to fix format for start, duraion, as valdist 
-      //assemble it as a dict before you send to end point 
-      const expenseEventList= scenario.expenseEvents;
-      var map1= {
-          name:req.body.title,  
-          start:req.body.start,
-          description: req.body.summary, 
-          discretionary:req.body.discretionaryStatus,
-          inflationAdjusted:req.body.inflationStatus,  
-          duration: req.body.duration, 
-          userFraction: req.body.userFrac,
-          changeAmtOrPct:req.body.amountOrPercent, 
-          initialAmount:req.body.initial,
-          changeDistribution:req.body.changeDistribution
+    const scenarioId = req.body.scenarioId
+    const newEvent = req.body.event
+    const user = req.user
+    const eventType = req.params.type;
 
-      }
+    if (!eventType) {
+      return res.status(404).json({error: "Missing event type!"})
+    }
+    if (!newEvent) {
+      return res.status(400).json({error: "Event object missing!"})
+    }
 
-    expenseEventList.push(map1);
-  console.log("map made");
-  console.log(map1);
+    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+
+    if (!scenario) {
+      return res.status(404).json({error: "Scenario not found!"})
+    }
+
+    if (scenario.owner !== user._id && !scenario.editors.contains(user._id)) {
+      return res.status(401).json({error: "You do not have permission to edit this scenario!"})
+    }
+
+    if (eventType === 'income') {
+      scenario.incomeEvents.push(newEvent)
+    }
+    else if (eventType === 'expense') {
+      scenario.expenseEvents.push(newEvent)
+    }
+    else if (eventType === 'invest') {
+      scenario.investEvents.push(newEvent)
+    }
+    else if (eventType === 'rebalance') {
+      scenario.rebalanceEvents.push(newEvent)
+    }
+    else {
+      return res.status(400).json({error: `Invalid event type ${eventType} detected`})
+    }
+
     try {
-      await scenario.save();
-      console.log("saved");
-      return res.status(200).json({scenarioId: scenario._id})
-  }
-  catch(error) {
-      console.log(error)
+      await scenario.save()
+      return res.status(200).json({msg: 'OK'})
+    }
+    catch (error) {
       return res.status(500).json({error: error})
-  }
-    
-    
+    }
+  })
 
-    //find out which index or where his expense event is and replace it 
-    //after modifying save the scenario wih scenario.save() or something
+  router.post('/api/events/update/:type', getUserAuth, async(req, res) => {
 
+    const scenarioId = req.body.scenarioId
+    const eventId = req.body.eventId
+    const newEvent = req.body.event
+    const user = req.user
+    const eventType = req.params.type;
+
+    if (!eventType) {
+      return res.status(404).json({error: "Missing event type!"})
+    }
+    if (!eventId) {
+      return res.status(400).json({error: "Missing eventId!"})
+    }
+    if (!newEvent) {
+      return res.status(404).json({error: "Event object missing!"})
+    }
+
+    const scenario = await ScenarioModel.findOne({_id: scenarioId})
+
+    if (!scenario) {
+      return res.status(404).json({error: "Scenario not found!"})
+    }
+
+    if (scenario.owner !== user._id && !scenario.editors.contains(user._id)) {
+      return res.status(401).json({error: "You do not have permission to edit this scenario!"})
+    }
+
+    let result
+
+    if (eventType === 'income') {
+      result = await scenario.findOneAndUpdate(
+        {_id: scenarioId, 'incomeEvents._id': eventId},
+        { $set: { 'incomeEvents.$': newEvent } },
+        { new: true, runValidators: true }
+      )
+    }
+    else if (eventType === 'expense') {
+      result = await scenario.findOneAndUpdate(
+        {_id: scenarioId, 'expenseEvents._id': eventId},
+        { $set: { 'expenseEvents.$': newEvent } },
+        { new: true, runValidators: true }
+      )
+    }
+    else if (eventType === 'rebalance') {
+      result = await scenario.findOneAndUpdate(
+        {_id: scenarioId, 'investEvents._id': eventId},
+        { $set: { 'investEvents.$': newEvent } },
+        { new: true, runValidators: true }
+      )
+    }
+    else {
+      result = await scenario.findOneAndUpdate(
+        {_id: scenarioId, 'rebalanceEvents._id': eventId},
+        { $set: { 'rebalanceEvents.$': newEvent } },
+        { new: true, runValidators: true }
+      )
+    }
+
+    if (!result) {
+      return res.status(500).json({error: "Failed to update the scenario"})
+    }
+    else {
+      return res.status(200).json({msg: 'OK'})
+    }
   })
 
   router.post('/api/postEventUpdate', async (req, res) => {
@@ -376,55 +449,6 @@ router.get('/api/scenario2/', getUserAuth, async (req, res) => {
         }
     
   })
-
-  router.post('/api/postIncomenew', getUserAuth, async (req, res) => {
-
-    const user = req.user
-
-      console.log("postEventnew reached");
-      const scenarioId= req.body.scenarioId;
-      const scenario = await ScenarioModel.findOne({_id: scenarioId })
-      
-      //need to fix format for start, duraion, as valdist 
-      //assemble it as a dict before you send to end point 
-      const incomeEventList= scenario.incomeEvents;
-      var map1= {
-          name:req.body.title,  
-          start:req.body.start,
-          description: req.body.summary, 
-          socialSecurity:req.body.socialSecurityStatus,
-          inflationAdjusted:req.body.inflationStatus,  
-          duration: req.body.duration, 
-          userFraction: req.body.userFrac,
-          changeAmtOrPct:req.body.amountOrPercent, 
-          initialAmount:req.body.initial,
-          changeDistribution:req.body.changeDistribution
-
-      }
-
-    incomeEventList.push(map1);
-  console.log("map made");
-    try {
-        await ScenarioModel.deleteOne({_id: scenarioId});
-
-        // Use the $pull operator to remove the scenario ID from ownedScenarios
-        await UserModel.updateOne(
-            { _id: user._id },
-            { $pull: { ownedScenarios: scenarioId } }
-        );
-
-        await ResultsModel.deleteOne(
-            { scenarioId: scenarioId }
-        )
-
-        return res.status(200).json({success: true});
-    }
-    catch(error) {
-        console.error(error);
-        return res.status(500).json({error: error});
-    }
-});
-
 
 router.post('/api/scenario/Editordelete/', getUserAuth, async (req, res) => {
     const user = req.user;
@@ -561,58 +585,6 @@ router.post('/api/scenario/share', async (req, res) => {
    //find out which index or where his expense event is and replace it 
    //after modifying save the scenario wih scenario.save() or something
 
-})
-
-router.post('/api/postInvestmentEventnew', async (req, res) => {
-
-      console.log("postInvestmentEventnew reached");
-      const scenarioId= req.body.scenarioId;
-      const scenario = await ScenarioModel.findOne({_id: scenarioId })
-      
-      //need to fix format for start, duraion, as valdist 
-      //assemble it as a dict before you send to end point 
-      const investmentEventList= scenario.investEvents;
-          console.log(req.body.assetAllocation)
-          console.log(req.body.glideStatus)
-          console.log(req.body.start)
-      if(req.body.glideStatus==false){
-      var map1= {
-          name:req.body.title,  
-          start:req.body.start,
-          description: req.body.summary, 
-          glidePath:req.body.glideStatus,  
-          duration: req.body.duration, 
-          assetAllocation:req.body.assetAllocation
-          
-
-      }
-  }
-      if(req.body.glideStatus==true){
-
-      var map1= {
-          name:req.body.title,  
-          start:req.body.start,
-          description: req.body.summary, 
-          glidePath:req.body.glideStatus,  
-          duration: req.body.duration, 
-          assetAllocation:req.body.assetAllocation,
-          assetAllocation2:req.body.assetAllocation2
-          
-
-      }
-  }
-    investmentEventList.push(map1);
-  console.log("map made");
-    try {
-      await scenario.save()
-      console.log("saved");
-      return res.status(200).json({scenarioId: scenario._id})
-  }
-  catch(error) {
-      console.log(error)
-      return res.status(500).json({error: error})
-  }
-
   })
 
   router.post('/api/postInvestmentEventUpdate', async (req, res) => {
@@ -674,38 +646,6 @@ router.post('/api/postInvestmentEventnew', async (req, res) => {
           console.error(err);
           return res.status(500).json({ error: "Server error" });
         }
-  })
-
-  router.post('/api/postRebalanceEventnew', async (req, res) => {
-
-      console.log("postREventnew reached");
-      const scenarioId= req.body.scenarioId;
-      const scenario = await ScenarioModel.findOne({_id: scenarioId })
-      
-      //need to fix format for start, duraion, as valdist 
-      //assemble it as a dict before you send to end point 
-      const rebalanceEventList= scenario.rebalanceEvents;
-    
-      var map1= {
-          name:req.body.title,  
-          start:req.body.start,
-          description: req.body.summary,  
-          duration: req.body.duration, 
-          assetAllocation:req.body.assetAllocation
-      }
-
-    rebalanceEventList.push(map1);
-  console.log("map made");
-    try {
-      await scenario.save()
-      console.log("saved");
-      return res.status(200).json({scenarioId: scenario._id})
-  }
-  catch(error) {
-      console.log(error)
-      return res.status(500).json({error: error})
-  }
-
   })
 
   router.post('/api/postRebalanceEventUpdate', async (req, res) => {

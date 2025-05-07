@@ -180,7 +180,7 @@ const ScenarioDetailPage = () => {
       <h1>Scenario Detail</h1>
       <button onClick={() => setIsEditModalOpen(true)}        style={buttonStyle}>Edit Scenario Details</button>
       <button onClick={() => setIsInvestmentWizardOpen(true)} style={buttonStyle}>Add New Investment</button>
-      <button onClick={() => navigate(`/scenario/edit?id=${scenarioId}`)} style={buttonStyle}>Add/Edit Events</button>
+      <button onClick={() => navigate(`/scenario/edit?id=${scenarioId}`)} style={buttonStyle}>Add Events</button>
 
       {/* General Information */}
       <section style={{ margin: '20px 0' }}>
@@ -226,7 +226,8 @@ const ScenarioDetailPage = () => {
             <button onClick={() => {
               if (!window.confirm('Delete this investment?')) return;
               const invs = scenario.investments.filter((_, i) => i !== idx);
-              updateScenario({ investments: invs });
+              const ews = scenario.expenseWithdrawalStrategy.filter((_, i) => i !== idx)
+              updateScenario({ investments: invs, expenseWithdrawalStrategy: ews });
             }} style={buttonStyle}>Delete</button>
           </div>
         ))}

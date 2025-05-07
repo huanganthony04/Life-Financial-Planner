@@ -4,6 +4,8 @@ import axios from "axios";
 import ValueDist from "./valueDistribution";
 import ExpenseEventList from "./expenseEventList";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
 // Styles for form spacing
 const styles = {
   formSection: {
@@ -113,20 +115,20 @@ const ExpenseEvent = ({ scenarioId, scenarioName }) => {
   // Submit
   const handleSubmit = async () => {
     if (!isFormValid) return;
+    const newExpenseEvent = {
+      name: title,
+      start: start,
+      duration: duration,
+      initialAmount: initial,
+      changeAmtOrPct: amountOrPercent,
+      changeDistribution: changeDistribution,
+      inflationAdjusted: inflationStatus,
+      userFraction: userFrac,
+      discretionary: discretionaryStatus
+    }
     try {
-      await axios.post("http://localhost:8080/api/postEventnew", {
-        scenarioId,
-        title,
-        changeDistribution,
-        summary,
-        discretionaryStatus,
-        inflationStatus,
-        start,
-        duration,
-        userFrac,
-        amountOrPercent,
-        initial,
-      });
+      console.log(scenarioId)
+      await axios.post(`${BACKEND_URL}/api/events/create/expense`, { scenarioId: scenarioId, event: newExpenseEvent }, { withCredentials: true })
       navigate(
         `/scenario/detail?id=${scenarioId}`,
         { state: { scenario: { name: scenarioName, scenarioId } } }
