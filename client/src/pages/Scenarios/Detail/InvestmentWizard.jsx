@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 
 const VALID_TAX = ['non-retirement', 'pre-tax', 'after-tax']
+const AMT_OR_PCT = ['amount', 'percent']
 
 // Reusable field component
-const Field = ({ label, type = 'text', value, onChange, options = [] }) => (
-  <div style={styles.field}>
+const Field = ({ label, type = 'text', value, onChange, options = [], tooltip = "" }) => (
+  <div style={styles.field} title={tooltip}>
     <label style={styles.label}>{label}</label>
     {options.length ? (
       <select value={value} onChange={onChange} style={styles.select}>
@@ -34,6 +35,7 @@ export default function InvestmentWizard({ open, onSubmit, onClose }) {
 
   // Step 2 fields
   const [returnType, setReturnType] = useState('fixed')
+  const [returnAmtOrPct, setReturnAmtOrPct] = useState('amount')
   const [returnValue, setReturnValue] = useState('')
   const [returnMean, setReturnMean] = useState('')
   const [returnSigma, setReturnSigma] = useState('')
@@ -42,6 +44,7 @@ export default function InvestmentWizard({ open, onSubmit, onClose }) {
 
   // Step 3 fields
   const [incomeType, setIncomeType] = useState('fixed')
+  const [incomeAmtOrPct, setIncomeAmtOrPct] = useState('amount')
   const [incomeValue, setIncomeValue] = useState('')
   const [incomeMean, setIncomeMean] = useState('')
   const [incomeSigma, setIncomeSigma] = useState('')
@@ -49,7 +52,7 @@ export default function InvestmentWizard({ open, onSubmit, onClose }) {
   const [incomeUpper, setIncomeUpper] = useState('')
 
   // Utility functions
-  const toNum = str => { const n = Number(str); return isNaN(n) ? null : n }
+  const toNum = str => { const n = Number(str); return (isNaN(n) || str.length < 1) ? null : n }
   const buildDist = (type, val, mean, sigma, lower, upper) => {
     if (type === 'fixed') return { distType: 'fixed', value: toNum(val) }
     if (['normal','GBM'].includes(type)) return { distType: type, mean: toNum(mean), sigma: toNum(sigma) }
@@ -59,17 +62,19 @@ export default function InvestmentWizard({ open, onSubmit, onClose }) {
   const validate = () => {
     setError('')
     if (step === 1) {
-      if (!name.trim()) return 'Name is required'
-      if (!VALID_TAX.includes(taxStatus)) return 'Tax status is required'
-      if (toNum(value) == null) return 'Value must be numeric'
-      if (toNum(expenseRatio) == null) return 'Expense ratio must be numeric'
+      if (!name.trim()) return 'Name is required.'
+      if (!VALID_TAX.includes(taxStatus)) return 'Tax status is required.'
+      if (toNum(value) == null || toNum(value) < 0) return 'Value must be a positive number.'
+      if (toNum(expenseRatio) == null || toNum(expenseRatio) > 100 || toNum(expenseRatio) < 0) return 'Expense ratio must be a positive percentage.'
     }
     if (step === 2) {
+      if (!AMT_OR_PCT.includes(returnAmtOrPct)) return 'Select an option for amount or percent.'
       if (returnType === 'fixed' && toNum(returnValue) == null) return 'Return value is required'
       if (['normal','GBM'].includes(returnType) && (toNum(returnMean)==null || toNum(returnSigma)==null)) return 'Mean & Sigma required'
       if (returnType === 'uniform' && (toNum(returnLower)==null || toNum(returnUpper)==null)) return 'Lower & Upper required'
     }
     if (step === 3) {
+      if (!AMT_OR_PCT.includes(incomeAmtOrPct)) return 'Select an option for amount or percent.'
       if (incomeType === 'fixed' && toNum(incomeValue) == null) return 'Income value is required'
       if (['normal','GBM'].includes(incomeType) && (toNum(incomeMean)==null || toNum(incomeSigma)==null)) return 'Mean & Sigma required'
       if (incomeType === 'uniform' && (toNum(incomeLower)==null || toNum(incomeUpper)==null)) return 'Lower & Upper required'
@@ -85,12 +90,33 @@ export default function InvestmentWizard({ open, onSubmit, onClose }) {
 
   const submit = () => {
     const err = validate(); if (err) return setError(err)
+
+    let [rvalue, rmean, rlower, rupper] = [toNum(returnValue), toNum(returnMean), toNum(returnLower), toNum(returnUpper)];
+    
+    if (returnAmtOrPct === 'percent') {
+      rvalue = rvalue / 100
+      rmean = rmean / 100
+      rlower = rlower / 100
+      rupper = rupper / 100
+    }
+
+    let [ivalue, imean, ilower, iupper] = [toNum(incomeValue), toNum(incomeMean), toNum(incomeLower), toNum(incomeUpper)];
+
+    if (incomeAmtOrPct === 'percent') {
+      ivalue = ivalue / 100
+      imean = imean / 100
+      ilower = ilower / 100
+      iupper = iupper / 100
+    }
+
     const inv = {
-      name: name.trim(), taxStatus, value: toNum(value), expenseRatio: toNum(expenseRatio),
+      name: name.trim(), taxStatus, value: toNum(value), costBasis: toNum(value),
       investmentType: {
-        name: name.trim(), description: description.trim(), expenseRatio: toNum(expenseRatio),
-        returnDistribution: buildDist(returnType, returnValue, returnMean, returnSigma, returnLower, returnUpper),
-        incomeDistribution: buildDist(incomeType, incomeValue, incomeMean, incomeSigma, incomeLower, incomeUpper)
+        name: name.trim(), description: description.trim(), expenseRatio: toNum(expenseRatio) / 100,
+        returnDistribution: buildDist(returnType, rvalue, rmean, returnSigma, rlower, rupper),
+        returnAmtOrPct: returnAmtOrPct,
+        incomeDistribution: buildDist(incomeType, ivalue, imean, incomeSigma, ilower, iupper),
+        incomeAmtOrPct: incomeAmtOrPct
       }
     }
     onSubmit(inv)
@@ -106,23 +132,60 @@ export default function InvestmentWizard({ open, onSubmit, onClose }) {
         {error && <div style={styles.error}>{error}</div>}
         <div style={styles.body}>
           {step===1 && <>
-            <Field label="Name" value={name} onChange={e=>setName(e.target.value)} />
-            <Field label="Description" value={description} onChange={e=>setDescription(e.target.value)} />
-            <Field label="Tax Status" options={VALID_TAX} value={taxStatus} onChange={e=>setTaxStatus(e.target.value)} />
-            <Field label="Value" type="number" value={value} onChange={e=>setValue(e.target.value)} />
-            <Field label="Expense Ratio" type="number" value={expenseRatio} onChange={e=>setExpenseRatio(e.target.value)} />
+            <p className="field-description">Enter general information about the investment.</p>
+            <Field label="Name" value={name} onChange={e=>setName(e.target.value)} tooltip="The name of the investment."/>
+            <Field label="Description" value={description} onChange={e=>setDescription(e.target.value)} tooltip="The description of the investment."/>
+            <Field label="Tax Status" options={VALID_TAX} value={taxStatus} onChange={e=>setTaxStatus(e.target.value)} tooltip="The tax status of the investment, pre-tax, after-tax, or non-retirement."/>
+            <Field label="Value ($)" type="number" value={value} onChange={e=>setValue(e.target.value)} tooltip="The current value, in USD, of the investment."/>
+            <Field label="Expense Ratio (%)" type="number" value={expenseRatio} onChange={e=>setExpenseRatio(e.target.value)} tooltip="The cost of maintaining of the investment, expressed as a percentage of the current value."/>
           </>}
           {step===2 && <>
-            <Field label="Return Type" options={['fixed','normal','GBM','uniform']} value={returnType} onChange={e=>setReturnType(e.target.value)} />
-            {returnType==='fixed' && <Field label="Return Value" type="number" value={returnValue} onChange={e=>setReturnValue(e.target.value)} />}
-            {['normal','GBM'].includes(returnType) && <><Field label="Mean" type="number" value={returnMean} onChange={e=>setReturnMean(e.target.value)} /><Field label="Sigma" type="number" value={returnSigma} onChange={e=>setReturnSigma(e.target.value)} /></>}
-            {returnType==='uniform' && <><Field label="Lower" type="number" value={returnLower} onChange={e=>setReturnLower(e.target.value)} /><Field label="Upper" type="number" value={returnUpper} onChange={e=>setReturnUpper(e.target.value)} /></>}
+            <p className="field-description">Specify the rate that the investment grows or shrinks yearly.</p>
+            <Field label="Return Amount or Percent" options={AMT_OR_PCT} value={returnAmtOrPct} onChange={e => setReturnAmtOrPct(e.target.value)} tooltip="Whether the growth of the investment is expressed in amount, or a percentage."/>
+            <Field label="Return Type" options={['fixed','normal','GBM','uniform']} value={returnType} onChange={e=>setReturnType(e.target.value)} tooltip="How the growth of the investment should be modeled."/>
+            {returnType==='fixed' && <Field label={returnAmtOrPct === 'amount' ? 'Return Value ($)' : 'Return Rate (%)'} type="number" value={returnValue} onChange={e=>setReturnValue(e.target.value)} 
+              tooltip={returnAmtOrPct === 'amount' ? "The amount, in USD, this investment grows annually." : "The rate that this investment grows annually."}
+            />}
+            {['normal','GBM'].includes(returnType) && 
+              <>
+                <Field label={returnAmtOrPct === 'amount' ? 'Mean ($)' : 'Mean (%)'} type="number" value={returnMean} onChange={e=>setReturnMean(e.target.value)} 
+                  tooltip={`The average growth${(returnAmtOrPct === 'amount') ? ', in USD,': ' rate'} of this investment's value annually.`}
+                />
+                <Field label="Sigma" type="number" value={returnSigma} onChange={e=>setReturnSigma(e.target.value)} tooltip="How much the growth amount/rate of the investment varies yearly."/>
+              </>
+            }
+            {returnType==='uniform' && 
+              <>
+                <Field label={returnAmtOrPct === 'amount' ? 'Lower ($)' : 'Lower (%)'} type="number" value={returnLower} onChange={e=>setReturnLower(e.target.value)} 
+                  tooltip={(returnAmtOrPct === 'amount' ? 'The maximum value' : 'The maximum rate') + ' that the investment grows annually.'}
+                />
+                <Field label={returnAmtOrPct === 'amount' ? 'Upper ($)' : 'Upper (%)'} type="number" value={returnUpper} onChange={e=>setReturnUpper(e.target.value)} 
+                  tooltip={(returnAmtOrPct === 'amount' ? 'The maximum value' : 'The maximum rate') + ' that the investment grows annually.'}
+                />
+              </>
+            }
           </>}
           {step===3 && <>
+            <p className="field-description">Specify investment income, such as from dividends or interest. This income is automatically reinvested into the investment.</p>
+            <Field label="Income Amount or Percent" options={AMT_OR_PCT} value={incomeAmtOrPct} onChange={e => setIncomeAmtOrPct(e.target.value)}/>
             <Field label="Income Type" options={['fixed','normal','GBM','uniform']} value={incomeType} onChange={e=>setIncomeType(e.target.value)} />
-            {incomeType==='fixed' && <Field label="Income Value" type="number" value={incomeValue} onChange={e=>setIncomeValue(e.target.value)} />}
-            {['normal','GBM'].includes(incomeType) && <><Field label="Mean" type="number" value={incomeMean} onChange={e=>setIncomeMean(e.target.value)} /><Field label="Sigma" type="number" value={incomeSigma} onChange={e=>setIncomeSigma(e.target.value)} /></>}
-            {incomeType==='uniform' && <><Field label="Lower" type="number" value={incomeLower} onChange={e=>setIncomeLower(e.target.value)} /><Field label="Upper" type="number" value={incomeUpper} onChange={e=>setIncomeUpper(e.target.value)} /></>}
+            {incomeType==='fixed' && <Field label={incomeAmtOrPct === 'amount' ? 'Value ($)' : 'Rate (%)'} type="number" value={incomeValue} onChange={e=>setIncomeValue(e.target.value)} />}
+            {['normal','GBM'].includes(incomeType) && 
+              <>
+                <Field label={incomeAmtOrPct === 'amount' ? 'Mean ($)' : 'Mean (%)'} type="number" value={incomeMean} onChange={e=>setIncomeMean(e.target.value)} />
+                <Field label='Sigma' type="number" value={incomeSigma} onChange={e=>setIncomeSigma(e.target.value)} />
+              </>
+            }
+            {incomeType==='uniform' && 
+              <>
+                <Field label={incomeAmtOrPct === 'amount' ? 'Lower ($)' : 'Lower (%)'} type="number" value={incomeLower} onChange={e=>setIncomeLower(e.target.value)} 
+                  tooltip={(incomeAmtOrPct === 'amount' ? 'The minimum value' : 'The minimum rate') + ' that the investment earns annually.'}
+                />
+                <Field label={incomeAmtOrPct === 'amount' ? 'Upper ($)' : 'Upper (%)'} type="number" value={incomeUpper} onChange={e=>setIncomeUpper(e.target.value)} 
+                  tooltip={(incomeAmtOrPct === 'amount' ? 'The maximum value' : 'The maximum rate') + ' that the investment earns annually.'}
+                />
+              </>
+            }
           </>}
           {step===4 && <div style={styles.review}>
             <p><strong>Name:</strong> {name}</p>
@@ -130,7 +193,17 @@ export default function InvestmentWizard({ open, onSubmit, onClose }) {
             <p><strong>Value:</strong> {value}</p>
             <p><strong>Expense Ratio:</strong> {expenseRatio}</p>
             <p><strong>Return:</strong> {returnType}</p>
+            {returnType === 'fixed' && (returnAmtOrPct === 'amount' ? 
+              <p><strong>Return Value: </strong>${returnValue}</p>
+              :
+              <p><strong>Return Rate: </strong>{returnValue}%</p>
+            )}
             <p><strong>Income:</strong> {incomeType}</p>
+            {incomeType === 'fixed' && (incomeAmtOrPct === 'amount' ? 
+              <p><strong>Income Value: </strong>${incomeValue}</p>
+              :
+              <p><strong>Income Rate: </strong>{incomeValue}%</p>
+            )}
           </div>}
         </div>
         <div style={styles.footer}>

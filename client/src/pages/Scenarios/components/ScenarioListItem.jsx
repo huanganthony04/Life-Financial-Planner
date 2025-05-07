@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import dropdownLogo from '/src/assets/icons/chevron_down.svg'
 import DropdownMenu from './DropdownMenu'
 
+
 // Reusable style for action buttons
 const buttonStyle = {
   padding: '8px 16px',
@@ -22,7 +23,7 @@ const dropdownButtonStyle = {
   cursor: 'pointer',
 }
 
-const ScenarioListItem = ({ name, scenarioId, editScenario, deleteScenario, exportScenario }) => {
+const ScenarioListItem = ({ name, scenarioId, editScenario, deleteScenario, exportScenario, shareScenario,changeSharedId }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -58,6 +59,8 @@ const ScenarioListItem = ({ name, scenarioId, editScenario, deleteScenario, expo
         editScenario={editScenario}
         deleteScenario={deleteScenario}
         exportScenario={exportScenario}
+        shareScenario={shareScenario}
+        changeSharedId={changeSharedId}
       />
     </div>
   )

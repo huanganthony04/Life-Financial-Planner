@@ -111,6 +111,7 @@ const ScenarioDetailPage = () => {
   const [selectedRebalanceIdx, setSelectedRebalanceIdx]     = useState(null);
 
   useEffect(() => {
+
     axios.get(`${BACKEND_URL}/api/scenario/?id=${scenarioId}`, { withCredentials: true })
       .then(res => {
         if (!res.data.scenario) throw new Error('No scenario found');
@@ -126,6 +127,7 @@ const ScenarioDetailPage = () => {
             ? sc.spendingStrategy
             : sc.expenseEvents.filter(e => e.discretionary).map(e => e.name)
         );
+
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
@@ -166,6 +168,7 @@ const ScenarioDetailPage = () => {
       updateScenario({ spendingStrategy: arr });
     }
     setDragging({ list: null, idx: null });
+
   };
 
   // Add discretionary expense
@@ -192,7 +195,7 @@ const ScenarioDetailPage = () => {
       <h1>Scenario Detail</h1>
       <button onClick={() => setIsEditModalOpen(true)}        style={buttonStyle}>Edit Scenario Details</button>
       <button onClick={() => setIsInvestmentWizardOpen(true)} style={buttonStyle}>Add New Investment</button>
-      <button onClick={() => navigate(`/scenario/edit?id=${scenarioId}`)} style={buttonStyle}>Add/Edit Events</button>
+      <button onClick={() => navigate(`/scenario/edit?id=${scenarioId}`)} style={buttonStyle}>Add Events</button>
 
       {/* General Information */}
       <section style={{ margin: '20px 0' }}>
@@ -231,12 +234,15 @@ const ScenarioDetailPage = () => {
             <div><strong>Value:</strong> {inv.value}</div>
             <div><strong>Expense Ratio:</strong> {inv.investmentType?.expenseRatio}</div>
             <div><strong>Return Distribution:</strong> {renderValueDistribution(inv.investmentType?.returnDistribution)}</div>
+            <div><strong>Return Amount or Percent:</strong> {inv.investmentType?.returnAmtOrPct}</div>
             <div><strong>Income Distribution:</strong> {renderValueDistribution(inv.investmentType?.incomeDistribution)}</div>
+            <div><strong>Income Amount or Percent:</strong> {inv.investmentType?.incomeAmtOrPct}</div>
             <button onClick={() => { setSelectedInvestIdx(idx); setIsInvestEditOpen(true); }} style={buttonStyle}>Edit</button>
             <button onClick={() => {
               if (!window.confirm('Delete this investment?')) return;
               const invs = scenario.investments.filter((_, i) => i !== idx);
-              updateScenario({ investments: invs });
+              const ews = scenario.expenseWithdrawalStrategy.filter((id) => id.split(" ").slice(0, -1).join(" ") !== inv.investmentType.name)
+              updateScenario({ investments: invs, expenseWithdrawalStrategy: ews });
             }} style={buttonStyle}>Delete</button>
           </div>
         ))}

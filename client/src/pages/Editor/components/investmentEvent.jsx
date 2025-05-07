@@ -5,6 +5,8 @@ import ValueDist from './valueDistribution';
 import InvestmentList from './investmentList';
 import InvestmentEventList from './investmentEventList';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
 // Styles for form spacing
 const styles = {
   formSection: { marginBottom: '2rem', border: '1px solid #e0e0e0', padding: '1rem', borderRadius: '0.5rem' },
@@ -19,6 +21,7 @@ const InvestmentEvent = ({ scenarioId, scenarioName }) => {
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [glideStatus, setGlideStatus] = useState(true);
+  const [maxCash, setMaxCash] = useState(0)
 
   // Distribution state (start)
   const [distMode1, setDistMode1] = useState('normal');
@@ -89,17 +92,19 @@ const InvestmentEvent = ({ scenarioId, scenarioName }) => {
       if (glideStatus && value !== '') assetAllocationF[key] = Number(value);
     }
 
+    const newInvestEvent = {
+      name: title,
+      description: summary,
+      start: start,
+      duration: duration,
+      assetAllocation: assetAllocationI,
+      glidePath: glideStatus,
+      assetAllocation2: assetAllocationF,
+      maxCash: maxCash
+    }
+
     try {
-      await axios.post('http://localhost:8080/api/postInvestmentEventnew', {
-        scenarioId,
-        title,
-        summary,
-        glideStatus,
-        start,
-        duration,
-        assetAllocation: assetAllocationI,
-        assetAllocation2: assetAllocationF
-      });
+      await axios.post(`${BACKEND_URL}/api/events/create/invest`, { scenarioId: scenarioId, event: newInvestEvent }, { withCredentials: true });
       navigate('/scenario/detail?id=' + scenarioId, { state: { scenario: { name: scenarioName, scenarioId } } });
     } catch (error) {
       console.error('Error posting investment event:', error);
@@ -163,6 +168,16 @@ const InvestmentEvent = ({ scenarioId, scenarioName }) => {
             setSigma={setSigma2}
           />
         </div>
+      </fieldset>
+
+      <fieldset style={styles.formSection}>
+        <legend>Cash ($)</legend>
+        <input
+          type='number'
+          value={maxCash}
+          onChange={(e) => setMaxCash(e.target.value)}
+          placeholder='Maximum Cash to Hold'
+        />
       </fieldset>
 
       <fieldset style={styles.formSection}>

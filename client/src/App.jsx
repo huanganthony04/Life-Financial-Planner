@@ -12,6 +12,7 @@ import ScenarioDetailPage from './pages/Scenarios/Detail/ScenarioDetailPage.jsx'
 import axios from 'axios'
 import './App.css'
 import UserProfile from '/src/components/UserProfile'
+import SharedScenario from './pages/Scenarios/sharedScenario.jsx'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
@@ -42,10 +43,6 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/dashboard" element={<Layout page="Dashboard" user={user}/>}>
-          <Route index element={<Dashboard user={user}/>} />
-        </Route>
-
         <Route path="/scenario" element={<Layout page="Scenario" user={user}/>}>
           <Route path="/scenario" element={<Scenario user={user}/>}/>
         </Route>
@@ -61,6 +58,10 @@ function App() {
 
         <Route path="/results" element={<Layout page="Results" user={user}/>}>
           <Route path="/results" element={<Results user={user}/>}/>
+        </Route>
+
+        <Route path="/sharedScenario" element={<Layout page="Shared with you " user={user}/>}>
+          <Route index element={<SharedScenario user={user}/>} />
         </Route>
 
         {/* Uncomment this when the UserProfile page is ready}

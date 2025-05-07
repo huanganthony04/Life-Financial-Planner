@@ -14,13 +14,6 @@ const Navbar = () => {
         </div>
         <div id="nav-buttons">
             <NavLink 
-                to="/dashboard" 
-                className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
-            >
-                <img className="nav-button-icon" src={homeLogo}/>
-                Dashboard
-            </NavLink>
-            <NavLink 
                 to="/scenario" 
                 className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
             >
@@ -34,6 +27,14 @@ const Navbar = () => {
             >
                 <img className="nav-button-icon" src={resultsLogo}/>
                 Results
+            </NavLink>
+
+            <NavLink 
+                to="/sharedscenario" 
+                className={({isActive}) => (isActive ? 'nav-button current-variation' : 'nav-button')}
+            >
+                <img className="nav-button-icon" src={listLogo}/>
+                Shared Scenarios
             </NavLink>
 
             {/* Uncomment this when the UserProfile page is ready

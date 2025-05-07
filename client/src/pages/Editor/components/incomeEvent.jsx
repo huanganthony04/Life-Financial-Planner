@@ -5,6 +5,8 @@ import axios from "axios";
 import ValueDist from "./valueDistribution";
 import IncomeEventList from "./incomeEventList";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
 // Styles for form spacing
 const styles = {
   formSection: {
@@ -104,29 +106,51 @@ const IncomeEvent = ({ scenarioId, scenarioName }) => {
   const isMiscValid =
     initial !== "" && ["amount", "percent"].includes(amountOrPercent) && userFrac >= 0 && userFrac <= 1;
 
-  const isFormValid =
-    isNameValid && isStartValid && isDurationValid && isChangeValid && isMiscValid;
+  const isFormValid = function() {
+    if (!isNameValid) {
+      console.log(`Name is not valid. Name is ${title.trim()}`)
+      return false
+    }
+    if (!isStartValid) {
+      console.log("Start is not valid.")
+      return false
+    }
+    if (!isDurationValid) {
+      console.log("Duration is not valid.")
+      return false
+    }
+    if (!isChangeValid) {
+      console.log("Change is not valid.")
+      return false
+    }
+    if (!isMiscValid) {
+      console.log("Misc is not valid.")
+      return false
+    }
+    else {
+      return true
+    }
+  }
 
   // Submit
   const handleSubmit = async () => {
     if (!isFormValid) return;
+    const newIncomeEvent = {
+      name: title,
+      description: summary,
+      start: start,
+      duration: duration,
+      initialAmount: initial,
+      changeAmtOrPct: amountOrPercent,
+      changeDistribution: changeDistribution,
+      inflationAdjusted: inflationStatus,
+      userFraction: userFrac,
+      socialSecurity: socialSecurityStatus
+    }
     try {
-      await axios.post("http://localhost:8080/api/postIncomenew", {
-        scenarioId,
-        title,
-        changeDistribution,
-        summary,
-        socialSecurityStatus,
-        inflationStatus,
-        start,
-        duration,
-        userFrac,
-        amountOrPercent,
-        initial,
-      });
+      await axios.post(`${BACKEND_URL}/api/events/create/income`, {scenarioId: scenarioId, event: newIncomeEvent}, {withCredentials: true});
       navigate(
         `/scenario/detail?id=${scenarioId}`,
-        { state: { scenario: { name: scenarioName, scenarioId } } }
       );
     } catch (error) {
       console.error("Error posting income event:", error);
@@ -260,7 +284,7 @@ const IncomeEvent = ({ scenarioId, scenarioName }) => {
       <button
         style={styles.submitButton}
         onClick={handleSubmit}
-        disabled={!isFormValid}
+        disabled={!isFormValid()}
       >
         Create Event
       </button>

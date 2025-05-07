@@ -15,7 +15,7 @@ const Login = () => {
         axios.get(`${BACKEND_URL}/api/getuser`, {withCredentials: true})
           .then((response) => {
             if (response.data) {
-                navigate("/dashboard")
+                navigate("/scenario")
             }
         })
     })
@@ -32,7 +32,7 @@ const Login = () => {
                                 await axios.post(`${BACKEND_URL}/api/login`, response, { withCredentials: true })
                                     .then((res) => {
                                         console.log(res)
-                                        navigate("/dashboard")
+                                        navigate("/scenario")
                                     })
                                     .catch((error) => {
                                         console.log(error)

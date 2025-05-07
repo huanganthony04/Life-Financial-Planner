@@ -25,6 +25,10 @@ const AssetChart = ({result, selection}) => {
             labels.push(startYear + i)
         }
 
+        if (result.simulationResults[0].results[0][selection] == null) {
+            return { labels: labels, datasets: null }
+        }
+
         let assets = Object.keys(result.simulationResults[0].results[0][selection])
 
         let datasets = []

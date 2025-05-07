@@ -260,3 +260,133 @@ test('Advanced Simulation Test', async () => {
     expect.soft(results[40].investments['S&P 500 non-retirement']).toBeLessThan(100000000)
 
 })
+
+test("Advanced simulation test 2", async () => {
+    const ScenarioObj = {
+        "_id": {
+          "$oid": "681ade57b14b82b7415f9cb3"
+        },
+        "name": "Married",
+        "owner": "108704024217815646343",
+        "editors": [
+          "108704024217815646343"
+        ],
+        "maritalStatus": true,
+        "birthYears": [
+          2004,
+          2004
+        ],
+        "lifeExpectancy": [
+          {
+            "distType": "fixed",
+            "value": 85,
+            "_id": {
+              "$oid": "681ade57b14b82b7415f9cb4"
+            }
+          },
+          {
+            "distType": "fixed",
+            "value": 85,
+            "_id": {
+              "$oid": "681ade57b14b82b7415f9cb5"
+            }
+          }
+        ],
+        "investments": [
+          {
+            "investmentType": {
+              "name": "Stocks",
+              "description": "",
+              "returnAmtOrPct": "amount",
+              "returnDistribution": {
+                "distType": "fixed",
+                "value": 0,
+                "_id": {
+                  "$oid": "681afbc7881f9dd64388d3ee"
+                }
+              },
+              "expenseRatio": 0,
+              "incomeAmtOrPct": "amount",
+              "incomeDistribution": {
+                "distType": "fixed",
+                "value": 0,
+                "_id": {
+                  "$oid": "681afbc7881f9dd64388d3ef"
+                }
+              },
+              "_id": {
+                "$oid": "681afbc7881f9dd64388d3ed"
+              }
+            },
+            "value": 100000,
+            "taxStatus": "non-retirement",
+            "costBasis": 100000,
+            "_id": {
+              "$oid": "681afbc7881f9dd64388d3ec"
+            },
+            "id": "Stocks non-retirement"
+          }
+        ],
+        "incomeEvents": [],
+        "expenseEvents": [
+          {
+            "name": "Food",
+            "start": {
+              "startDistribution": {
+                "distType": "fixed",
+                "value": 2025,
+                "_id": {
+                  "$oid": "681af996881f9dd64388d363"
+                }
+              },
+              "startWith": "",
+              "_id": {
+                "$oid": "681af996881f9dd64388d362"
+              }
+            },
+            "duration": {
+              "distType": "fixed",
+              "value": 50,
+              "_id": {
+                "$oid": "681af996881f9dd64388d364"
+              }
+            },
+            "initialAmount": 500,
+            "changeAmtOrPct": "amount",
+            "changeDistribution": {
+              "distType": "normal",
+              "mean": 500,
+              "sigma": 2,
+              "_id": {
+                "$oid": "681af996881f9dd64388d365"
+              }
+            },
+            "inflationAdjusted": true,
+            "userFraction": 1,
+            "discretionary": false,
+            "_id": {
+              "$oid": "681af996881f9dd64388d361"
+            }
+          }
+        ],
+        "investEvents": [],
+        "rebalanceEvents": [],
+        "inflationAssumption": {
+          "distType": "fixed",
+          "value": 0,
+          "_id": {
+            "$oid": "681ade57b14b82b7415f9cb6"
+          }
+        },
+        "afterTaxContributionLimit": 6000,
+        "spendingStrategy": [],
+        "expenseWithdrawalStrategy": [
+          "Stocks non-retirement"
+        ],
+        "financialGoal": 10000000,
+        "residenceState": "NY",
+        "__v": 32
+    }
+
+    let results = runSimulation(ScenarioObj, taxRateNone, taxRateNone)
+})

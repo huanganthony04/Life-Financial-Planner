@@ -38,9 +38,21 @@ async function init() {
             const { userId, email, scenarioId, resultsId, num } = JSON.parse(msg.content.toString())
 
             const resultsModel = await ResultsModel.findById(resultsId)
-            const scenario = await ScenarioModel.findOne().lean()
+            const scenario = await ScenarioModel.findOne({_id: scenarioId}).lean()
+
+            if (!scenario) {
+                console.log(`Can't find scenario: ${scenarioId}`)
+            }
             const federalTaxRates = await FederalTaxModel.findOne().lean()
-            const stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
+
+
+            let stateTaxRates;
+            if (scenario.residenceState) {
+                stateTaxRates = await StateTaxModel.findOne({state: scenario.residenceState}).lean()
+            }
+            else {
+                stateTaxRates = await StateTaxModel.findOne().lean()
+            }
 
             try {
 
@@ -53,8 +65,8 @@ async function init() {
                 await createCSV(email.split("@")[0], resultsModel)
 
                 console.log(`Worker ${process.pid} completed simulation and stored in ${resultsId}`)
-
                 channel.ack(msg)
+
             }
             catch(error) {
                 console.log(`ERROR in Worker ${process.pid}: `, error)

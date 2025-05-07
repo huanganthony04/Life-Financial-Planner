@@ -9,14 +9,15 @@ import CreateScenarioModal from './components/CreateScenarioModal'
 import ScenarioListItem from './components/ScenarioListItem'
 import './Scenario.css'
 import SharingScenarioModal from './components/SharingScenarioModal'
-
+import SharedScenarioListItem from './components/sharedScenarioListItem'
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
-const Scenario = ({user}) => {
+const SharedScenario = ({user}) => {
 
     const navigate = useNavigate()
 
     const [scenarios, setScenarios] = useState([])
+    const [sharedscenarios, setSharedScenarios] = useState([])
 
     //States for opening and closing the modals
     const [ScenModalOpen, setScenModalOpen] = useState(false)
@@ -25,17 +26,40 @@ const Scenario = ({user}) => {
     const [shareModalState,setSharingModalState]=useState(false)
     const [searchedUserName,changeSearchedUserName]=useState("")
     const[sharedScenarioId,changeSharedId]=useState("")
+    //fetch user and get its sharedScenario as a state then for loop again to fetch each individual
 
     const fetchUserScenarios = async (user) => {
-        await axios.get(`${BACKEND_URL}/api/scenario/byuser?userId=${user.userId}`, {withCredentials: true})
+        await axios.get(`${BACKEND_URL}/api/sharedscenario/byuser?userId=${user.userId}`, {withCredentials: true})
         .then((response) => {
-            if (response.data.scenarios) {
-                setScenarios(response.data.scenarios)
+            console.log(response.data.sharedScenarios)
+            if (response.data.sharedscenarios) {
+                setSharedScenarios(response.data.sharedscenarios)
+                console.log(sharedscenarios+"sharedscenarios id list")
             }
         })
         .catch((error) => {
             console.log(error)
         })
+    }
+
+
+    const fetchEachScenario= async (user) => {
+        let tempScenarioList=[]
+        for(let i=0; i<sharedscenarios.length;i++){
+            try {
+                const response = await axios.get('http://localhost:8080/api/scenario2/', {
+                    params: { id: sharedscenarios[i] },
+                    withCredentials: true
+                });
+                console.log(response.data.scenario);
+                tempScenarioList.push(response.data.scenario)
+                console.log("expenseList reached!");
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+        setScenarios(tempScenarioList);
+
     }
 
     // Function to create a scenario
@@ -48,6 +72,7 @@ const Scenario = ({user}) => {
                 setScenFileModalOpen(false)
                 setScenNameModalOpen(false)
                 fetchUserScenarios(user)
+                fetchEachScenario(user)
             })
             .catch((error) => {
                 console.log(error)
@@ -60,7 +85,7 @@ const Scenario = ({user}) => {
     }, [navigate])
 
     const deleteScenario = useCallback(async (scenarioId) => {
-        await axios.post(`${BACKEND_URL}/api/scenario/delete`, {scenarioId,user}, {withCredentials: true})
+        await axios.post(`${BACKEND_URL}/api/scenario/Editordelete`, {scenarioId, user}, {withCredentials: true})
         .then(() => {
             fetchUserScenarios(user)
         })
@@ -88,13 +113,14 @@ const Scenario = ({user}) => {
     useEffect(() => {
         if (user) {
             fetchUserScenarios(user)
+            fetchEachScenario(user)
         }
     }, [user])
 
     const scenariosList = (scenario) => {
         return scenario.map((item) => {
             return (
-                <ScenarioListItem
+                <SharedScenarioListItem
                     key={item._id}
                     name={item.name}
                     scenarioId={item._id}
@@ -104,6 +130,8 @@ const Scenario = ({user}) => {
                     exportScenario={exportScenario}
                     shareScenario={shareScenario}
                     changeSharedId={changeSharedId}
+                    owner={item.owner}
+                    accessStatus={item.editors.includes(user.userId)?"editor":"viewer"}
                 />
             )
         })
@@ -175,4 +203,4 @@ const [searchWarning,changeSW]=useState(false)
 
 }
 
-export default Scenario
+export default SharedScenario
