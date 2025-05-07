@@ -130,7 +130,10 @@ export default function EditExpenseEvent({ open, expenseEvent, onClose, onSubmit
         <h2>Edit Expense Event</h2>
 
         <form style={formStyle} onSubmit={handleSubmit}>
+
+          <label htmlFor='name'>Name</label>
           <input
+            id='name'
             style={inputStyle}
             placeholder="Name *"
             value={name}
@@ -138,7 +141,9 @@ export default function EditExpenseEvent({ open, expenseEvent, onClose, onSubmit
           />
           {!isNameValid && <div style={errorMsg}>Name is required.</div>}
 
+          <label htmlFor='description'>Description</label>
           <input
+            id='description'
             style={inputStyle}
             placeholder="Description"
             value={description}
@@ -153,34 +158,39 @@ export default function EditExpenseEvent({ open, expenseEvent, onClose, onSubmit
           <ValueDistEdit distribution={durationDist} onChange={setDurationDist} />
           {!isDurationValid && <div style={errorMsg}>Please complete duration distribution.</div>}
 
-          <label>Change Distribution *</label>
-          <ValueDistEdit distribution={changeDist} onChange={setChangeDist} />
-          {!isChangeValid && <div style={errorMsg}>Please complete change distribution.</div>}
-
+          <label htmlFor='initial-amount'>Initial Cost ($)</label>
           <input
+            type='number'
+            id="initial-amount"
             style={inputStyle}
             placeholder="Initial Amount *"
             value={initialAmount}
             onChange={e => setInitialAmount(e.target.value)}
           />
-          {!(!isNaN(Number(initialAmount))) && <div style={errorMsg}>Must be a number.</div>}
 
+          <label htmlFor='change'>Change Distribution *</label>
+          <fieldset id='change'>
+            <label htmlFor='change-amount-or-percent'>Change Amount/Percent</label>
+            <select
+              id="change-amount-or-percent"
+              style={inputStyle}
+              placeholder="Change Amount or % *"
+              value={changeAmtOrPct}
+              onChange={e => setChangeAmtOrPct(e.target.value)}
+            >
+              <option value="amount">Amount</option>
+              <option value="percent">Percent</option>
+            </select>
+
+            <ValueDistEdit distribution={changeDist} onChange={setChangeDist} />
+            {!isChangeValid && <div style={errorMsg}>Please complete change distribution.</div>}
+            {!(!isNaN(Number(initialAmount))) && <div style={errorMsg}>Must be a number.</div>}
+          </fieldset>
+
+          <label htmlFor='user-fraction'>User Fraction (0-1)</label>
           <input
-            style={inputStyle}
-            placeholder="Change Amount or % *"
-            value={changeAmtOrPct}
-            onChange={e => setChangeAmtOrPct(e.target.value)}
-          />
-
-          <label>
-            <input
-              type="checkbox"
-              checked={inflationAdjusted}
-              onChange={e => setInflationAdjusted(e.target.checked)}
-            /> Inflation Adjusted
-          </label>
-
-          <input
+            id='user-fraction'
+            type='number'
             style={inputStyle}
             placeholder="User Fraction (0–1) *"
             value={userFraction}
@@ -192,6 +202,14 @@ export default function EditExpenseEvent({ open, expenseEvent, onClose, onSubmit
              Number(userFraction) <=1) &&
             <div style={errorMsg}>Enter a fraction between 0 and 1.</div>
           }
+
+          <label>
+            <input
+              type="checkbox"
+              checked={inflationAdjusted}
+              onChange={e => setInflationAdjusted(e.target.checked)}
+            /> Inflation Adjusted
+          </label>
 
           <label>
             <input

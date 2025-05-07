@@ -139,6 +139,16 @@ const ScenarioDetailPage = () => {
     if (res.data.success) {
       const sc = res.data.scenario || { ...scenario, ...updates };
       setScenario(sc);
+      setWithdrawalOrder(
+        sc.expenseWithdrawalStrategy?.length
+          ? sc.expenseWithdrawalStrategy
+          : sc.investments.map(i => i.name || i.investmentType?.name)
+      );
+      setSpendingOrder(
+        sc.spendingStrategy?.length
+          ? sc.spendingStrategy
+          : sc.expenseEvents.filter(e => e.discretionary).map(e => e.name)
+      );
       return sc;
     }
   };
@@ -334,7 +344,8 @@ const ScenarioDetailPage = () => {
             <button onClick={() => {
               if (!window.confirm('Delete this expense event?')) return;
               const evts = scenario.expenseEvents.filter((_, i) => i !== idx);
-              updateScenario({ expenseEvents: evts });
+              const spendingStrategy = scenario.spendingStrategy.filter((name) => name !== exp.name);
+              updateScenario({ expenseEvents: evts, spendingStrategy: spendingStrategy });
             }} style={buttonStyle}>Delete</button>
           </div>
         ))}
