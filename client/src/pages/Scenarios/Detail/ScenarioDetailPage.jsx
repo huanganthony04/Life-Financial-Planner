@@ -219,7 +219,9 @@ const ScenarioDetailPage = () => {
             <div><strong>Value:</strong> {inv.value}</div>
             <div><strong>Expense Ratio:</strong> {inv.investmentType?.expenseRatio}</div>
             <div><strong>Return Distribution:</strong> {renderValueDistribution(inv.investmentType?.returnDistribution)}</div>
+            <div><strong>Return Amount or Percent:</strong> {inv.investmentType?.returnAmtOrPct}</div>
             <div><strong>Income Distribution:</strong> {renderValueDistribution(inv.investmentType?.incomeDistribution)}</div>
+            <div><strong>Income Amount or Percent:</strong> {inv.investmentType?.incomeAmtOrPct}</div>
             <button onClick={() => { setSelectedInvestIdx(idx); setIsInvestEditOpen(true); }} style={buttonStyle}>Edit</button>
             <button onClick={() => {
               if (!window.confirm('Delete this investment?')) return;
