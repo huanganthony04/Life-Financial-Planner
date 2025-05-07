@@ -377,9 +377,9 @@ router.get('/api/scenario2/', getUserAuth, async (req, res) => {
     
   })
 
-  router.post('/api/postIncomenew', async (req, res) => {
+  router.post('/api/postIncomenew', getUserAuth, async (req, res) => {
 
-
+    const user = req.user
 
       console.log("postEventnew reached");
       const scenarioId= req.body.scenarioId;

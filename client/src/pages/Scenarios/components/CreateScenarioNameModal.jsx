@@ -25,7 +25,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
 
   // Global form fields
   const [name, setName] = useState("")
-  const [maritalStatus, setMaritalStatus] = useState(false) // false = individual, true = married
+  const [maritalStatus, setMaritalStatus] = useState('single') // false = individual, true = married
   const [birthYear, setBirthYear] = useState("")
   const [spouseBirthYear, setSpouseBirthYear] = useState("")
   const [lifeExpectancy, setLifeExpectancy] = useState("")
@@ -124,11 +124,11 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
         break
       case 3:
         if (birthYear === "") return "Please provide your birth year."
-        if (maritalStatus && spouseBirthYear === "") return "Please provide spouse's birth year."
+        if (maritalStatus === 'couple' && spouseBirthYear === "") return "Please provide spouse's birth year."
         break
       case 4:
         if (lifeExpectancy === "") return "Please provide your life expectancy."
-        if (maritalStatus && spouseLifeExpectancy === "") return "Please provide spouse's life expectancy."
+        if (maritalStatus === 'couple' && spouseLifeExpectancy === "") return "Please provide spouse's life expectancy."
         break
       case 5:
         if (financialGoal === "" || Number(financialGoal) < 0) return "Financial goal must be a non-negative number."
@@ -170,7 +170,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
   const resetForm = () => {
     setCurrentStep(1)
     setName("")
-    setMaritalStatus(false)
+    setMaritalStatus('single')
     setBirthYear("")
     setSpouseBirthYear("")
     setLifeExpectancy("")
@@ -226,7 +226,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
       return
     }
     let birthYears, lifeExpectancyArray
-    if (maritalStatus) {
+    if (maritalStatus === 'couple') {
       birthYears = [Number(birthYear), Number(spouseBirthYear)]
       lifeExpectancyArray = [
         buildDistribution(lifeExpDistType, lifeExpectancy, lifeExpMean, lifeExpSigma, lifeExpLower, lifeExpUpper),
@@ -293,11 +293,11 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
                 <select
                   style={selectStyle}
                   id="marital-status-select"
-                  value={maritalStatus ? "married" : "individual"}
-                  onChange={(e) => setMaritalStatus(e.target.value === "married")}
+                  value={maritalStatus === 'couple' ? "couple" : "individual"}
+                  onChange={(e) => setMaritalStatus(e.target.value)}
                 >
                   <option value="individual">Individual</option>
-                  <option value="married">Married Couple</option>
+                  <option value="couple">Married Couple</option>
                 </select>
               </div>
             )}
@@ -312,7 +312,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
                   value={birthYear}
                   onChange={(e) => setBirthYear(e.target.value)}
                 />
-                {maritalStatus && (
+                {maritalStatus === 'couple' && (
                   <>
                     <label style={labelStyle} htmlFor="spouse-birth-year-input">Spouse Birth Year:</label>
                     <input 
@@ -329,7 +329,7 @@ const ScenarioCreateNameModal = ({ open, onClose, user, createScenario }) => {
             )}
             {currentStep === 4 && (
               <div>
-                {maritalStatus ? (
+                {maritalStatus === 'couple' ? (
                   <>
                     <h3>Your Life Expectancy</h3>
                     <label style={labelStyle} htmlFor="life-expectancy-input">Your Life Expectancy:</label>
