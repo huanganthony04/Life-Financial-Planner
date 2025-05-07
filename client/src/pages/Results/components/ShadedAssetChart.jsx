@@ -32,6 +32,7 @@ const ShadedAssetChart = ({result, selection}) => {
         for (let year = 0; year < numYears; year++) {
             let values = result.simulationResults.map((sim) => {
                 let sum = 0
+                if (sim.results[year][selection] == null) return 0
                 Object.values(sim.results[year][selection]).forEach((value) => {
                     sum += value
                 })
