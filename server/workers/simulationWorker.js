@@ -5,7 +5,7 @@ import ResultsModel from '../models/ResultsModel.js'
 import FederalTaxModel from '../models/TaxModel.js'
 import StateTaxModel from '../models/StateTaxModel.js'
 import runSimulations from '../simulator/runSimulations.js'
-import createCSV from '../components/csv.js';
+import { createCSV, logFinancialEvents } from '../components/logger.js'
 
 import path from 'path'
 import dotenv from 'dotenv'
@@ -63,7 +63,7 @@ async function init() {
                 resultsModel.status = 'Complete'
                 await resultsModel.save()
                 await createCSV(email.split("@")[0], resultsModel)
-
+                await logFinancialEvents(email.split("@")[0], scenario)
                 console.log(`Worker ${process.pid} completed simulation and stored in ${resultsId}`)
                 channel.ack(msg)
 

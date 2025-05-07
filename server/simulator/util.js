@@ -340,6 +340,7 @@ function payNonDiscretionaryExpenses(amount, investments, cash_investment, withd
             capitalGains += amount - investment.costBasis * portion
             investment.value -= amount
             investment.costBasis -= investment.costBasis * portion
+            amount = 0
         }
     }
 
